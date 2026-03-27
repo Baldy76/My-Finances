@@ -1,14 +1,15 @@
 /**
  * COMMAND CENTER BRAIN (app.js)
- * v1.0.2 - Full Data Integrity Build
+ * v2.0 - Account Centric Architecture
  */
 
-console.log("Brain Initializing...");
+console.log("Brain Booting...");
 
-// --- DATA ---
-let accounts = (JSON.parse(localStorage.getItem('myAccounts')) || []).map(a => ({...a, balance: parseFloat(a.balance)||0, overdraft: parseFloat(a.overdraft)||0, domain: a.domain || ''}));
-let debts = (JSON.parse(localStorage.getItem('myDebts')) || []).map(d => ({...d, balance: parseFloat(d.balance)||0, limit: parseFloat(d.limit)||0, domain: d.domain || ''})); 
-let pots = (JSON.parse(localStorage.getItem('myPots')) || []).map(p => ({...p, balance: parseFloat(p.balance)||0}));
+// --- DATA STATE ---
+let accounts = (JSON.parse(localStorage.getItem('myAccounts')) || []).map(a => ({...a, overdraft: parseFloat(a.overdraft) || 0}));
+let debts = (JSON.parse(localStorage.getItem('myDebts')) || []).map(d => ({...d, limit: parseFloat(d.limit) || 0})); 
+let pots = (JSON.parse(localStorage.getItem('myPots')) || []).map(p => ({...p, balance: parseFloat(p.balance) || 0}));
+// Bills now need to link to accounts and track paid states
 let cashflowData = JSON.parse(localStorage.getItem('cashflowData')) || [];
 let historyLog = JSON.parse(localStorage.getItem('myHistory')) || [];
 
@@ -16,241 +17,311 @@ const today = new Date();
 const currentYear = today.getFullYear();
 const currentDay = today.getDate();
 const currentMonthNum = today.getMonth(); 
-const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const currentMonthKey = `${currentYear}-${currentMonthNum}`; // e.g. "2026-2" for March 2026
 
-// --- NAVIGATION ---
+// Formatting helper for date inputs
+const todayIso = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+
+// --- NAVIGATION & SHEETS ---
 window.switchView = function(viewId) {
     document.querySelectorAll('.view-section').forEach(s => s.classList.remove('view-active'));
-    const target = document.getElementById(`view-${viewId}`);
-    if(target) target.classList.add('view-active');
-    window.scrollTo({top: 0, behavior: 'smooth'});
+    document.getElementById(`view-${viewId}`).classList.add('view-active');
+    window.scrollTo(0,0);
     
-    // Refresh specific view data
+    if(viewId === 'home') renderAccountsHub();
     if(viewId === 'admin') renderAdminList();
     if(viewId === 'vault') renderVault();
-    if(viewId === 'bills') renderLedger();
     if(viewId === 'history') renderHistory();
     if(viewId === 'analytics') generateAnalytics();
-    if(viewId === 'transact') renderTransactOptions();
     
     if(window.lucide) lucide.createIcons();
     if(navigator.vibrate) navigator.vibrate(10);
 };
 
+window.openSheet = function(sheetId) {
+    document.getElementById(sheetId).classList.add('sheet-open');
+    if(window.lucide) lucide.createIcons();
+    if(navigator.vibrate) navigator.vibrate(10);
+};
+
+window.closeSheet = function(sheetId) {
+    document.getElementById(sheetId).classList.remove('sheet-open');
+};
+
 // --- BOOT ---
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        initUI();
-        updateApp();
+        // Set date
+        document.getElementById('date-display-home').innerText = today.toLocaleString('en-GB', {weekday:'short', day:'numeric', month:'long'});
+        // Populate day selectors for new bills
+        const daySel = document.getElementById('new-bill-day');
+        if(daySel) { for(let i=1; i<=31; i++) { let o = document.createElement('option'); o.value=i; o.innerText=i; daySel.appendChild(o); } }
+        
+        // Initial Renders
+        renderAccountsHub();
+        
+        // Hide loader
         const shield = document.getElementById('loading-shield');
-        if(shield) { shield.style.opacity = '0'; setTimeout(() => shield.remove(), 500); }
-    } catch (err) { console.error("Boot error:", err); }
+        if(shield) { setTimeout(() => { shield.style.opacity = '0'; setTimeout(() => shield.remove(), 500); }, 400); }
+
+        setupThemeToggle();
+    } catch (err) { console.error("Boot failure:", err); }
 });
 
-function initUI() {
-    document.getElementById('date-display-home').innerText = `${monthNames[currentMonthNum]} ${currentDay}`;
-    const dSel = document.getElementById('cf-day');
-    if(dSel) { for(let i=1; i<=31; i++) { let o=document.createElement('option'); o.value=i; o.innerText=i; dSel.appendChild(o); } }
-    const moSel = document.getElementById('cf-month');
-    if(moSel) { monthNames.forEach((m, i) => { let o=document.createElement('option'); o.value=i; o.innerText=m; moSel.appendChild(o); }); moSel.value = currentMonthNum; }
-    setupListeners();
-}
-
-// --- LOGO ENGINE 2.0 (CLEANED) ---
-function getLogoUrl(item) {
-    let domain = item.domain || '';
-    if (domain.trim() === '') {
-        const n = item.name.toLowerCase();
-        if (n.includes('halifax')) domain = 'halifax.co.uk';
-        else if (n.includes('barclays')) domain = 'barclays.co.uk';
-        else if (n.includes('starling')) domain = 'starlingbank.com';
-        else if (n.includes('amex')) domain = 'americanexpress.com';
-        else if (n.includes('monzo')) domain = 'monzo.com';
-        else if (n.includes('natwest')) domain = 'natwest.com';
-        else if (n.includes('sky')) domain = 'sky.com';
-        else if (n.includes('amazon')) domain = 'amazon.co.uk';
-        else return null;
+// --- CORE RENDERING (HOME SCREEN) ---
+function renderAccountsHub() {
+    const hub = document.getElementById('accounts-hub-list');
+    const emptyState = document.getElementById('empty-state-home');
+    
+    if(accounts.length === 0) {
+        hub.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
     }
-    // Clean input: remove https, www, whitespace
-    domain = domain.toLowerCase().replace('https://', '').replace('http://', '').replace('www.', '').split('/')[0].trim();
-    return `https://logo.clearbit.com/${domain}`;
+    
+    emptyState.classList.add('hidden');
+    hub.innerHTML = '';
+
+    accounts.forEach(acc => {
+        const avail = (parseFloat(acc.balance)||0) + (parseFloat(acc.overdraft)||0);
+        const balColor = (parseFloat(acc.balance)||0) < 0 ? 'text-red-500' : 'text-slate-900 dark:text-white';
+        
+        // CSS Card Generation (Replaces Clearbit Logos)
+        const init = acc.name.substring(0,2).toUpperCase();
+        
+        hub.innerHTML += `
+            <div class="bg-white dark:bg-cardbg rounded-[2rem] p-6 shadow-xl border border-slate-100 dark:border-gray-800 relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-32 h-32 rounded-full opacity-10" style="background-color: ${acc.color}; filter: blur(30px);"></div>
+                
+                <div class="flex justify-between items-start mb-6 relative z-10">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl flex justify-center items-center font-black text-sm text-white shadow-md" style="background: linear-gradient(135deg, ${acc.color}, #0F172A);">${init}</div>
+                        <div>
+                            <h2 class="font-black text-xl tracking-tight">${acc.name}</h2>
+                            ${acc.overdraft > 0 ? `<p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">OD Limit: £${acc.overdraft}</p>` : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6 relative z-10">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Current Balance</p>
+                    <p class="text-4xl font-black tracking-tighter ${balColor}">£${(parseFloat(acc.balance)||0).toFixed(2)}</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 relative z-10">
+                    <button onclick="launchBillsSheet(${acc.id})" class="bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white py-3.5 rounded-2xl font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-transform border border-slate-200 dark:border-gray-700">
+                        <i data-lucide="calendar-check" class="w-4 h-4 text-starling"></i> View Bills
+                    </button>
+                    <button onclick="launchSpendSheet(${acc.id})" class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3.5 rounded-2xl font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md">
+                        <i data-lucide="shopping-bag" class="w-4 h-4"></i> Log Spend
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    if(window.lucide) lucide.createIcons();
 }
 
-// --- PAYROLL WEEKEND SHIFT ---
-function resolveActualDay(item) {
-    if (item.day === 'last_working_day') {
+// --- QUICK SPEND LOGIC ---
+let selectedMerchant = 'Other';
+
+window.selectMerchant = function(element, merchant) {
+    document.querySelectorAll('.merchant-pill').forEach(el => el.classList.remove('active'));
+    element.classList.add('active');
+    selectedMerchant = merchant;
+    
+    const customInput = document.getElementById('spend-custom-merchant');
+    if(merchant === 'Other') {
+        customInput.classList.remove('hidden');
+        customInput.focus();
+    } else {
+        customInput.classList.add('hidden');
+        customInput.value = '';
+    }
+}
+
+window.launchSpendSheet = function(accountId) {
+    const acc = accounts.find(a => a.id === accountId);
+    if(!acc) return;
+    
+    document.getElementById('spend-sheet-title').innerText = `Spend from ${acc.name}`;
+    document.getElementById('spend-active-account').value = accountId;
+    document.getElementById('spend-date').value = todayIso;
+    document.getElementById('spend-amt').value = '';
+    
+    // Reset to 'Other'
+    const pills = document.querySelectorAll('.merchant-pill');
+    if(pills.length > 0) selectMerchant(pills[pills.length-1], 'Other');
+    
+    openSheet('sheet-spend');
+}
+
+window.submitSpend = function() {
+    const accId = parseInt(document.getElementById('spend-active-account').value);
+    const amt = parseFloat(document.getElementById('spend-amt').value);
+    let merchant = selectedMerchant === 'Other' ? document.getElementById('spend-custom-merchant').value : selectedMerchant;
+    const dateStr = document.getElementById('spend-date').value; // YYYY-MM-DD
+
+    if(!amt || !merchant) return alert("Please enter amount and merchant.");
+
+    const acc = accounts.find(a => a.id === accId);
+    if(acc) {
+        acc.balance -= amt;
+        
+        // Format date for history log nicely
+        const dObj = new Date(dateStr);
+        const fDate = dObj.toLocaleString('en-GB',{day:'numeric',month:'short'});
+        
+        historyLog.unshift({ id: Date.now(), title: merchant, amount: `-£${amt.toFixed(2)}`, desc: `Paid from ${acc.name}`, timestamp: fDate, color: 'text-slate-800 dark:text-white' });
+        if(historyLog.length > 100) historyLog.pop();
+        
+        saveData();
+        renderAccountsHub();
+        closeSheet('sheet-spend');
+    }
+}
+
+// --- BILLS CALENDAR LOGIC ---
+function resolveActualDay(dayStr) {
+    if (dayStr === 'last_working_day') {
         let lastDay = new Date(currentYear, currentMonthNum + 1, 0); 
         if (lastDay.getDay() === 0) lastDay.setDate(lastDay.getDate() - 2); 
         else if (lastDay.getDay() === 6) lastDay.setDate(lastDay.getDate() - 1); 
         return lastDay.getDate();
     }
-    let checkDate = new Date(currentYear, currentMonthNum, parseInt(item.day));
+    let checkDate = new Date(currentYear, currentMonthNum, parseInt(dayStr));
     if (checkDate.getMonth() !== currentMonthNum) checkDate = new Date(currentYear, currentMonthNum + 1, 0);
     const dow = checkDate.getDay();
-    if (dow === 0 || dow === 6) { 
-        if (item.type === 'income') checkDate.setDate(checkDate.getDate() - (dow === 0 ? 2 : 1));
-        else checkDate.setDate(checkDate.getDate() + (dow === 0 ? 1 : 2));
-    }
+    if (dow === 0 || dow === 6) checkDate.setDate(checkDate.getDate() + (dow === 0 ? 1 : 2)); // Bills push forward
     return checkDate.getDate();
 }
 
-// --- CORE ENGINE ---
-function updateApp() {
-    const totalCashIncludingOD = accounts.reduce((s, a) => s + a.balance + a.overdraft, 0);
-    let remBills = 0, upH = '', alertH = '';
+window.launchBillsSheet = function(accountId) {
+    const acc = accounts.find(a => a.id === accountId);
+    if(!acc) return;
+    
+    document.getElementById('bills-active-account').value = accountId;
+    document.getElementById('bills-sheet-title').innerText = `${acc.name} Bills`;
+    
+    const dueList = document.getElementById('bills-due-list');
+    const paidList = document.getElementById('bills-paid-list');
+    dueList.innerHTML = ''; paidList.innerHTML = '';
+    
+    let hasDue = false;
 
-    const sorted = cashflowData
-        .filter(item => {
-            const f = item.frequency || 'monthly';
-            if (f === 'monthly') return true;
-            if (f === 'one_off') return parseInt(item.month) === currentMonthNum;
-            if (f === 'quarterly') return (currentMonthNum - parseInt(item.month) + 12) % 3 === 0;
-            return true;
-        })
-        .map(item => ({ ...item, actualDay: resolveActualDay(item) }))
-        .sort((a, b) => a.actualDay - b.actualDay);
+    // Get bills for this account
+    const accBills = cashflowData
+        .filter(b => b.accountId === accountId && (b.frequency === 'monthly' || b.frequency === 'one_off'))
+        .map(b => ({...b, actualDay: resolveActualDay(b.day)}))
+        .sort((a,b) => a.actualDay - b.actualDay);
 
-    sorted.filter(i => i.actualDay >= currentDay).forEach(item => {
-        if (item.type === 'bill') remBills += item.amount;
-        let diff = item.actualDay - currentDay;
-        upH += `<div class="flex justify-between items-center border-b dark:border-gray-800/50 pb-4 last:border-0">
-            <div><p class="text-sm font-black">${item.name}</p><p class="text-[9px] text-slate-500 uppercase font-black">${diff===0?'Today':'in '+diff+' days'}</p></div>
-            <p class="text-sm font-black ${item.type==='bill'?'text-red-500':'text-starling'}">${item.type==='bill'?'-':'+'}£${item.amount.toFixed(2)}</p></div>`;
-        if (item.manual && item.type === 'bill' && (diff === 0 || diff === 1)) {
-            alertH += `<div class="bg-red-500 text-white p-4 rounded-2xl text-sm font-black shadow-lg flex items-center gap-3">🚨 <span class="flex-1">Pay ${item.name} ${diff===0?'Today':'Tomorrow'}</span><button onclick="this.parentElement.remove()" class="text-lg opacity-50">✕</button></div>`;
+    accBills.forEach(bill => {
+        const isPaidThisMonth = bill.paidMonths && bill.paidMonths.includes(currentMonthKey);
+        
+        const html = `
+            <div class="bg-slate-50 dark:bg-gray-800 p-4 rounded-2xl flex justify-between items-center border border-slate-100 dark:border-transparent">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleBillPaid(${bill.id}, ${accountId})" class="w-6 h-6 rounded-full border-2 ${isPaidThisMonth ? 'bg-starling border-starling text-slate-900' : 'border-slate-300 dark:border-gray-600 text-transparent'} flex items-center justify-center transition-colors">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                    </button>
+                    <div>
+                        <p class="font-black text-sm ${isPaidThisMonth ? 'line-through opacity-50' : ''}">${bill.name}</p>
+                        <p class="text-[9px] font-black uppercase text-slate-400 tracking-widest">Day ${bill.actualDay}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <p class="font-black text-sm">£${bill.amount.toFixed(2)}</p>
+                    <button onclick="deleteBill(${bill.id}, ${accountId})" class="text-red-400 opacity-50 hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+            </div>
+        `;
+
+        if(isPaidThisMonth) {
+            paidList.innerHTML += html;
+        } else {
+            hasDue = true;
+            dueList.innerHTML += html;
         }
     });
 
-    document.getElementById('alerts-container').innerHTML = alertH;
-    document.getElementById('upcoming-list').innerHTML = upH;
-    document.getElementById('no-upcoming').classList.toggle('hidden', sorted.length > 0);
-    
-    const safeToSpend = totalCashIncludingOD - remBills;
-    document.getElementById('safe-to-spend').innerText = `£${safeToSpend.toFixed(2)}`;
-    document.getElementById('total-cash').innerText = `£${totalCashIncludingOD.toFixed(2)}`;
-    document.getElementById('display-bills').innerText = `£${remBills.toFixed(2)}`;
-    
-    const pc = totalCashIncludingOD > 0 ? Math.max(0, Math.min(100, (safeToSpend / totalCashIncludingOD) * 100)) : 0;
-    const bar = document.getElementById('cash-bar');
-    bar.style.width = `${pc}%`;
-    bar.className = `h-2 rounded-full transition-all duration-1000 ${pc < 20 ? 'bg-red-500' : 'bg-starling'}`;
-
-    renderAccounts();
-    saveData();
+    document.getElementById('no-bills-due').classList.toggle('hidden', hasDue);
     if(window.lucide) lucide.createIcons();
+    openSheet('sheet-bills');
 }
 
-function renderAccounts() {
-    const list = document.getElementById('accounts-list'); if(!list) return;
-    list.innerHTML = '';
-    accounts.forEach(acc => {
-        const logo = getLogoUrl(acc);
-        const iconHtml = logo ? `<img src="${logo}" class="w-10 h-10 rounded-xl bg-white p-1 shadow-sm">` : `<div class="w-10 h-10 rounded-xl flex justify-center items-center font-black text-xs text-white" style="background-color:${acc.color}">${acc.name.substring(0,2).toUpperCase()}</div>`;
-        list.innerHTML += `<div class="flex justify-between items-center bg-white dark:bg-cardbg p-4 rounded-3xl shadow-sm mb-3">
-            <div class="flex items-center gap-4">${iconHtml}<div><p class="font-black text-sm text-slate-800 dark:text-white">${acc.name}</p><p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Net: £${(acc.balance + acc.overdraft).toFixed(2)}</p></div></div>
-            <p class="font-black text-lg ${acc.balance<0?'text-red-500':'text-slate-800 dark:text-white'}">£${acc.balance.toFixed(2)}</p></div>`;
-    });
+window.toggleBillPaid = function(billId, accId) {
+    const bill = cashflowData.find(b => b.id === billId);
+    if(!bill) return;
+    
+    if(!bill.paidMonths) bill.paidMonths = [];
+    
+    const index = bill.paidMonths.indexOf(currentMonthKey);
+    const acc = accounts.find(a => a.id === accId);
+
+    if(index > -1) {
+        // Unmark paid (Refund the account conceptually, though usually people just toggle UI. Let's just toggle UI state for now to keep balance manual control clean, or auto-deduct? Auto-deduct is better UX).
+        bill.paidMonths.splice(index, 1);
+        if(acc) acc.balance += bill.amount; // Refund
+    } else {
+        // Mark paid
+        bill.paidMonths.push(currentMonthKey);
+        if(acc) acc.balance -= bill.amount; // Deduct
+        recordTx(bill.name, `-£${bill.amount.toFixed(2)}`, `Bill paid from ${acc.name}`, 'text-red-500');
+    }
+    
+    saveData();
+    renderAccountsHub(); // Update background balance
+    launchBillsSheet(accId); // Refresh sheet
 }
 
-// --- ACTIONS ---
-function setupListeners() {
-    // Admin Creation (Auto-Clear Fix)
-    document.getElementById('add-account-btn').onclick = () => {
-        const type = document.getElementById('admin-type').value, name = document.getElementById('admin-name').value;
-        const domain = document.getElementById('admin-domain').value, sec = parseFloat(document.getElementById('admin-secondary').value) || 0;
-        if(!name) return alert("Enter account name");
-        const colorThemes = ['#8B5CF6', '#F59E0B', '#EC4899', '#3B82F6', '#10B981'];
-        const newObj = { id: Date.now(), name, domain, balance: 0, color: colorThemes[Math.floor(Math.random() * colorThemes.length)] };
-        if(type === 'bank') newObj.overdraft = sec; else if(type === 'debt') newObj.limit = sec;
-        if(type === 'bank') accounts.push(newObj); else if(type === 'debt') debts.push(newObj); else pots.push(newObj);
-        
-        // CLEAR FORM
-        document.getElementById('admin-name').value = '';
-        document.getElementById('admin-domain').value = '';
-        document.getElementById('admin-secondary').value = '';
-        saveData(); renderAdminList(); updateApp();
-    };
-
-    // Emergency Overrides (Fixed)
-    document.getElementById('force-override-btn').onclick = () => {
-        const cont = document.getElementById('override-inputs-container'); cont.innerHTML = '';
-        const sections = [ {t:'Banks', d:accounts, i:'over-bank-'}, {t:'Pots', d:pots, i:'over-pot-'}, {t:'Debts', d:debts, i:'over-debt-'} ];
-        sections.forEach(s => {
-            if(s.d.length === 0) return;
-            let h = `<h3 class="text-[10px] font-black uppercase mb-3 opacity-40 text-center tracking-widest">${s.t}</h3>`;
-            s.d.forEach(item => { h += `<div class="mb-4"><label class="text-[9px] uppercase font-black text-slate-400 mb-1 block">${item.name}</label><input type="number" id="${s.i}${item.id}" value="${item.balance}" class="w-full bg-slate-100 dark:bg-gray-800 p-4 rounded-2xl font-black focus:ring-2 focus:ring-starling outline-none"></div>`; });
-            cont.innerHTML += `<div class="bg-white dark:bg-darkbg p-5 rounded-3xl mb-4 shadow-sm">${h}</div>`;
-        });
-        document.getElementById('override-modal').classList.remove('hidden');
-        document.getElementById('override-modal').classList.add('flex');
-    };
-
-    document.getElementById('close-override').onclick = () => { document.getElementById('override-modal').classList.add('hidden'); document.getElementById('override-modal').classList.remove('flex'); };
-
-    document.getElementById('save-override-btn').onclick = () => {
-        accounts.forEach(a => { let el = document.getElementById(`over-bank-${a.id}`); if(el) a.balance = parseFloat(el.value) || 0; });
-        pots.forEach(p => { let el = document.getElementById(`over-pot-${p.id}`); if(el) p.balance = parseFloat(el.value) || 0; });
-        debts.forEach(d => { let el = document.getElementById(`over-debt-${d.id}`); if(el) d.balance = parseFloat(el.value) || 0; });
-        saveData(); updateApp(); document.getElementById('override-modal').classList.add('hidden');
-    };
-
-    // Spend Logic
-    document.getElementById('quick-spend-btn').onclick = () => {
-        const v = document.getElementById('spend-account').value, a = parseFloat(document.getElementById('spend-amount').value);
-        if(!v || !a) return;
-        const [type, id] = v.split('_');
-        let t = type === 'bank' ? accounts.find(x=>x.id==id) : debts.find(x=>x.id==id);
-        if(type==='bank') t.balance -= a; else t.balance += a;
-        recordTx(`Spend: ${t.name}`, `-£${a.toFixed(2)}`, document.getElementById('spend-desc').value, 'text-red-500');
-        document.getElementById('spend-amount').value = ''; document.getElementById('spend-desc').value = '';
-        saveData(); switchView('home');
-    };
-
-    // Transfer Logic
-    document.getElementById('transfer-btn').onclick = () => {
-        const fId = document.getElementById('transfer-from').value, tId = document.getElementById('transfer-to').value, amt = parseFloat(document.getElementById('transfer-amount').value);
-        if(!fId || !tId || !amt) return;
-        const [fT, fI] = fId.split('_'), [tT, tI] = tId.split('_');
-        let src = accounts.find(x=>x.id==fI), dest = tT === 'bank' ? accounts.find(x=>x.id==tI) : pots.find(x=>x.id==tI);
-        src.balance -= amt; dest.balance += amt;
-        recordTx(`Transfer`, `£${amt.toFixed(2)}`, `${src.name} ➔ ${dest.name}`, 'text-blue-500');
-        document.getElementById('transfer-amount').value = '';
-        saveData(); switchView('home');
-    };
-
-    // Add Cashflow (Auto-Clear Fix)
-    document.getElementById('add-cf-btn').onclick = () => {
-        const name = document.getElementById('cf-name').value, amount = parseFloat(document.getElementById('cf-amount').value);
-        if(!name || !amount) return alert("Fill in details");
-        cashflowData.push({ id: Date.now(), type: document.getElementById('cf-type').value, frequency: document.getElementById('cf-freq').value, day: document.getElementById('cf-day').value, month: document.getElementById('cf-month').value, name, amount, manual: document.getElementById('cf-manual').checked });
-        document.getElementById('cf-name').value = ''; document.getElementById('cf-amount').value = ''; document.getElementById('cf-manual').checked = false;
-        saveData(); switchView('home');
-    };
-
-    // Backup Data
-    document.getElementById('export-data-btn').onclick = () => {
-        const d = JSON.stringify({accounts, debts, pots, cashflowData, historyLog});
-        const blob = new Blob([d], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `CC_Backup.json`; a.click();
-    };
-    document.getElementById('import-data-btn').onclick = () => document.getElementById('import-file-input').click();
-    document.getElementById('import-file-input').onchange = (e) => {
-        const r = new FileReader(); r.onload = (ev) => {
-            const d = JSON.parse(ev.target.result);
-            accounts = d.accounts; debts = d.debts; pots = d.pots; cashflowData = d.cashflowData; historyLog = d.historyLog || [];
-            saveData(); location.reload();
-        }; r.readAsText(e.target.files[0]);
-    };
-
-    // Theme Toggle
-    document.getElementById('theme-toggle-btn').onclick = () => {
-        const h = document.documentElement;
-        if(h.classList.contains('dark')) { h.classList.remove('dark'); localStorage.setItem('appTheme', 'light'); }
-        else { h.classList.add('dark'); localStorage.setItem('appTheme', 'dark'); }
-    };
+window.openAddBillModal = function() {
+    document.getElementById('new-bill-name').value = '';
+    document.getElementById('new-bill-amount').value = '';
+    closeSheet('sheet-bills');
+    setTimeout(() => openSheet('sheet-add-bill'), 300); // Wait for first sheet to close
 }
 
-// --- SUB-RENDERS ---
+window.submitNewBill = function() {
+    const accId = parseInt(document.getElementById('bills-active-account').value);
+    const name = document.getElementById('new-bill-name').value;
+    const amount = parseFloat(document.getElementById('new-bill-amount').value);
+    const day = document.getElementById('new-bill-day').value;
+    const freq = document.getElementById('new-bill-freq').value;
+
+    if(!name || !amount || !day) return alert("Please fill all fields.");
+
+    cashflowData.push({ id: Date.now(), accountId: accId, type: 'bill', frequency: freq, day: day, name, amount, paidMonths: [] });
+    saveData();
+    
+    closeSheet('sheet-add-bill');
+    setTimeout(() => launchBillsSheet(accId), 300);
+}
+
+window.deleteBill = function(billId, accId) {
+    if(!confirm("Delete this bill entirely?")) return;
+    cashflowData = cashflowData.filter(b => b.id !== billId);
+    saveData();
+    launchBillsSheet(accId);
+}
+
+// --- ADMIN, VAULT, HISTORY (Standard Functions) ---
+function createAccount() {
+    const type = document.getElementById('admin-type').value;
+    const name = document.getElementById('admin-name').value;
+    const sec = parseFloat(document.getElementById('admin-secondary').value) || 0;
+    if(!name) return alert("Enter name");
+    
+    const colorThemes = ['#8B5CF6', '#F59E0B', '#EC4899', '#3B82F6', '#10B981', '#EF4444'];
+    const newObj = { id: Date.now(), name, balance: 0, color: colorThemes[Math.floor(Math.random() * colorThemes.length)] };
+    
+    if(type === 'bank') { newObj.overdraft = sec; accounts.push(newObj); }
+    else if(type === 'debt') { newObj.limit = sec; debts.push(newObj); }
+    else { pots.push(newObj); }
+    
+    document.getElementById('admin-name').value = ''; document.getElementById('admin-secondary').value = '';
+    saveData(); renderAdminList();
+}
+
 function renderAdminList() {
     const list = document.getElementById('admin-list'); if(!list) return;
     list.innerHTML = '';
@@ -260,90 +331,77 @@ function renderAdminList() {
             <p class="text-sm font-black">${item.name} <span class="text-[9px] opacity-40 uppercase ml-2">${item.t}</span></p>
             <button onclick="deleteAccount('${item.t}', ${item.id})" class="text-red-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`;
     });
-    lucide.createIcons();
+    if(window.lucide) lucide.createIcons();
 }
 
 window.deleteAccount = function(type, id) {
     if(!confirm("Delete?")) return;
-    if(type==='bank') accounts=accounts.filter(a=>a.id!==id); else if(type==='debt') debts=debts.filter(d=>d.id!==id); else pots=pots.filter(p=>p.id!==id);
-    renderAdminList(); updateApp();
+    if(type==='bank') { accounts=accounts.filter(a=>a.id!==id); cashflowData = cashflowData.filter(b=>b.accountId!==id); }
+    else if(type==='debt') debts=debts.filter(d=>d.id!==id); 
+    else pots=pots.filter(p=>p.id!==id);
+    saveData(); renderAdminList();
 };
-
-function renderLedger() {
-    const ledger = document.getElementById('full-ledger'); if(!ledger) return;
-    ledger.innerHTML = '';
-    cashflowData.forEach(item => {
-        ledger.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl flex justify-between items-center mb-2 shadow-sm border dark:border-transparent">
-            <div><p class="text-sm font-black">${item.name}</p><p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Day ${item.day}</p></div>
-            <div class="flex items-center gap-2"><p class="font-black">£${item.amount.toFixed(2)}</p>
-            <button onclick="deleteCf(${item.id})" class="text-red-400 p-2"><i data-lucide="x-circle" class="w-4 h-4"></i></button></div></div>`;
-    });
-    lucide.createIcons();
-}
-window.deleteCf = function(id) { if(confirm("Remove?")) { cashflowData = cashflowData.filter(c=>c.id!==id); renderLedger(); updateApp(); } };
 
 function renderVault() {
     const pList = document.getElementById('pots-dashboard-list'); pList.innerHTML = '';
     pots.forEach(p => {
-        pList.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-3xl mb-3 shadow-sm flex justify-between items-center">
-            <div><p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">${p.name}</p><p class="text-2xl font-black text-yellow-500">£${p.balance.toFixed(2)}</p></div>
-            <button onclick="withdrawFromPot(${p.id})" class="bg-slate-100 dark:bg-gray-700 px-4 py-2 rounded-xl font-black text-xs">Withdraw</button></div>`;
+        pList.innerHTML += `<div class="bg-white dark:bg-gray-800 p-5 rounded-3xl mb-3 shadow-sm flex justify-between items-center border border-slate-100 dark:border-transparent">
+            <div><p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">${p.name}</p><p class="text-2xl font-black text-yellow-500">£${(parseFloat(p.balance)||0).toFixed(2)}</p></div>
+            <button onclick="withdrawFromPot(${p.id})" class="bg-slate-100 dark:bg-gray-700 px-4 py-2 rounded-xl font-black text-xs active:scale-95 transition-transform">Withdraw</button></div>`;
     });
     const dList = document.getElementById('debt-dashboard-list'); dList.innerHTML = '';
     debts.forEach(d => {
         const util = d.limit > 0 ? Math.min((d.balance / d.limit) * 100, 100) : 0;
-        dList.innerHTML += `<div class="bg-white dark:bg-gray-800 p-5 rounded-3xl mb-3 shadow-sm">
-            <div class="flex justify-between items-center mb-2"><p class="text-sm font-black">${d.name}</p><p class="text-xl font-black text-red-500">£${d.balance.toFixed(2)}</p></div>
+        dList.innerHTML += `<div class="bg-white dark:bg-gray-800 p-6 rounded-3xl mb-3 shadow-sm border border-slate-100 dark:border-transparent">
+            <div class="flex justify-between items-center mb-2"><p class="text-sm font-black">${d.name}</p><p class="text-xl font-black text-red-500">£${(parseFloat(d.balance)||0).toFixed(2)}</p></div>
             ${d.limit > 0 ? `<div class="w-full bg-slate-100 dark:bg-gray-900 h-1.5 rounded-full overflow-hidden mb-4"><div class="bg-red-500 h-full" style="width: ${util}%"></div></div>` : ''}
             <div class="flex gap-2">
-                <button onclick="payDebt(${d.id})" class="flex-1 bg-starling py-2 rounded-xl font-black text-xs text-slate-900">Pay</button>
-                <button onclick="addInterest(${d.id})" class="flex-1 bg-red-100 dark:bg-red-900/30 text-red-500 py-2 rounded-xl font-black text-xs">+ Int</button></div></div>`;
+                <button onclick="payDebt(${d.id})" class="flex-1 bg-starling py-3 rounded-xl font-black text-xs text-slate-900 active:scale-95 transition-transform">Pay</button>
+                <button onclick="addInterest(${d.id})" class="flex-1 bg-red-50 dark:bg-red-900/30 text-red-500 py-3 rounded-xl font-black text-xs active:scale-95 transition-transform">+ Int</button></div></div>`;
     });
-    document.getElementById('total-debt-display').innerText = `£${debts.reduce((s,d)=>s+d.balance,0).toFixed(2)}`;
+    document.getElementById('total-debt-display').innerText = `£${debts.reduce((s,d)=>s+(parseFloat(d.balance)||0),0).toFixed(2)}`;
 }
 
-window.payDebt = function(id) { let a = prompt("Amount?"); if(a) { debts.find(x=>x.id==id).balance -= parseFloat(a); updateApp(); renderVault(); } };
-window.addInterest = function(id) { let a = prompt("Amount?"); if(a) { debts.find(x=>x.id==id).balance += parseFloat(a); updateApp(); renderVault(); } };
-window.withdrawFromPot = function(id) { let a = prompt("Amount?"); if(a) { pots.find(x=>x.id==id).balance -= parseFloat(a); updateApp(); renderVault(); } };
-
-function renderTransactOptions() {
-    const sAcc = document.getElementById('spend-account'); const tF = document.getElementById('transfer-from'); const tT = document.getElementById('transfer-to');
-    sAcc.innerHTML = '<option value="" disabled selected>Account...</option>'; tF.innerHTML = sAcc.innerHTML; tT.innerHTML = sAcc.innerHTML;
-    accounts.forEach(a => { const h = `<option value="bank_${a.id}">🏦 ${a.name} (£${a.balance.toFixed(2)})</option>`; sAcc.innerHTML += h; tF.innerHTML += h; tT.innerHTML += h; });
-    debts.forEach(d => { sAcc.innerHTML += `<option value="debt_${d.id}">💳 ${d.name} (£${d.balance.toFixed(2)})</option>`; });
-    pots.forEach(p => { tT.innerHTML += `<option value="pot_${p.id}">🍯 ${p.name} (£${p.balance.toFixed(2)})</option>`; });
-}
-
-function recordTx(title, amt, desc, color='text-slate-800 dark:text-white') {
-    historyLog.unshift({ id: Date.now(), title, amount:amt, desc: desc||'', timestamp: new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}), color });
-    if(historyLog.length > 100) historyLog.pop(); localStorage.setItem('myHistory', JSON.stringify(historyLog));
-}
+window.payDebt = function(id) { let a = prompt("Amount?"); if(a) { debts.find(x=>x.id==id).balance -= parseFloat(a); saveData(); renderVault(); recordTx(`Paid Debt`, `-£${a}`); } };
+window.addInterest = function(id) { let a = prompt("Amount?"); if(a) { debts.find(x=>x.id==id).balance += parseFloat(a); saveData(); renderVault(); recordTx(`Interest`, `+£${a}`); } };
+window.withdrawFromPot = function(id) { let a = prompt("Amount?"); if(a) { pots.find(x=>x.id==id).balance -= parseFloat(a); saveData(); renderVault(); recordTx(`Withdraw`, `-£${a}`, 'From Pot'); } };
 
 function renderHistory() {
     const list = document.getElementById('history-list'); list.innerHTML = '';
-    if(historyLog.length===0) list.innerHTML = '<p class="text-center p-8 opacity-50 font-bold uppercase">No History</p>';
+    if(historyLog.length===0) list.innerHTML = '<p class="text-center p-8 opacity-50 font-black text-[10px] uppercase tracking-widest">No Logs</p>';
     historyLog.forEach(tx => {
-        list.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl mb-2 flex justify-between shadow-sm">
-            <div><p class="text-sm font-black text-slate-800 dark:text-white">${tx.title}</p><p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${tx.timestamp} • ${tx.desc}</p></div>
-            <p class="font-black ${tx.color}">${tx.amount}</p></div>`;
+        list.innerHTML += `<div class="bg-white dark:bg-gray-800 p-5 rounded-3xl mb-3 flex justify-between shadow-sm border border-slate-100 dark:border-transparent">
+            <div><p class="text-sm font-black">${tx.title}</p><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${tx.timestamp} • ${tx.desc}</p></div>
+            <p class="font-black text-lg ${tx.color}">${tx.amount}</p></div>`;
     });
 }
+window.clearHistory = function() { if(confirm("Wipe?")) { historyLog = []; saveData(); renderHistory(); } };
 
 function generateAnalytics() {
-    const cash = accounts.reduce((s,a)=>s+a.balance,0), potVal = pots.reduce((s,p)=>s+p.balance,0), debtVal = debts.reduce((s,d)=>s+d.balance,0);
+    const cash = accounts.reduce((s,a)=>s+(parseFloat(a.balance)||0),0), potVal = pots.reduce((s,p)=>s+(parseFloat(p.balance)||0),0), debtVal = debts.reduce((s,d)=>s+(parseFloat(d.balance)||0),0);
     const grand = cash + potVal - debtVal, total = Math.abs(cash) + Math.abs(potVal) + Math.abs(debtVal);
     document.getElementById('analytics-total').innerText = `£${grand.toFixed(0)}`;
     const chart = document.getElementById('donut-chart');
-    if(total <= 0) chart.style.background = '#334155';
-    else {
+    if(total <= 0) { chart.style.background = '#334155'; } else {
         const p1 = (Math.abs(cash)/total)*360, p2 = (Math.abs(potVal)/total)*360;
         chart.style.background = `conic-gradient(#00E6C3 0deg ${p1}deg, #FBBF24 ${p1}deg ${p1+p2}deg, #EF4444 ${p1+p2}deg 360deg)`;
     }
 }
 
+// Data Handling
 function saveData() {
     localStorage.setItem('myAccounts', JSON.stringify(accounts));
     localStorage.setItem('myDebts', JSON.stringify(debts));
     localStorage.setItem('myPots', JSON.stringify(pots));
     localStorage.setItem('cashflowData', JSON.stringify(cashflowData));
+    localStorage.setItem('myHistory', JSON.stringify(historyLog));
 }
+
+function setupThemeToggle() {
+    document.getElementById('theme-toggle-btn').onclick = () => {
+        const h = document.documentElement;
+        if(h.classList.contains('dark')) { h.classList.remove('dark'); localStorage.setItem('appTheme', 'light'); }
+        else { h.classList.add('dark'); localStorage.setItem('appTheme', 'dark'); }
+    };
+}
+document.getElementById('add-account-btn').onclick = createAccount;
