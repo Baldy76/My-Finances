@@ -4,13 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Command Center</title>
-  
   <link rel="stylesheet" href="./style.css">
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#0F172A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -20,241 +18,221 @@
     }
   </script>
   <style>
-    /* Fixed MacOS Button CSS */
     .btn-close-mac {
-      width: 28px !important; height: 28px !important;
-      background-color: #ff5f56 !important;
-      border: 1px solid #e0443e !important;
-      border-radius: 50% !important;
-      display: flex !important; align-items: center !important; justify-content: center !important;
-      cursor: pointer !important;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      flex-shrink: 0;
+      width: 28px; height: 28px; background-color: #ff5f56; border: 1px solid #e0443e;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
-    .btn-close-mac i { color: rgba(0,0,0,0.5) !important; width: 14px; height: 14px; stroke-width: 4px; }
-    .btn-close-mac:active { transform: scale(0.9); filter: brightness(0.9); }
+    .btn-close-mac i { color: rgba(0,0,0,0.5); width: 14px; height: 14px; stroke-width: 4px; }
+    .view-section { display: none; width: 100%; min-height: 100vh; animation: fadeIn 0.2s ease-out; }
+    .view-active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 
-<body class="p-4 relative min-h-screen bg-lightbg dark:bg-darkbg text-slate-900 dark:text-white transition-colors duration-300 overflow-x-hidden">
+<body class="bg-lightbg dark:bg-darkbg text-slate-900 dark:text-white transition-colors duration-300 overflow-x-hidden">
 
   <div id="loading-shield" class="fixed inset-0 z-[100] bg-darkbg flex flex-col items-center justify-center transition-opacity duration-500">
     <div class="w-10 h-10 border-4 border-starling border-t-transparent rounded-full animate-spin mb-4"></div>
-    <p class="text-starling font-black text-[10px] uppercase tracking-widest">System Booting</p>
+    <p class="text-starling font-black text-[10px] uppercase tracking-widest">Command Center v1.0.2</p>
   </div>
 
-  <header class="flex justify-between items-center mb-4 pt-4">
-    <h1 class="text-2xl font-black tracking-tight italic">COMMAND <span class="text-starling not-italic">CENTER</span></h1>
-    <p class="text-slate-500 dark:text-gray-400 text-xs font-bold" id="date-display">---</p>
-  </header>
-  
-  <div id="alerts-container" class="mb-4 space-y-2"></div>
+  <main id="app-container" class="p-4 pb-24">
 
-  <div class="bg-lightcard dark:bg-gradient-to-br dark:from-cardbg dark:to-gray-900 rounded-3xl p-6 border border-slate-200 dark:border-gray-800 shadow-xl mb-6 relative overflow-hidden">
-    <div class="flex justify-between items-center mb-1 relative z-10">
-      <p class="text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wide text-[10px]">Net Position</p>
-      <button id="nav-analytics" class="text-[10px] bg-slate-100 dark:bg-gray-800 text-starling px-3 py-1.5 rounded-full font-black active:scale-95 flex items-center gap-1">
-        <i data-lucide="bar-chart-3" class="w-3 h-3"></i> ANALYTICS
-      </button>
-    </div>
-    <h2 class="text-5xl font-black tracking-tighter relative z-10 my-2" id="safe-to-spend">£0.00</h2>
-    <div class="w-full bg-slate-100 dark:bg-gray-800 rounded-full h-2 mt-4 mb-3 overflow-hidden relative z-10">
-      <div id="cash-bar" class="bg-starling h-2 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-    </div>
-    <div class="text-xs text-slate-500 dark:text-gray-400 border-t border-slate-100 dark:border-gray-700/50 pt-3 mt-4 relative z-10 flex justify-between">
-      <span>Total Cash: <span id="total-cash" class="font-bold text-slate-800 dark:text-white">£0.00</span></span>
-      <span>Remaining Bills: <span id="display-bills" class="font-bold text-red-500">£0.00</span></span>
-    </div>
-  </div>
+    <div id="view-home" class="view-section view-active">
+      <header class="flex justify-between items-center mb-4 pt-4">
+        <h1 class="text-2xl font-black tracking-tight italic">COMMAND <span class="text-starling not-italic">CENTER</span></h1>
+        <p class="text-slate-500 dark:text-gray-400 text-xs font-bold" id="date-display-home">---</p>
+      </header>
 
-  <div class="flex justify-between items-center mb-3">
-    <h3 class="text-lg font-black tracking-tight">Accounts</h3>
-    <button id="view-history-btn" class="text-xs bg-slate-200 dark:bg-gray-800 text-slate-700 dark:text-starling px-3 py-1.5 rounded-full font-bold flex items-center gap-1 active:scale-95">
-      <i data-lucide="history" class="w-3 h-3"></i> History
-    </button>
-  </div>
-  <div class="space-y-3 mb-6" id="accounts-list"></div>
+      <div id="alerts-container" class="mb-4 space-y-2"></div>
 
-  <h3 class="text-lg font-black tracking-tight mb-3">Calendar</h3>
-  <div class="bg-lightcard dark:bg-cardbg rounded-3xl p-5 border border-slate-200 dark:border-gray-800 shadow-lg mb-24">
-    <div id="upcoming-list" class="space-y-4"></div>
-    <p id="no-upcoming" class="text-sm text-slate-400 dark:text-gray-500 text-center py-2 hidden">No pending payments</p>
-  </div>
-
-  <nav class="fixed bottom-0 left-0 w-full bg-white/90 dark:bg-cardbg/95 backdrop-blur-xl border-t border-slate-200 dark:border-gray-800 p-4 flex justify-between px-8 items-center rounded-t-3xl z-40 pb-8 transition-all">
-    <button id="nav-home" class="flex flex-col items-center text-slate-400 dark:text-gray-500 hover:text-starling active:scale-90 transition-transform">
-      <i data-lucide="home" class="w-6 h-6"></i><span class="text-[8px] mt-1 font-black uppercase tracking-widest">Home</span>
-    </button>
-    <button id="nav-cashflow" class="flex flex-col items-center text-slate-400 dark:text-gray-500 hover:text-starling active:scale-90 transition-transform">
-      <i data-lucide="calendar" class="w-6 h-6"></i><span class="text-[8px] mt-1 font-black uppercase tracking-widest">Bills</span>
-    </button>
-    <button id="add-btn" class="flex flex-col items-center text-slate-900 dark:text-starling -mt-12 bg-white dark:bg-darkbg rounded-full p-4 border-4 border-slate-100 dark:border-cardbg shadow-2xl active:scale-95 transition-transform">
-      <i data-lucide="plus" class="w-8 h-8"></i>
-    </button>
-    <button id="nav-vault" class="flex flex-col items-center text-slate-400 dark:text-gray-500 hover:text-yellow-500 active:scale-90 transition-transform">
-      <i data-lucide="shield-check" class="w-6 h-6"></i><span class="text-[8px] mt-1 font-black uppercase tracking-widest">Vault</span>
-    </button>
-    <button id="nav-admin" class="flex flex-col items-center text-slate-400 dark:text-gray-500 hover:text-white active:scale-90 transition-transform">
-      <i data-lucide="settings" class="w-6 h-6"></i><span class="text-[8px] mt-1 font-black uppercase tracking-widest">Admin</span>
-    </button>
-  </nav>
-
-  <div id="update-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex-col justify-end backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-black">Transact</h2>
-        <button id="close-update" class="btn-close-mac"><i data-lucide="x"></i></button>
-      </div>
-      <div class="overflow-y-auto flex-1 space-y-6">
-        <div class="bg-white dark:bg-darkbg p-5 rounded-3xl border border-slate-200 dark:border-gray-700">
-          <h3 class="text-xs font-black text-starling mb-4 uppercase">⚡ Quick Spend</h3>
-          <div class="grid grid-cols-2 gap-3 mb-3">
-            <select id="spend-account" class="bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-medium focus:outline-none"></select>
-            <input type="number" id="spend-amount" placeholder="£ 0.00" class="bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-bold focus:outline-none">
-          </div>
-          <input type="text" id="spend-desc" placeholder="Merchant name" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm mb-4 focus:outline-none">
-          <button id="quick-spend-btn" class="w-full bg-starling text-slate-900 font-black p-4 rounded-xl active:scale-95 shadow-lg">Record</button>
+      <div class="bg-lightcard dark:bg-gradient-to-br dark:from-cardbg dark:to-gray-900 rounded-3xl p-6 border border-slate-200 dark:border-gray-800 shadow-xl mb-6 relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-starling opacity-20 dark:opacity-10 rounded-full blur-3xl"></div>
+        <div class="flex justify-between items-center mb-1 relative z-10">
+          <p class="text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wide text-[10px]">Net Position</p>
+          <button id="btn-to-analytics" class="text-[10px] bg-slate-100 dark:bg-gray-800 text-starling px-3 py-1.5 rounded-full font-black active:scale-95 flex items-center gap-1">
+            <i data-lucide="bar-chart-3" class="w-3 h-3"></i> ANALYTICS
+          </button>
         </div>
-        <div class="bg-white dark:bg-darkbg p-5 rounded-3xl border border-slate-200 dark:border-gray-700">
-          <h3 class="text-xs font-black text-blue-500 mb-4 uppercase">🔄 Transfer</h3>
-          <div class="space-y-3 mb-4">
-            <select id="transfer-from" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm focus:outline-none"></select>
-            <select id="transfer-to" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm focus:outline-none"></select>
-            <input type="number" id="transfer-amount" placeholder="£ Amount" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-bold focus:outline-none">
-          </div>
-          <button id="transfer-btn" class="w-full bg-blue-500 text-white font-black p-4 rounded-xl active:scale-95 shadow-lg">Execute</button>
+        <h2 class="text-5xl font-black tracking-tighter relative z-10 my-2" id="safe-to-spend">£0.00</h2>
+        <div class="w-full bg-slate-100 dark:bg-gray-800 rounded-full h-2 mt-4 mb-3 overflow-hidden relative z-10 shadow-inner">
+          <div id="cash-bar" class="bg-starling h-2 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+        </div>
+        <div class="text-xs text-slate-500 dark:text-gray-400 border-t border-slate-100 dark:border-gray-700/50 pt-3 mt-4 relative z-10 flex justify-between">
+          <span>Available Cash: <span id="total-cash" class="font-bold text-slate-800 dark:text-white">£0.00</span></span>
+          <span>Bills Due: <span id="display-bills" class="font-bold text-red-500">£0.00</span></span>
         </div>
       </div>
-    </div>
-  </div>
 
-  <div id="vault-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex-col justify-end backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-black">The Vault</h2>
-        <button id="close-vault" class="btn-close-mac"><i data-lucide="x"></i></button>
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-lg font-black tracking-tight">Your Accounts</h3>
+        <button id="btn-to-history" class="text-xs bg-slate-200 dark:bg-gray-800 text-slate-700 dark:text-starling px-3 py-1.5 rounded-full font-bold flex items-center gap-1">
+          <i data-lucide="history" class="w-3 h-3"></i> History
+        </button>
       </div>
-      <div class="overflow-y-auto flex-1 space-y-6">
-        <div><h3 class="text-xs font-black text-yellow-500 uppercase tracking-widest mb-4">🍯 Pots</h3><div id="pots-dashboard-list" class="space-y-3"></div></div>
-        <div>
-            <h3 class="text-xs font-black text-red-500 uppercase tracking-widest mb-4">💳 Debts</h3>
-            <div id="debt-dashboard-list" class="space-y-3"></div>
-            <div class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 p-5 rounded-3xl flex justify-between items-center shadow-sm">
-                <p class="text-red-600 dark:text-red-400 font-black uppercase text-[10px]">Grand Debt</p>
-                <h2 class="text-xl font-black text-red-600 dark:text-red-500" id="total-debt-display">£0.00</h2>
-            </div>
-        </div>
+      <div class="space-y-3 mb-6" id="accounts-list"></div>
+
+      <h3 class="text-lg font-black tracking-tight mb-3">Upcoming Calendar</h3>
+      <div class="bg-lightcard dark:bg-cardbg rounded-3xl p-5 border border-slate-200 dark:border-gray-800 shadow-lg">
+        <div id="upcoming-list" class="space-y-4"></div>
+        <p id="no-upcoming" class="text-sm text-slate-400 dark:text-gray-500 text-center py-2 hidden">Nothing left this month!</p>
       </div>
     </div>
-  </div>
 
-  <div id="cashflow-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex-col justify-end backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-2xl font-black">Calendar</h2>
-        <button id="close-cashflow" class="btn-close-mac"><i data-lucide="x"></i></button>
+    <div id="view-bills" class="view-section">
+      <div class="flex justify-between items-center mb-6 pt-4">
+        <h2 class="text-3xl font-black">Calendar</h2>
+        <button onclick="switchView('home')" class="btn-close-mac"><i data-lucide="x"></i></button>
       </div>
       <div class="bg-white dark:bg-darkbg p-5 rounded-3xl shadow-sm mb-6 border dark:border-gray-700">
+        <h3 class="text-xs font-black text-starling mb-4 uppercase">Add Recurring / One-Off</h3>
         <div class="grid grid-cols-2 gap-3 mb-3">
           <select id="cf-type" class="bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-medium focus:outline-none"><option value="bill">🔴 Bill</option><option value="income">🟢 Income</option></select>
           <select id="cf-freq" class="bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-medium focus:outline-none"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="one_off">One-Off</option></select>
         </div>
         <div class="grid grid-cols-2 gap-3 mb-3">
-          <select id="cf-month" class="hidden bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm text-center focus:outline-none"></select>
-          <select id="cf-day" class="col-span-2 bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm text-center font-medium focus:outline-none"><option value="" disabled selected>Select Day...</option><option value="last_working_day">⭐ Last Working Day</option></select>
+          <select id="cf-month" class="hidden bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm"></select>
+          <select id="cf-day" class="col-span-2 bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm focus:outline-none"><option value="" disabled selected>Select Day...</option><option value="last_working_day">⭐ Last Working Day</option></select>
         </div>
-        <input type="text" id="cf-name" placeholder="Name" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-medium mb-3 focus:outline-none">
-        <input type="number" id="cf-amount" placeholder="Amount £" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-black mb-4 focus:outline-none">
+        <input type="text" id="cf-name" placeholder="Name" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm mb-3 focus:outline-none">
+        <input type="number" id="cf-amount" placeholder="£ Amount" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-black mb-4 focus:outline-none">
         <label class="flex items-center gap-3 mb-5 text-xs p-2 cursor-pointer opacity-70">
           <input type="checkbox" id="cf-manual" class="w-5 h-5 rounded accent-starling"><span>Push Notification / Alert</span>
         </label>
-        <button id="add-cf-btn" class="w-full bg-slate-800 dark:bg-gray-700 text-white font-black p-4 rounded-xl active:scale-95 shadow-lg">+ Add Entry</button>
+        <button id="add-cf-btn" class="w-full bg-slate-800 dark:bg-gray-700 text-white font-black p-4 rounded-xl active:scale-95 shadow-lg">+ Add to Calendar</button>
       </div>
-      <div class="overflow-y-auto flex-1 space-y-3" id="full-ledger"></div>
+      <div id="full-ledger" class="space-y-3"></div>
     </div>
-  </div>
 
-  <div id="admin-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex-col justify-end backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-black">Admin</h2>
-        <button id="close-admin" class="btn-close-mac"><i data-lucide="x"></i></button>
+    <div id="view-transact" class="view-section">
+      <div class="flex justify-between items-center mb-6 pt-4">
+        <h2 class="text-3xl font-black">Transact</h2>
+        <button onclick="switchView('home')" class="btn-close-mac"><i data-lucide="x"></i></button>
       </div>
-      <div class="overflow-y-auto flex-1 space-y-6">
-        <div class="bg-white dark:bg-darkbg p-5 rounded-3xl flex justify-between items-center shadow-sm border dark:border-gray-700">
-          <div><h3 class="text-sm font-black">Dark Mode</h3><p class="text-[10px] text-slate-500 font-medium">Toggle UI Style</p></div>
-          <button id="theme-toggle-btn" class="bg-slate-100 dark:bg-gray-800 p-3 rounded-full shadow-inner border dark:border-gray-600 text-xl">🌙</button>
+      <div class="space-y-6">
+        <div class="bg-white dark:bg-darkbg p-6 rounded-3xl border dark:border-gray-700 shadow-sm">
+          <h3 class="text-xs font-black text-starling mb-4 uppercase">⚡ Quick Spend</h3>
+          <div class="grid grid-cols-2 gap-3 mb-3">
+            <select id="spend-account" class="bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm focus:outline-none"></select>
+            <input type="number" id="spend-amount" placeholder="£ 0.00" class="bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-bold focus:outline-none">
+          </div>
+          <input type="text" id="spend-desc" placeholder="Details (e.g. Amazon)" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm mb-4 focus:outline-none">
+          <button id="quick-spend-btn" class="w-full bg-starling text-slate-900 font-black p-4 rounded-xl active:scale-95">Record Transaction</button>
         </div>
+        <div class="bg-white dark:bg-darkbg p-6 rounded-3xl border dark:border-gray-700 shadow-sm">
+          <h3 class="text-xs font-black text-blue-500 mb-4 uppercase">🔄 Internal Transfer</h3>
+          <div class="space-y-3 mb-4">
+            <select id="transfer-from" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm"></select>
+            <select id="transfer-to" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm"></select>
+            <input type="number" id="transfer-amount" placeholder="£ Amount" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-bold">
+          </div>
+          <button id="transfer-btn" class="w-full bg-blue-500 text-white font-black p-4 rounded-xl active:scale-95">Move Money</button>
+        </div>
+      </div>
+    </div>
 
+    <div id="view-vault" class="view-section">
+      <div class="flex justify-between items-center mb-6 pt-4">
+        <h2 class="text-3xl font-black">The Vault</h2>
+        <button onclick="switchView('home')" class="btn-close-mac"><i data-lucide="x"></i></button>
+      </div>
+      <div class="space-y-8">
+        <div><h3 class="text-xs font-black text-yellow-500 uppercase tracking-widest mb-4">🍯 Savings Pots</h3><div id="pots-dashboard-list" class="space-y-3"></div></div>
+        <div>
+          <h3 class="text-xs font-black text-red-500 uppercase tracking-widest mb-4">💳 Credit & Debts</h3>
+          <div id="debt-dashboard-list" class="space-y-3"></div>
+          <div class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 p-6 rounded-3xl flex justify-between items-center shadow-sm">
+            <p class="text-red-600 dark:text-red-400 font-black uppercase text-[10px]">Total Liabilities</p>
+            <h2 class="text-2xl font-black text-red-600 dark:text-red-500" id="total-debt-display">£0.00</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-admin" class="view-section">
+      <div class="flex justify-between items-center mb-6 pt-4">
+        <h2 class="text-3xl font-black">Admin</h2>
+        <button onclick="switchView('home')" class="btn-close-mac"><i data-lucide="x"></i></button>
+      </div>
+      <div class="space-y-6">
+        <div class="bg-white dark:bg-darkbg p-5 rounded-3xl flex justify-between items-center shadow-sm border dark:border-gray-700">
+          <div><h3 class="text-sm font-black text-slate-800 dark:text-white">Dark Mode</h3><p class="text-[10px] text-slate-500">UI Toggle</p></div>
+          <button id="theme-toggle-btn" class="bg-slate-100 dark:bg-gray-800 p-3 rounded-full shadow-inner border dark:border-gray-600 text-xl transition-transform active:scale-90">🌙</button>
+        </div>
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/50 p-5 rounded-3xl shadow-sm flex justify-between items-center">
+          <p class="text-xs font-black text-blue-600 dark:text-blue-400 uppercase">Backup Data</p>
+          <div class="flex gap-2">
+            <button id="export-data-btn" class="bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 px-4 py-2 rounded-xl text-xs font-black border border-blue-100">Export</button>
+            <button id="import-data-btn" class="bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 px-4 py-2 rounded-xl text-xs font-black border border-blue-100">Import</button>
+          </div>
+          <input type="file" id="import-file-input" accept=".json" class="hidden">
+        </div>
         <div class="bg-white dark:bg-darkbg p-5 rounded-3xl border dark:border-gray-700 shadow-sm">
           <h3 class="text-sm font-black text-starling mb-4 uppercase">New Account</h3>
           <div class="space-y-3 mb-4">
             <select id="admin-type" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border dark:border-gray-600 text-sm font-medium focus:outline-none">
-              <option value="bank">🏦 Bank</option><option value="debt">💳 Credit/Debt</option><option value="pot">🍯 Pot</option>
+              <option value="bank">🏦 Bank Account</option><option value="debt">💳 Credit / Debt</option><option value="pot">🍯 Savings Pot</option>
             </select>
-            <input type="text" id="admin-name" placeholder="Account Name (e.g. Halifax)" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border dark:border-gray-600 text-sm font-medium focus:outline-none">
-            <input type="text" id="admin-domain" placeholder="Domain (e.g. halifax.co.uk)" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border dark:border-gray-600 text-[10px] opacity-70 focus:outline-none">
-            <input type="number" id="admin-secondary" placeholder="Limit / Overdraft £" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border dark:border-gray-600 text-sm font-medium focus:outline-none">
+            <input type="text" id="admin-name" placeholder="Name (e.g. Halifax)" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border dark:border-gray-600 text-sm font-medium">
+            <input type="text" id="admin-domain" placeholder="Domain (e.g. halifax.co.uk)" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border dark:border-gray-600 text-[10px] opacity-70">
+            <input type="number" id="admin-secondary" placeholder="Limit / Overdraft £" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border dark:border-gray-600 text-sm font-medium">
           </div>
-          <button id="add-account-btn" class="w-full bg-slate-800 dark:bg-gray-700 text-white font-black p-4 rounded-xl active:scale-95 shadow-lg">Create</button>
+          <button id="add-account-btn" class="w-full bg-slate-800 dark:bg-gray-700 text-white font-black p-4 rounded-xl shadow-lg active:scale-95">Create Entry</button>
         </div>
-        
-        <button id="force-override-btn" class="w-full bg-white dark:bg-gray-800 border dark:border-gray-700 p-4 rounded-xl font-black text-sm flex justify-between items-center active:opacity-50">
-          <span>⚠️ Force Overrides</span> <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        <button id="force-override-btn" class="w-full bg-white dark:bg-gray-800 border dark:border-gray-700 p-4 rounded-xl font-black text-sm flex justify-between items-center shadow-sm">
+          <span>⚠️ Force Overrides (Truth Reset)</span> <i data-lucide="chevron-right" class="w-4 h-4 text-red-500"></i>
         </button>
-
         <div class="space-y-3" id="admin-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <div id="analytics-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex-col justify-end backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-black">Analytics</h2>
-        <button id="close-analytics" class="btn-close-mac"><i data-lucide="x"></i></button>
-      </div>
-      <div class="overflow-y-auto flex-1 space-y-6 text-center">
-        <div class="bg-white dark:bg-darkbg p-8 rounded-3xl shadow-sm border dark:border-gray-800 flex flex-col items-center">
-          <div class="relative w-48 h-48 rounded-full border-4 border-slate-100 dark:border-gray-800 flex justify-center items-center shadow-inner" id="donut-chart" style="background: conic-gradient(#00E6C3 0% 100%);">
-            <div class="absolute w-36 h-36 bg-white dark:bg-darkbg rounded-full shadow-md flex flex-col justify-center items-center">
-              <span class="text-[10px] text-slate-400 uppercase font-black">Total Equity</span>
-              <span class="text-xl font-black" id="analytics-total">£0.00</span>
-            </div>
-          </div>
-          <div class="w-full grid grid-cols-3 gap-2 mt-8 text-center">
-            <div class="bg-slate-50 dark:bg-gray-800/50 p-2 rounded-xl"><div class="w-2 h-2 rounded-full bg-starling mx-auto mb-1"></div><p class="text-[8px] font-black uppercase text-slate-500">Cash</p><p class="text-xs font-black" id="an-cash">£0</p></div>
-            <div class="bg-slate-50 dark:bg-gray-800/50 p-2 rounded-xl"><div class="w-2 h-2 rounded-full bg-yellow-400 mx-auto mb-1"></div><p class="text-[8px] font-black uppercase text-slate-500">Pots</p><p class="text-xs font-black" id="an-pots">£0</p></div>
-            <div class="bg-slate-50 dark:bg-gray-800/50 p-2 rounded-xl"><div class="w-2 h-2 rounded-full bg-red-500 mx-auto mb-1"></div><p class="text-[8px] font-black uppercase text-slate-500">Debt</p><p class="text-xs font-black" id="an-debt">£0</p></div>
-          </div>
+        <div class="pt-8 pb-4 text-center">
+            <p id="version-tag" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Command Center v1.0.2</p>
         </div>
       </div>
     </div>
-  </div>
 
-  <div id="history-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex-col justify-end backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-black">History</h2>
-        <button id="close-history" class="btn-close-mac"><i data-lucide="x"></i></button>
+    <div id="view-analytics" class="view-section">
+      <div class="flex justify-between items-center mb-6 pt-4">
+        <h2 class="text-3xl font-black">Analytics</h2>
+        <button onclick="switchView('home')" class="btn-close-mac"><i data-lucide="x"></i></button>
       </div>
-      <div class="overflow-y-auto flex-1 space-y-3" id="history-list"></div>
-      <button onclick="clearHistory()" class="mt-5 w-full bg-red-50 dark:bg-red-900/30 text-red-600 font-black p-4 rounded-xl">Wipe History</button>
+      <div class="bg-white dark:bg-darkbg p-8 rounded-3xl shadow-sm border dark:border-gray-800 flex flex-col items-center mb-6">
+        <div class="relative w-48 h-48 rounded-full border-4 border-slate-100 dark:border-gray-800 flex justify-center items-center shadow-inner" id="donut-chart">
+          <div class="absolute w-36 h-36 bg-white dark:bg-darkbg rounded-full shadow-md flex flex-col justify-center items-center">
+            <span class="text-[10px] text-slate-400 uppercase font-black">Net Assets</span>
+            <span class="text-xl font-black" id="analytics-total">£0.00</span>
+          </div>
+        </div>
+        <div class="w-full grid grid-cols-3 gap-2 mt-8 text-center" id="analytics-breakdown"></div>
+      </div>
+      <div class="bg-white dark:bg-darkbg p-6 rounded-3xl text-left border dark:border-gray-800 shadow-sm">
+        <h3 class="text-xs font-black text-slate-500 uppercase mb-2">Monthly Spend Log</h3>
+        <p class="text-3xl font-black" id="monthly-spend-total">£0.00</p>
+      </div>
     </div>
-  </div>
 
-  <div id="override-modal" class="fixed inset-0 bg-black/60 z-60 hidden flex-col justify-end backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6 shrink-0">
-        <h2 class="text-2xl font-black w-full text-center">Overrides</h2>
-        <button id="close-override" class="btn-close-mac"><i data-lucide="x"></i></button>
+    <div id="view-history" class="view-section">
+      <div class="flex justify-between items-center mb-6 pt-4">
+        <h2 class="text-3xl font-black">History</h2>
+        <button onclick="switchView('home')" class="btn-close-mac"><i data-lucide="x"></i></button>
       </div>
-      <div class="overflow-y-auto flex-1 space-y-6" id="override-inputs-container"></div>
-      <button id="save-override-btn" class="w-full bg-starling text-slate-900 font-black text-lg p-4 rounded-xl mt-4 active:scale-95 shadow-lg">Save Changes</button>
+      <div id="history-list" class="space-y-3"></div>
+      <button onclick="clearHistory()" class="mt-8 w-full bg-red-50 dark:bg-red-900/30 text-red-600 font-black p-4 rounded-xl">Wipe All Logs</button>
     </div>
-  </div>
+
+    <div id="override-modal" class="fixed inset-0 bg-black/80 z-60 hidden flex-col justify-center p-6 backdrop-blur-sm">
+      <div class="bg-lightbg dark:bg-cardbg rounded-3xl p-6 shadow-2xl max-h-[80vh] flex flex-col border border-slate-200 dark:border-gray-700">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-black">Emergency Override</h2>
+          <button id="close-override" class="btn-close-mac"><i data-lucide="x"></i></button>
+        </div>
+        <p class="text-[10px] text-red-500 font-black uppercase mb-4 tracking-wider text-center">Update your live balances below</p>
+        <div class="overflow-y-auto flex-1 space-y-4" id="override-inputs-container"></div>
+        <button id="save-override-btn" class="w-full bg-starling text-slate-900 font-black text-lg p-4 rounded-2xl mt-6 active:scale-95 shadow-lg">Confirm & Sync</button>
+      </div>
+    </div>
+
+  </main>
 
   <script src="./app.js"></script>
-
 </body>
 </html>
