@@ -91,24 +91,29 @@
     <p id="no-upcoming" class="text-sm text-gray-500 text-center py-2 hidden">Nothing else this month!</p>
   </div>
 
-  <nav class="fixed bottom-0 left-0 w-full bg-cardbg/95 backdrop-blur-xl border-t border-gray-800 p-4 flex justify-around items-center rounded-t-3xl z-40 pb-6">
+  <nav class="fixed bottom-0 left-0 w-full bg-cardbg/95 backdrop-blur-xl border-t border-gray-800 p-4 flex justify-between px-6 items-center rounded-t-3xl z-40 pb-6">
     <button class="flex flex-col items-center text-gray-500 hover:text-white transition-colors">
-      <span class="text-2xl">🏠</span>
-      <span class="text-[10px] mt-1 font-bold tracking-wide">HOME</span>
+      <span class="text-xl">🏠</span>
+      <span class="text-[9px] mt-1 font-bold tracking-wide">HOME</span>
     </button>
     
     <button id="nav-cashflow" class="flex flex-col items-center text-gray-500 hover:text-starling transition-colors">
-      <span class="text-2xl">📅</span>
-      <span class="text-[10px] mt-1 font-bold tracking-wide">BILLS</span>
+      <span class="text-xl">📅</span>
+      <span class="text-[9px] mt-1 font-bold tracking-wide">BILLS</span>
     </button>
     
     <button id="add-btn" class="flex flex-col items-center text-starling -mt-12 bg-darkbg rounded-full p-4 border-4 border-cardbg shadow-xl transform active:scale-90 transition-transform duration-200">
-      <span class="text-3xl">➕</span>
+      <span class="text-2xl">➕</span>
     </button>
     
     <button class="flex flex-col items-center text-gray-500 hover:text-white transition-colors">
-      <span class="text-2xl">🏦</span>
-      <span class="text-[10px] mt-1 font-bold tracking-wide">VAULT</span>
+      <span class="text-xl">🏦</span>
+      <span class="text-[9px] mt-1 font-bold tracking-wide">VAULT</span>
+    </button>
+
+    <button id="nav-admin" class="flex flex-col items-center text-gray-500 hover:text-white transition-colors">
+      <span class="text-xl">⚙️</span>
+      <span class="text-[9px] mt-1 font-bold tracking-wide">ADMIN</span>
     </button>
   </nav>
 
@@ -149,12 +154,15 @@
       
       <div class="bg-darkbg p-4 rounded-2xl border border-gray-700 mb-6 shrink-0">
         <h3 class="text-sm font-bold text-starling mb-3 uppercase tracking-wide">Add New</h3>
-        <div class="grid grid-cols-2 gap-3 mb-3">
-          <select id="cf-type" class="bg-gray-800 text-white p-3 rounded-xl border border-gray-700 focus:outline-none text-sm">
+        <div class="grid grid-cols-3 gap-3 mb-3">
+          <select id="cf-type" class="col-span-2 bg-gray-800 text-white p-3 rounded-xl border border-gray-700 focus:outline-none text-sm appearance-none">
             <option value="bill">🔴 Bill / Direct Debit</option>
             <option value="income">🟢 Income / Salary</option>
           </select>
-          <input type="number" id="cf-day" placeholder="Day (1-31)" class="bg-gray-800 text-white p-3 rounded-xl border border-gray-700 focus:outline-none text-sm" min="1" max="31">
+          
+          <select id="cf-day" class="bg-gray-800 text-white p-3 rounded-xl border border-gray-700 focus:outline-none text-sm appearance-none text-center">
+            <option value="" disabled selected>Day</option>
+            </select>
         </div>
         <div class="grid grid-cols-3 gap-3 mb-3">
           <input type="text" id="cf-name" placeholder="Name (e.g. Gas)" class="col-span-2 bg-gray-800 text-white p-3 rounded-xl border border-gray-700 focus:outline-none text-sm">
@@ -171,27 +179,48 @@
     </div>
   </div>
 
+  <div id="admin-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
+    <div class="bg-cardbg rounded-t-3xl p-6 border-t border-gray-700 pb-12 shadow-2xl h-[60vh] flex flex-col">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold">Admin Settings ⚙️</h2>
+        <button id="close-admin" class="text-gray-400 hover:text-white text-2xl w-10 h-10 flex justify-center items-center rounded-full bg-gray-800">✕</button>
+      </div>
+      
+      <div class="flex-1 flex flex-col items-center justify-center space-y-4 text-center">
+        <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center text-3xl mb-2">🛠️</div>
+        <h3 class="font-bold text-white text-lg">Admin Sandbox Ready</h3>
+        <p class="text-gray-400 text-sm max-w-[250px]">This secure area is ready for future settings, data exports, or app configurations.</p>
+      </div>
+    </div>
+  </div>
+
   <script>
     // --- STATE & DATA ---
     let bankData = { halifax: 0, barclays: 0, starling: 0 };
-    // Example default data structure
     let cashflowData = [
       { id: Date.now()+1, type: 'bill', name: 'Mobile Phone', amount: 45, day: 10 },
       { id: Date.now()+2, type: 'bill', name: 'Energy', amount: 120, day: 15 },
       { id: Date.now()+3, type: 'income', name: 'Salary', amount: 2500, day: 28 }
     ];
 
-    // --- SETUP CALENDAR ---
+    // --- SETUP CALENDAR & DAY SELECTOR ---
     const today = new Date();
     const currentDay = today.getDate(); // 1-31
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     document.getElementById('date-display').innerText = `Today is ${monthNames[today.getMonth()]} ${currentDay}`;
 
+    // Populate the 1-31 Day Dropdown dynamically
+    const daySelect = document.getElementById('cf-day');
+    for(let i = 1; i <= 31; i++) {
+      daySelect.innerHTML += `<option value="${i}">${i}</option>`;
+    }
+
     // --- UI ELEMENTS ---
     const updateModal = document.getElementById('update-modal');
     const cashflowModal = document.getElementById('cashflow-modal');
+    const adminModal = document.getElementById('admin-modal');
     
-    // Buttons
+    // Buttons - Main Math Modal
     document.getElementById('add-btn').addEventListener('click', () => {
       if (navigator.vibrate) navigator.vibrate(50);
       updateModal.classList.remove('hidden'); updateModal.classList.add('flex');
@@ -200,6 +229,7 @@
       updateModal.classList.add('hidden'); updateModal.classList.remove('flex');
     });
     
+    // Buttons - Cashflow Modal
     document.getElementById('nav-cashflow').addEventListener('click', () => {
       if (navigator.vibrate) navigator.vibrate(50);
       renderLedger();
@@ -208,6 +238,15 @@
     document.getElementById('close-cashflow').addEventListener('click', () => {
       cashflowModal.classList.add('hidden'); cashflowModal.classList.remove('flex');
       updateApp(); // Recalculate everything when closing manager
+    });
+
+    // Buttons - Admin Modal
+    document.getElementById('nav-admin').addEventListener('click', () => {
+      if (navigator.vibrate) navigator.vibrate(50);
+      adminModal.classList.remove('hidden'); adminModal.classList.add('flex');
+    });
+    document.getElementById('close-admin').addEventListener('click', () => {
+      adminModal.classList.add('hidden'); adminModal.classList.remove('flex');
     });
 
     // --- CASHFLOW MANAGER LOGIC ---
@@ -226,14 +265,15 @@
       // Clear form
       document.getElementById('cf-name').value = '';
       document.getElementById('cf-amount').value = '';
-      document.getElementById('cf-day').value = '';
+      document.getElementById('cf-day').value = ''; // Resets back to default
       
       saveData();
       renderLedger();
       if (navigator.vibrate) navigator.vibrate(50);
     });
 
-    function deleteItem(id) {
+    // Make delete function available globally
+    window.deleteItem = function(id) {
       cashflowData = cashflowData.filter(item => item.id !== id);
       saveData();
       renderLedger();
@@ -244,14 +284,13 @@
       const ledger = document.getElementById('full-ledger');
       ledger.innerHTML = '';
       
-      // Sort by day of month
       const sorted = [...cashflowData].sort((a, b) => a.day - b.day);
       
       sorted.forEach(item => {
         const isBill = item.type === 'bill';
         const color = isBill ? 'text-red-400' : 'text-starling';
         const icon = isBill ? '🔴' : '🟢';
-        const passed = item.day < currentDay ? 'opacity-50 line-through' : '';
+        const passed = item.day < currentDay ? 'opacity-50' : ''; // Removed strikethrough, just faded now for a cleaner look
 
         ledger.innerHTML += `
           <div class="bg-gray-800 p-3 rounded-xl flex justify-between items-center ${passed}">
@@ -261,7 +300,7 @@
             </div>
             <div class="flex items-center gap-3">
               <p class="font-bold ${color}">${isBill ? '-' : '+'}£${item.amount.toFixed(2)}</p>
-              <button onclick="deleteItem(${item.id})" class="text-gray-500 hover:text-red-500 bg-gray-700 p-2 rounded-lg text-xs">🗑</button>
+              <button onclick="deleteItem(${item.id})" class="text-gray-500 hover:text-red-500 bg-gray-700 p-2 rounded-lg text-xs transition-colors">🗑</button>
             </div>
           </div>
         `;
@@ -282,16 +321,13 @@
       let remainingIncome = 0;
       let upcomingListHTML = '';
 
-      // Sort chronological for the dashboard
       const upcomingItems = [...cashflowData].sort((a, b) => a.day - b.day).filter(item => item.day >= currentDay);
 
       upcomingItems.forEach(item => {
         const isBill = item.type === 'bill';
-        
         if (isBill) remainingBills += item.amount;
         else remainingIncome += item.amount;
 
-        // Add to dashboard list
         const color = isBill ? 'text-red-400' : 'text-starling';
         const prefix = isBill ? '-' : '+';
         const dueText = item.day === currentDay ? 'TODAY' : `in ${item.day - currentDay} days`;
@@ -307,7 +343,6 @@
         `;
       });
 
-      // Update Dashboard Upcoming List
       const listEl = document.getElementById('upcoming-list');
       const emptyEl = document.getElementById('no-upcoming');
       if (upcomingItems.length === 0) {
@@ -320,7 +355,6 @@
       const safeToSpend = totalCash - remainingBills;
       const projectedEOM = totalCash - remainingBills + remainingIncome;
 
-      // Update UI Numbers
       const safeEl = document.getElementById('safe-to-spend');
       safeEl.innerText = `£${safeToSpend.toFixed(2)}`;
       safeEl.className = `text-5xl font-extrabold tracking-tight transition-colors duration-300 relative z-10 ${safeToSpend < 0 ? 'text-red-500' : 'text-white'}`;
@@ -329,7 +363,6 @@
       document.getElementById('display-bills').innerText = `£${remainingBills.toFixed(2)}`;
       document.getElementById('projected-balance').innerText = `£${projectedEOM.toFixed(2)}`;
 
-      // Update Bank Cards
       document.getElementById('display-halifax').innerText = `£${bankData.halifax.toFixed(2)}`;
       document.getElementById('display-starling').innerText = `£${bankData.starling.toFixed(2)}`;
       const barclaysEl = document.getElementById('display-barclays');
@@ -343,7 +376,6 @@
         document.getElementById('barclays-warning').classList.add('hidden');
       }
 
-      // Calculate Progress Bar (based on remaining cash vs bills)
       let safePercent = 0;
       if (totalCash > 0) {
         safePercent = safeToSpend > 0 ? Math.round((safeToSpend / totalCash) * 100) : 0;
@@ -352,7 +384,6 @@
       barEl.style.width = `${safePercent}%`;
       barEl.className = `h-1.5 rounded-full transition-all duration-1000 ease-out ${safePercent < 20 ? 'bg-red-500' : 'bg-starling'}`;
 
-      // Finalize
       saveData();
       updateModal.classList.add('hidden'); updateModal.classList.remove('flex');
     }
@@ -378,7 +409,6 @@
       updateApp();
     }
 
-    // Triggers
     document.getElementById('save-btn').addEventListener('click', () => {
       if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
       updateApp();
