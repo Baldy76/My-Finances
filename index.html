@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Banking Portal</title>
+    <title>Personal Command Centre</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -19,7 +19,7 @@
     <script type="text/babel">
         const { useState } = React;
 
-        function AccountSelector() {
+        function CommandCentre() {
             const [selectedAccount, setSelectedAccount] = useState('');
 
             const handleAccountChange = (e) => {
@@ -27,12 +27,13 @@
             };
 
             const handleLogCharge = () => {
-                alert(`Charging to ${selectedAccount}... Transaction pending.`);
+                // Currently just an alert, ready to be upgraded later
+                alert(`Charging to ${selectedAccount}... Transaction logged in Command Centre.`);
             };
 
             return (
                 <div className="p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6 tracking-tight">Link New Account</h2>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6 tracking-tight">Log Transaction</h2>
                     
                     <div className="mb-6">
                         <label htmlFor="account-type" className="block text-sm font-medium text-gray-500 mb-2">
@@ -45,7 +46,7 @@
                                 onChange={handleAccountChange}
                                 className="block w-full pl-4 pr-10 py-3 text-base border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent sm:text-sm rounded-xl bg-gray-50 transition ease-in-out duration-200 cursor-pointer shadow-sm hover:bg-gray-100"
                             >
-                                <option value="" disabled>Choose an option...</option>
+                                <option value="" disabled>Choose an account...</option>
                                 <option value="Bank Account">Bank Account</option>
                                 <option value="Savings Account">Savings Account</option>
                                 <option value="Credit Card">Credit Card</option>
@@ -56,7 +57,7 @@
                         </div>
                     </div>
 
-                    {/* Smooth transition for the button appearing */}
+                    {/* Smooth transition for the Credit Card button */}
                     <div 
                         className={`transition-all duration-500 ease-in-out overflow-hidden ${
                             selectedAccount === 'Credit Card' ? 'max-h-20 opacity-100 mt-4' : 'max-h-0 opacity-0 mt-0'
@@ -73,9 +74,9 @@
             );
         }
 
-        // Render the app to the screen
+        // Render the Command Centre to the screen
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<AccountSelector />);
+        root.render(<CommandCentre />);
     </script>
 </body>
 </html>
