@@ -1,60 +1,45 @@
-// --- STATE & DATA ---
-let accounts = (JSON.parse(localStorage.getItem('myAccounts')) || []).map(a => ({...a, overdraft: a.overdraft || 0}));
-let debts = (JSON.parse(localStorage.getItem('myDebts')) || []).map(d => ({...d, limit: d.limit || 0})); 
-let pots = JSON.parse(localStorage.getItem('myPots')) || [];
-let cashflowData = JSON.parse(localStorage.getItem('cashflowData')) || [];
-let historyLog = JSON.parse(localStorage.getItem('myHistory')) || [];
-let editingCfId = null; 
-const colorThemes = ['#8B5CF6', '#F59E0B', '#EC4899', '#3B82F6', '#10B981', '#EF4444', '#06B6D4', '#84CC16'];
+// --- LOGO ENGINE ---
+function getLogoUrl(account) {
+    // 1. If user provided a manual domain (e.g. halifax.co.uk)
+    if (account.domain) return `https://logo.clearbit.com/${account.domain}`;
 
-const today = new Date();
-const currentYear = today.getFullYear();
-const currentDay = today.getDate();
-const currentMonthNum = today.getMonth(); 
-const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    // 2. Automatic lookup based on common names
+    const name = account.name.toLowerCase();
+    if (name.includes('halifax')) return 'https://logo.clearbit.com/halifax.co.uk';
+    if (name.includes('barclays')) return 'https://logo.clearbit.com/barclays.co.uk';
+    if (name.includes('starling')) return 'https://logo.clearbit.com/starlingbank.com';
+    if (name.includes('amex') || name.includes('american express')) return 'https://logo.clearbit.com/americanexpress.com';
+    if (name.includes('monzo')) return 'https://logo.clearbit.com/monzo.com';
+    if (name.includes('natwest')) return 'https://logo.clearbit.com/natwest.com';
+    if (name.includes('amazon')) return 'https://logo.clearbit.com/amazon.co.uk';
+    if (name.includes('sky')) return 'https://logo.clearbit.com/sky.com';
 
-// --- INITIALIZE UI ---
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('date-display').innerText = `Today is ${monthNames[currentMonthNum]} ${currentDay}`;
-    setupSelectors();
-    applyTheme(localStorage.getItem('appTheme') || 'dark');
-    updateApp();
-});
-
-// --- CORE FUNCTIONS ---
-function setupSelectors() {
-    const daySelect = document.getElementById('cf-day');
-    if(daySelect) {
-        for(let i = 1; i <= 31; i++) { daySelect.innerHTML += `<option value="${i}">${i}</option>`; }
-    }
-    const monthSelect = document.getElementById('cf-month');
-    if(monthSelect) {
-        monthNames.forEach((m, idx) => { monthSelect.innerHTML += `<option value="${idx}">${m}</option>`; });
-        monthSelect.value = currentMonthNum;
-    }
+    // 3. Fallback: If no logo found, returning null lets us show initials instead
+    return null;
 }
 
-function recordTx(title, amount, desc, typeColor = 'text-slate-800 dark:text-white') {
-    const timestamp = new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-    historyLog.unshift({ id: Date.now(), title, amount, desc, timestamp, color: typeColor });
-    if(historyLog.length > 100) historyLog.pop(); 
-    localStorage.setItem('myHistory', JSON.stringify(historyLog));
-}
+// --- UPDATED RENDERING LOGIC ---
+function renderAccounts() {
+    const list = document.getElementById('accounts-list');
+    list.innerHTML = '';
+    
+    accounts.forEach(acc => {
+        const logoUrl = getLogoUrl(acc);
+        const iconHtml = logoUrl 
+            ? `<img src="${logoUrl}" class="w-10 h-10 rounded-xl shadow-sm object-contain bg-white p-1" onerror="this.style.display='none'">`
+            : `<div class="w-10 h-10 rounded-xl flex justify-center items-center font-black text-xs text-white" style="background-color: ${acc.color}">${acc.name.substring(0,2).toUpperCase()}</div>`;
 
-function getLastWorkingDay(year, month) {
-    let lastDay = new Date(year, month + 1, 0); 
-    if (lastDay.getDay() === 0) lastDay.setDate(lastDay.getDate() - 2); 
-    else if (lastDay.getDay() === 6) lastDay.setDate(lastDay.getDate() - 1); 
-    return lastDay.getDate();
+        list.innerHTML += `
+            <div class="flex justify-between items-center bg-white dark:bg-cardbg p-4 rounded-3xl shadow-sm border border-slate-100 dark:border-transparent">
+                <div class="flex items-center gap-4">
+                    ${iconHtml}
+                    <div>
+                        <p class="font-black text-slate-800 dark:text-white">${acc.name}</p>
+                        ${acc.balance < 0 ? '<span class="text-[9px] text-red-500 font-bold uppercase">Overdrawn</span>' : ''}
+                    </div>
+                </div>
+                <p class="font-black text-lg ${acc.balance < 0 ? 'text-red-500' : ''}">£${acc.balance.toFixed(2)}</p>
+            </div>
+        `;
+    });
 }
-
-function appliesThisMonth(item) {
-    const freq = item.frequency || 'monthly';
-    if (freq === 'monthly') return true;
-    if (freq === 'one_off') return parseInt(item.month) === currentMonthNum;
-    if (freq === 'quarterly') return (currentMonthNum - parseInt(item.month) + 12) % 3 === 0;
-    return true;
-}
-
-// All your specific UI updating logic goes here...
-// (I will provide the bridge in the final index file)
