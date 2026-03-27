@@ -24,9 +24,12 @@
   </script>
   <style>
     body { background-color: #0F172A; color: white; font-family: sans-serif; padding-bottom: 6rem; }
+    /* Hide the ugly arrows on number inputs */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   </style>
 </head>
-<body class="p-4">
+<body class="p-4 relative min-h-screen">
 
   <header class="flex justify-between items-center mb-6 pt-4">
     <div>
@@ -37,8 +40,8 @@
 
   <div class="bg-gradient-to-br from-cardbg to-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl text-center mb-8">
     <p class="text-gray-400 font-medium mb-2">Safe to Spend</p>
-    <h2 class="text-5xl font-extrabold tracking-tight text-white" id="safe-to-spend">£1450.00</h2>
-    <p class="text-sm text-gray-500 mt-4">Total Cash: £1900.00 | Pending Bills: £450.00</p>
+    <h2 class="text-5xl font-extrabold tracking-tight" id="safe-to-spend">£0.00</h2>
+    <p class="text-sm text-gray-500 mt-4">Total Cash: <span id="total-cash">£0.00</span> | Pending Bills: £450.00</p>
   </div>
 
   <h3 class="text-lg font-semibold mb-4">Your Vaults 🏦</h3>
@@ -49,7 +52,7 @@
         <div class="bg-halifax text-white p-2 rounded-full font-bold text-xs">HX</div>
         <p class="font-medium">Halifax Joint</p>
       </div>
-      <p class="font-bold">£1250.00</p>
+      <p class="font-bold" id="display-halifax">£0.00</p>
     </div>
 
     <div class="flex justify-between items-center bg-cardbg p-4 rounded-2xl border-l-4 border-barclays">
@@ -57,10 +60,10 @@
         <div class="bg-barclays text-white p-2 rounded-full font-bold text-xs">BC</div>
         <div>
           <p class="font-medium">Barclays Current</p>
-          <span class="text-xs text-red-400">Overdraft Active 🚨</span>
+          <span class="text-xs text-red-400 hidden" id="barclays-warning">Overdraft Active 🚨</span>
         </div>
       </div>
-      <p class="font-bold text-red-400">-£150.00</p>
+      <p class="font-bold" id="display-barclays">£0.00</p>
     </div>
 
     <div class="flex justify-between items-center bg-cardbg p-4 rounded-2xl border-l-4 border-starling">
@@ -68,12 +71,12 @@
         <div class="bg-starling text-gray-900 p-2 rounded-full font-bold text-xs">ST</div>
         <p class="font-medium">Starling Savings</p>
       </div>
-      <p class="font-bold">£800.00</p>
+      <p class="font-bold" id="display-starling">£0.00</p>
     </div>
 
   </div>
 
-  <nav class="fixed bottom-0 left-0 w-full bg-cardbg/90 backdrop-blur-lg border-t border-gray-800 p-4 flex justify-around items-center rounded-t-2xl z-50">
+  <nav class="fixed bottom-0 left-0 w-full bg-cardbg/90 backdrop-blur-lg border-t border-gray-800 p-4 flex justify-around items-center rounded-t-2xl z-40">
     <button class="flex flex-col items-center text-gray-400 hover:text-white">
       <span class="text-2xl">🏠</span>
       <span class="text-xs mt-1">Home</span>
@@ -82,14 +85,132 @@
       <span class="text-2xl">🎯</span>
       <span class="text-xs mt-1">Goals</span>
     </button>
-    <button class="flex flex-col items-center text-starling -mt-10 bg-darkbg rounded-full p-3 border-4 border-cardbg shadow-lg">
+    
+    <button id="add-btn" class="flex flex-col items-center text-starling -mt-10 bg-darkbg rounded-full p-3 border-4 border-cardbg shadow-lg transform active:scale-95 transition-transform">
       <span class="text-4xl">➕</span>
     </button>
+    
     <button class="flex flex-col items-center text-gray-400 hover:text-white">
       <span class="text-2xl">🏦</span>
       <span class="text-xs mt-1">Vault</span>
     </button>
   </nav>
 
+  <div id="update-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex-col justify-end transition-opacity duration-300">
+    <div class="bg-cardbg rounded-t-3xl p-6 border-t border-gray-700 pb-12 animate-slide-up">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold">Update Balances</h2>
+        <button id="close-modal" class="text-gray-400 hover:text-white text-2xl">✕</button>
+      </div>
+      
+      <div class="space-y-4 mb-6">
+        <div>
+          <label class="text-xs text-gray-400 font-bold mb-1 block uppercase">Halifax Joint (£)</label>
+          <input type="number" id="input-halifax" class="w-full bg-darkbg border border-gray-700 rounded-xl p-3 text-white text-lg focus:border-halifax focus:outline-none" placeholder="0.00">
+        </div>
+        <div>
+          <label class="text-xs text-gray-400 font-bold mb-1 block uppercase">Barclays Current (£)</label>
+          <input type="number" id="input-barclays" class="w-full bg-darkbg border border-gray-700 rounded-xl p-3 text-white text-lg focus:border-barclays focus:outline-none" placeholder="0.00">
+        </div>
+        <div>
+          <label class="text-xs text-gray-400 font-bold mb-1 block uppercase">Starling Savings (£)</label>
+          <input type="number" id="input-starling" class="w-full bg-darkbg border border-gray-700 rounded-xl p-3 text-white text-lg focus:border-starling focus:outline-none" placeholder="0.00">
+        </div>
+      </div>
+
+      <button id="save-btn" class="w-full bg-starling text-gray-900 font-bold text-lg p-4 rounded-xl shadow-lg active:scale-95 transition-transform">
+        Save & Calculate
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // 1. Grab all the HTML elements we need to interact with
+    const modal = document.getElementById('update-modal');
+    const addBtn = document.getElementById('add-btn');
+    const closeBtn = document.getElementById('close-modal');
+    const saveBtn = document.getElementById('save-btn');
+
+    const pendingBills = 450.00; // Hardcoded static bills (we can make this editable later!)
+
+    // 2. Open and Close the Menu
+    addBtn.addEventListener('click', () => {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    });
+
+    closeBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    });
+
+    // 3. The Core Logic: Calculate and Update Screen
+    function updateApp() {
+      // Get numbers from inputs (or default to 0 if blank)
+      const halifax = parseFloat(document.getElementById('input-halifax').value) || 0;
+      const barclays = parseFloat(document.getElementById('input-barclays').value) || 0;
+      const starling = parseFloat(document.getElementById('input-starling').value) || 0;
+
+      // Do the Math
+      const totalCash = halifax + barclays + starling;
+      const safeToSpend = totalCash - pendingBills;
+
+      // Update the Big Numbers
+      const safeEl = document.getElementById('safe-to-spend');
+      safeEl.innerText = `£${safeToSpend.toFixed(2)}`;
+      
+      // Color code the main number (Red if negative)
+      if (safeToSpend < 0) {
+        safeEl.classList.add('text-red-500');
+        safeEl.classList.remove('text-white');
+      } else {
+        safeEl.classList.remove('text-red-500');
+        safeEl.classList.add('text-white');
+      }
+
+      document.getElementById('total-cash').innerText = `£${totalCash.toFixed(2)}`;
+
+      // Update Bank Vault displays
+      document.getElementById('display-halifax').innerText = `£${halifax.toFixed(2)}`;
+      document.getElementById('display-starling').innerText = `£${starling.toFixed(2)}`;
+
+      // Special Barclays Logic (Overdraft)
+      const displayBarclays = document.getElementById('display-barclays');
+      const warningBarclays = document.getElementById('barclays-warning');
+      displayBarclays.innerText = `£${barclays.toFixed(2)}`;
+
+      if (barclays < 0) {
+        displayBarclays.classList.add('text-red-400');
+        warningBarclays.classList.remove('hidden');
+      } else {
+        displayBarclays.classList.remove('text-red-400');
+        warningBarclays.classList.add('hidden');
+      }
+
+      // Save to device memory so it stays when you refresh
+      localStorage.setItem('bankData', JSON.stringify({ halifax, barclays, starling }));
+
+      // Close the menu
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // 4. Load Data when the app opens
+    function loadData() {
+      const savedData = JSON.parse(localStorage.getItem('bankData'));
+      if (savedData) {
+        document.getElementById('input-halifax').value = savedData.halifax;
+        document.getElementById('input-barclays').value = savedData.barclays;
+        document.getElementById('input-starling').value = savedData.starling;
+        updateApp(); // Run the math immediately
+      }
+    }
+
+    // Button Triggers
+    saveBtn.addEventListener('click', updateApp);
+    
+    // Run this when the app first opens
+    loadData();
+  </script>
 </body>
 </html>
