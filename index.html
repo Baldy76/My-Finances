@@ -8,32 +8,23 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            starling: '#00E6C3',
-            darkbg: '#0F172A',
-            cardbg: '#1E293B',
-          }
-        }
-      }
-    }
+    tailwind.config = { theme: { extend: { colors: { starling: '#00E6C3', darkbg: '#0F172A', cardbg: '#1E293B', } } } }
   </script>
   <style>
     body { background-color: #0F172A; color: white; font-family: sans-serif; padding-bottom: 6rem; }
-    input[type=number]::-webkit-inner-spin-button, 
-    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   </style>
 </head>
 <body class="p-4 relative min-h-screen">
 
-  <header class="flex justify-between items-center mb-6 pt-4">
+  <header class="flex justify-between items-center mb-4 pt-4">
     <div>
       <h1 class="text-2xl font-bold">Command Center 🚀</h1>
       <p class="text-gray-400 text-sm" id="date-display">Checking calendar...</p>
     </div>
   </header>
+  
+  <div id="alerts-container" class="mb-4 space-y-2"></div>
 
   <div class="bg-gradient-to-br from-cardbg to-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl text-center mb-6 relative overflow-hidden">
     <div class="absolute -top-10 -right-10 w-32 h-32 bg-starling opacity-10 rounded-full blur-3xl"></div>
@@ -53,7 +44,10 @@
     </p>
   </div>
 
-  <h3 class="text-lg font-semibold mb-3">Your Accounts 🏦</h3>
+  <div class="flex justify-between items-center mb-3">
+    <h3 class="text-lg font-semibold">Your Accounts 🏦</h3>
+    <button id="view-history-btn" class="text-xs bg-gray-800 text-starling px-3 py-1 rounded-full font-bold shadow-md active:scale-95">📜 History</button>
+  </div>
   <div class="space-y-3 mb-6" id="accounts-list"></div>
 
   <h3 class="text-lg font-semibold mb-3">Next Up 📅</h3>
@@ -64,74 +58,80 @@
 
   <nav class="fixed bottom-0 left-0 w-full bg-cardbg/95 backdrop-blur-xl border-t border-gray-800 p-4 flex justify-between px-6 items-center rounded-t-3xl z-40 pb-6">
     <button class="flex flex-col items-center text-gray-500 hover:text-white transition-colors">
-      <span class="text-xl">🏠</span>
-      <span class="text-[9px] mt-1 font-bold tracking-wide">HOME</span>
+      <span class="text-xl">🏠</span><span class="text-[9px] mt-1 font-bold tracking-wide">HOME</span>
     </button>
     <button id="nav-cashflow" class="flex flex-col items-center text-gray-500 hover:text-starling transition-colors">
-      <span class="text-xl">📅</span>
-      <span class="text-[9px] mt-1 font-bold tracking-wide">BILLS</span>
+      <span class="text-xl">📅</span><span class="text-[9px] mt-1 font-bold tracking-wide">BILLS</span>
     </button>
     <button id="add-btn" class="flex flex-col items-center text-starling -mt-12 bg-darkbg rounded-full p-4 border-4 border-cardbg shadow-xl transform active:scale-90 transition-transform duration-200">
       <span class="text-2xl">➕</span>
     </button>
-    <button id="nav-vault" class="flex flex-col items-center text-gray-500 hover:text-red-400 transition-colors">
-      <span class="text-xl">💳</span>
-      <span class="text-[9px] mt-1 font-bold tracking-wide">DEBTS</span>
+    <button id="nav-vault" class="flex flex-col items-center text-gray-500 hover:text-yellow-400 transition-colors">
+      <span class="text-xl">🏦</span><span class="text-[9px] mt-1 font-bold tracking-wide">VAULT</span>
     </button>
     <button id="nav-admin" class="flex flex-col items-center text-gray-500 hover:text-white transition-colors">
-      <span class="text-xl">⚙️</span>
-      <span class="text-[9px] mt-1 font-bold tracking-wide">ADMIN</span>
+      <span class="text-xl">⚙️</span><span class="text-[9px] mt-1 font-bold tracking-wide">ADMIN</span>
     </button>
   </nav>
 
   <div id="update-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
     <div class="bg-cardbg rounded-t-3xl p-6 border-t border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col">
       <div class="flex justify-between items-center mb-4 shrink-0">
-        <h2 class="text-xl font-bold">Add / Update</h2>
+        <h2 class="text-xl font-bold">Transact</h2>
         <button id="close-modal" class="text-gray-400 hover:text-white text-2xl w-10 h-10 flex justify-center items-center rounded-full bg-gray-800">✕</button>
       </div>
       
-      <div class="overflow-y-auto flex-1 pr-2">
-        <div class="bg-darkbg p-4 rounded-2xl border border-gray-700 mb-6 shadow-lg">
+      <div class="overflow-y-auto flex-1 pr-2 space-y-6">
+        
+        <div class="bg-darkbg p-4 rounded-2xl border border-gray-700 shadow-lg">
           <h3 class="text-sm font-bold text-starling mb-3 uppercase tracking-wide flex items-center gap-2">⚡ Quick Spend</h3>
           <div class="grid grid-cols-2 gap-3 mb-3">
-            <select id="spend-account" class="bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm focus:outline-none focus:border-starling"></select>
-            <input type="number" id="spend-amount" placeholder="£ Amount" class="bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm focus:outline-none focus:border-starling">
+            <select id="spend-account" class="bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm focus:outline-none"></select>
+            <input type="number" id="spend-amount" placeholder="£ Amount" class="bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm focus:outline-none">
           </div>
-          <input type="text" id="spend-desc" placeholder="What was it? (e.g. Coffee, Amazon)" class="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm mb-3 focus:outline-none focus:border-starling">
+          <input type="text" id="spend-desc" placeholder="What was it? (e.g. Coffee, Amazon)" class="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm mb-3 focus:outline-none">
           <button id="quick-spend-btn" class="w-full bg-starling text-gray-900 font-extrabold p-3 rounded-xl active:scale-95 text-sm transition-transform shadow-lg">Record Purchase</button>
         </div>
 
-        <div class="border-b border-gray-700 mb-6 relative">
-          <span class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-cardbg px-4 text-xs font-bold text-gray-500 uppercase tracking-wide">OR OVERRIDE BALANCES</span>
+        <div class="bg-darkbg p-4 rounded-2xl border border-gray-700 shadow-lg">
+          <h3 class="text-sm font-bold text-blue-400 mb-3 uppercase tracking-wide flex items-center gap-2">🔄 Transfer Funds</h3>
+          <div class="space-y-3 mb-3">
+            <select id="transfer-from" class="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm focus:outline-none">
+              <option value="" disabled selected>Transfer FROM...</option>
+            </select>
+            <select id="transfer-to" class="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm focus:outline-none">
+              <option value="" disabled selected>Transfer TO...</option>
+            </select>
+            <input type="number" id="transfer-amount" placeholder="£ Amount to move" class="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm focus:outline-none">
+          </div>
+          <button id="transfer-btn" class="w-full bg-blue-500 text-white font-extrabold p-3 rounded-xl active:scale-95 text-sm transition-transform shadow-lg">Execute Transfer</button>
         </div>
 
-        <div class="space-y-6">
-          <div>
-            <h3 class="text-xs font-bold text-gray-300 mb-3 uppercase tracking-wide">Bank Accounts</h3>
-            <div id="update-banks-container" class="space-y-3"></div>
-          </div>
-          <div>
-            <h3 class="text-xs font-bold text-red-400 mb-3 uppercase tracking-wide">Credit Cards & Loans</h3>
-            <div id="update-debts-container" class="space-y-3"></div>
-          </div>
-        </div>
       </div>
-      
-      <button id="save-btn" class="w-full bg-gray-700 text-white font-extrabold text-lg p-4 rounded-xl shadow-lg mt-4 shrink-0 active:scale-95 transition-all">Force Save Overrides</button>
     </div>
   </div>
 
   <div id="vault-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
     <div class="bg-cardbg rounded-t-3xl p-6 border-t border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col">
       <div class="flex justify-between items-center mb-6 shrink-0">
-        <h2 class="text-xl font-bold">Manage Debt 💳</h2>
+        <h2 class="text-xl font-bold">The Vault 🏦</h2>
         <button id="close-vault" class="text-gray-400 hover:text-white text-2xl w-10 h-10 flex justify-center items-center rounded-full bg-gray-800">✕</button>
       </div>
-      <div class="overflow-y-auto flex-1 pr-2 space-y-4" id="debt-dashboard-list"></div>
-      <div class="mt-4 shrink-0 bg-red-900/20 border border-red-900/50 p-4 rounded-2xl flex justify-between items-center">
-        <p class="text-red-400 font-bold uppercase tracking-wide text-sm">Total Debt Position</p>
-        <h2 class="text-2xl font-extrabold text-red-500" id="total-debt-display">£0.00</h2>
+      <div class="overflow-y-auto flex-1 pr-2 space-y-6">
+        
+        <div>
+          <h3 class="text-xs font-bold text-yellow-400 mb-3 uppercase tracking-wide border-b border-gray-700 pb-2">🍯 Savings Pots</h3>
+          <div id="pots-dashboard-list" class="space-y-3"></div>
+        </div>
+
+        <div>
+          <h3 class="text-xs font-bold text-red-400 mb-3 uppercase tracking-wide border-b border-gray-700 pb-2">💳 Credit & Loans</h3>
+          <div id="debt-dashboard-list" class="space-y-3"></div>
+          <div class="mt-3 bg-red-900/20 border border-red-900/50 p-3 rounded-xl flex justify-between items-center">
+            <p class="text-red-400 font-bold uppercase tracking-wide text-[10px]">Total Debt Position</p>
+            <h2 class="text-lg font-extrabold text-red-500" id="total-debt-display">£0.00</h2>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -163,9 +163,14 @@
           </select>
         </div>
         <div class="grid grid-cols-3 gap-3 mb-3">
-          <input type="text" id="cf-name" placeholder="Name (e.g. Salary)" class="col-span-2 bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm">
+          <input type="text" id="cf-name" placeholder="Name (e.g. Sky TV)" class="col-span-2 bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm">
           <input type="number" id="cf-amount" placeholder="£" class="bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm">
         </div>
+        <label class="flex items-center gap-2 mb-4 text-sm text-gray-400 p-2 bg-gray-800/50 rounded-xl border border-gray-700 cursor-pointer">
+          <input type="checkbox" id="cf-manual" class="w-5 h-5 rounded accent-starling">
+          <span>Manual Payment (Remind me to pay this!)</span>
+        </label>
+        
         <button id="add-cf-btn" class="w-full bg-gray-700 text-white font-bold p-3 rounded-xl active:scale-95 text-sm hover:bg-starling hover:text-gray-900 transition-colors">+ Add to Calendar</button>
       </div>
 
@@ -180,19 +185,51 @@
         <button id="close-admin" class="text-gray-400 hover:text-white text-2xl w-10 h-10 flex justify-center items-center rounded-full bg-gray-800">✕</button>
       </div>
       <div class="bg-darkbg p-4 rounded-2xl border border-gray-700 mb-6 shrink-0">
-        <h3 class="text-sm font-bold text-starling mb-3 uppercase tracking-wide">Add Account / Debt</h3>
+        <h3 class="text-sm font-bold text-starling mb-3 uppercase tracking-wide">Create New</h3>
         <div class="space-y-3 mb-3">
           <select id="admin-type" class="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm">
             <option value="bank">🏦 Bank Account</option>
             <option value="debt">💳 Credit Card / Loan</option>
+            <option value="pot">🍯 Savings Pot</option>
           </select>
-          <input type="text" id="admin-name" placeholder="Name (e.g. Amex)" class="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm">
+          <input type="text" id="admin-name" placeholder="Name (e.g. Holiday Fund)" class="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm">
           <input type="number" id="admin-overdraft" placeholder="Overdraft Limit (£)" class="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm">
         </div>
         <button id="add-account-btn" class="w-full bg-gray-700 text-white font-bold p-3 rounded-xl active:scale-95 text-sm">Create Entry</button>
       </div>
+      
+      <button id="force-override-btn" class="w-full bg-gray-800 border border-gray-700 text-white font-bold p-3 rounded-xl active:scale-95 text-sm mb-6 flex justify-between items-center">
+        <span>⚠️ Force Override Balances</span> <span>></span>
+      </button>
+
       <h3 class="text-sm font-bold text-gray-400 mb-2 uppercase tracking-wide shrink-0">Manage Existing</h3>
       <div class="overflow-y-auto flex-1 pr-2 space-y-2" id="admin-list"></div>
+    </div>
+  </div>
+
+  <div id="history-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
+    <div class="bg-cardbg rounded-t-3xl p-6 border-t border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col">
+      <div class="flex justify-between items-center mb-6 shrink-0">
+        <h2 class="text-xl font-bold">Transaction History 📜</h2>
+        <button id="close-history" class="text-gray-400 hover:text-white text-2xl w-10 h-10 flex justify-center items-center rounded-full bg-gray-800">✕</button>
+      </div>
+      <div class="overflow-y-auto flex-1 pr-2 space-y-2" id="history-list"></div>
+      <button onclick="clearHistory()" class="mt-4 w-full bg-red-900/50 text-red-400 font-bold p-3 rounded-xl text-sm border border-red-500/30">Clear History Log</button>
+    </div>
+  </div>
+
+  <div id="override-modal" class="fixed inset-0 bg-black/90 z-60 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
+    <div class="bg-cardbg rounded-t-3xl p-6 border-t border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col">
+      <div class="flex justify-between items-center mb-6 shrink-0">
+        <h2 class="text-xl font-bold">Force Overrides</h2>
+        <button id="close-override" class="text-gray-400 hover:text-white text-2xl w-10 h-10 flex justify-center items-center rounded-full bg-gray-800">✕</button>
+      </div>
+      <div class="overflow-y-auto flex-1 pr-2 space-y-6">
+        <div id="update-banks-container" class="space-y-3"></div>
+        <div id="update-pots-container" class="space-y-3"></div>
+        <div id="update-debts-container" class="space-y-3"></div>
+      </div>
+      <button id="save-override-btn" class="w-full bg-starling text-gray-900 font-extrabold text-lg p-4 rounded-xl shadow-lg mt-4 shrink-0 active:scale-95 transition-all">Force Save Overrides</button>
     </div>
   </div>
 
@@ -200,8 +237,10 @@
     // --- STATE & DATA ---
     let accounts = JSON.parse(localStorage.getItem('myAccounts')) || [];
     let debts = JSON.parse(localStorage.getItem('myDebts')) || [];
+    let pots = JSON.parse(localStorage.getItem('myPots')) || [];
     let cashflowData = JSON.parse(localStorage.getItem('cashflowData')) || [];
-    let editingCfId = null; // Tracks if we are editing a cashflow item
+    let historyLog = JSON.parse(localStorage.getItem('myHistory')) || [];
+    let editingCfId = null; 
     const colorThemes = ['#8B5CF6', '#F59E0B', '#EC4899', '#3B82F6', '#10B981', '#EF4444'];
 
     const today = new Date();
@@ -211,6 +250,26 @@
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     document.getElementById('date-display').innerText = `Today is ${monthNames[currentMonthNum]} ${currentDay}`;
 
+    // --- TRANSACTION HISTORY LOGGER ---
+    function recordTx(title, amount, desc, typeColor = 'text-white') {
+      const timestamp = new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+      historyLog.unshift({ id: Date.now(), title, amount, desc, timestamp, color: typeColor });
+      if(historyLog.length > 50) historyLog.pop(); // Keep last 50
+      localStorage.setItem('myHistory', JSON.stringify(historyLog));
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('history-list'); list.innerHTML = '';
+      if(historyLog.length === 0) return list.innerHTML = '<p class="text-center text-gray-500 mt-4">No transactions yet.</p>';
+      historyLog.forEach(tx => {
+        list.innerHTML += `<div class="bg-gray-800 p-3 rounded-xl mb-2 flex justify-between items-center"><div class="flex-1"><p class="text-sm font-bold text-white">${tx.title}</p><p class="text-[10px] text-gray-400">${tx.desc} • ${tx.timestamp}</p></div><p class="font-bold ${tx.color}">${tx.amount}</p></div>`;
+      });
+    }
+
+    window.clearHistory = function() {
+      if(confirm("Wipe all history?")) { historyLog = []; localStorage.setItem('myHistory', JSON.stringify(historyLog)); renderHistory(); }
+    }
+
     // --- SMART CALENDAR LOGIC ---
     function getLastWorkingDay(year, month) {
       let lastDay = new Date(year, month + 1, 0); 
@@ -218,7 +277,6 @@
       else if (lastDay.getDay() === 6) lastDay.setDate(lastDay.getDate() - 1); 
       return lastDay.getDate();
     }
-
     function appliesThisMonth(item) {
       const freq = item.frequency || 'monthly';
       if (freq === 'monthly') return true;
@@ -229,7 +287,6 @@
 
     const daySelect = document.getElementById('cf-day');
     for(let i = 1; i <= 31; i++) { daySelect.innerHTML += `<option value="${i}">${i}</option>`; }
-    
     const monthSelect = document.getElementById('cf-month');
     monthNames.forEach((m, idx) => { monthSelect.innerHTML += `<option value="${idx}">${m}</option>`; });
     monthSelect.value = currentMonthNum;
@@ -239,46 +296,43 @@
       if(e.target.value === 'monthly') { m.classList.add('hidden'); d.classList.add('col-span-2'); } 
       else { m.classList.remove('hidden'); d.classList.remove('col-span-2'); }
     });
-
-    // Toggle Overdraft Input in Admin
     document.getElementById('admin-type').addEventListener('change', (e) => {
       const od = document.getElementById('admin-overdraft');
-      if(e.target.value === 'bank') od.classList.remove('hidden');
-      else od.classList.add('hidden');
+      if(e.target.value === 'bank') od.classList.remove('hidden'); else od.classList.add('hidden');
     });
 
-    const modals = { update: document.getElementById('update-modal'), cashflow: document.getElementById('cashflow-modal'), admin: document.getElementById('admin-modal'), vault: document.getElementById('vault-modal') };
+    // --- MODALS ---
+    const modals = { update: document.getElementById('update-modal'), cashflow: document.getElementById('cashflow-modal'), admin: document.getElementById('admin-modal'), vault: document.getElementById('vault-modal'), history: document.getElementById('history-modal'), override: document.getElementById('override-modal') };
     function openModal(id) { if(navigator.vibrate) navigator.vibrate(50); modals[id].classList.remove('hidden'); modals[id].classList.add('flex'); }
     function closeModal(id) { modals[id].classList.add('hidden'); modals[id].classList.remove('flex'); }
 
-    document.getElementById('add-btn').addEventListener('click', () => { renderUpdateModal(); openModal('update'); });
+    document.getElementById('add-btn').addEventListener('click', () => { renderTransactModal(); openModal('update'); });
     document.getElementById('close-modal').addEventListener('click', () => closeModal('update'));
     document.getElementById('nav-cashflow').addEventListener('click', () => { renderLedger(); openModal('cashflow'); });
-    document.getElementById('close-cashflow').addEventListener('click', () => { 
-      closeModal('cashflow'); 
-      editingCfId = null; // Reset edit state if they close without saving
-      document.getElementById('add-cf-btn').innerText = "+ Add to Calendar";
-      document.getElementById('add-cf-btn').classList.replace('bg-starling', 'bg-gray-700');
-      document.getElementById('add-cf-btn').classList.replace('text-gray-900', 'text-white');
-      updateApp(); 
-    });
+    document.getElementById('close-cashflow').addEventListener('click', () => { closeModal('cashflow'); editingCfId=null; document.getElementById('add-cf-btn').innerText = "+ Add to Calendar"; document.getElementById('cf-manual').checked = false; updateApp(); });
     document.getElementById('nav-admin').addEventListener('click', () => { renderAdminList(); openModal('admin'); });
     document.getElementById('close-admin').addEventListener('click', () => { closeModal('admin'); updateApp(); });
     document.getElementById('nav-vault').addEventListener('click', () => { openModal('vault'); });
     document.getElementById('close-vault').addEventListener('click', () => { closeModal('vault'); });
+    document.getElementById('view-history-btn').addEventListener('click', () => { renderHistory(); openModal('history'); });
+    document.getElementById('close-history').addEventListener('click', () => closeModal('history'));
+    
+    document.getElementById('force-override-btn').addEventListener('click', () => { renderOverrideModal(); openModal('override'); });
+    document.getElementById('close-override').addEventListener('click', () => closeModal('override'));
 
     // --- ADMIN LOGIC ---
     document.getElementById('add-account-btn').addEventListener('click', () => {
       const type = document.getElementById('admin-type').value; 
       const name = document.getElementById('admin-name').value;
       const overdraft = type === 'bank' ? (parseFloat(document.getElementById('admin-overdraft').value) || 0) : 0;
-
       if (!name) return;
-      accounts.push({ id: Date.now(), name: name, balance: 0, overdraft: Math.abs(overdraft), color: colorThemes[Math.floor(Math.random() * colorThemes.length)] });
-      if (type === 'debt') { debts.push(accounts.pop()); } 
       
-      document.getElementById('admin-name').value = ''; 
-      document.getElementById('admin-overdraft').value = '';
+      const newObj = { id: Date.now(), name: name, balance: 0, overdraft: Math.abs(overdraft), color: colorThemes[Math.floor(Math.random() * colorThemes.length)] };
+      if (type === 'bank') accounts.push(newObj); 
+      else if (type === 'debt') debts.push(newObj);
+      else pots.push(newObj);
+      
+      document.getElementById('admin-name').value = ''; document.getElementById('admin-overdraft').value = '';
       saveData(); renderAdminList(); updateApp();
     });
 
@@ -286,72 +340,52 @@
       if(confirm("Delete this?")) {
         if (type === 'bank') accounts = accounts.filter(a => a.id !== id);
         if (type === 'debt') debts = debts.filter(d => d.id !== id);
+        if (type === 'pot') pots = pots.filter(p => p.id !== id);
         saveData(); renderAdminList(); updateApp();
       }
     };
 
     function renderAdminList() {
       const list = document.getElementById('admin-list'); list.innerHTML = '';
-      accounts.forEach(acc => { 
-        const odText = acc.overdraft > 0 ? `<span class="text-[10px] text-gray-500 ml-2">(OD: £${acc.overdraft})</span>` : '';
-        list.innerHTML += `<div class="bg-gray-800 p-3 rounded-xl flex justify-between items-center border-l-4" style="border-color: ${acc.color}"><p class="text-sm font-bold text-white">🏦 ${acc.name} ${odText}</p><button onclick="deleteAccount('bank', ${acc.id})" class="text-gray-500 hover:text-red-500 bg-gray-700 p-2 rounded-lg text-xs">🗑</button></div>`; 
-      });
-      debts.forEach(debt => { list.innerHTML += `<div class="bg-gray-800 p-3 rounded-xl flex justify-between items-center border-l-4 border-red-500"><p class="text-sm font-bold text-white">💳 ${debt.name}</p><button onclick="deleteAccount('debt', ${debt.id})" class="text-gray-500 hover:text-red-500 bg-gray-700 p-2 rounded-lg text-xs">🗑</button></div>`; });
+      accounts.forEach(acc => { list.innerHTML += `<div class="bg-gray-800 p-3 rounded-xl flex justify-between items-center border-l-4" style="border-color: ${acc.color}"><p class="text-sm font-bold text-white">🏦 ${acc.name}</p><button onclick="deleteAccount('bank', ${acc.id})" class="text-gray-500 hover:text-red-500">🗑</button></div>`; });
+      debts.forEach(debt => { list.innerHTML += `<div class="bg-gray-800 p-3 rounded-xl flex justify-between items-center border-l-4 border-red-500"><p class="text-sm font-bold text-white">💳 ${debt.name}</p><button onclick="deleteAccount('debt', ${debt.id})" class="text-gray-500 hover:text-red-500">🗑</button></div>`; });
+      pots.forEach(pot => { list.innerHTML += `<div class="bg-gray-800 p-3 rounded-xl flex justify-between items-center border-l-4 border-yellow-400"><p class="text-sm font-bold text-white">🍯 ${pot.name}</p><button onclick="deleteAccount('pot', ${pot.id})" class="text-gray-500 hover:text-red-500">🗑</button></div>`; });
     }
 
-    // --- CASHFLOW ENTRY & EDIT LOGIC ---
+    // --- CASHFLOW ENTRY LOGIC ---
     document.getElementById('add-cf-btn').addEventListener('click', () => {
       const type = document.getElementById('cf-type').value; const freq = document.getElementById('cf-freq').value;
       const day = document.getElementById('cf-day').value; const month = document.getElementById('cf-month').value;
       const name = document.getElementById('cf-name').value; const amount = parseFloat(document.getElementById('cf-amount').value);
+      const isManual = document.getElementById('cf-manual').checked;
       
       if (!day || !name || !amount) return;
       
       if (editingCfId) {
-        // Update existing item
         const idx = cashflowData.findIndex(i => i.id === editingCfId);
-        if (idx !== -1) {
-          cashflowData[idx] = { id: editingCfId, type, name, amount, day, frequency: freq, month: month };
-        }
-        editingCfId = null; // Reset
-        const btn = document.getElementById('add-cf-btn');
-        btn.innerText = "+ Add to Calendar";
-        btn.classList.replace('bg-starling', 'bg-gray-700');
-        btn.classList.replace('text-gray-900', 'text-white');
+        if (idx !== -1) cashflowData[idx] = { id: editingCfId, type, name, amount, day, frequency: freq, month: month, manual: isManual };
+        editingCfId = null; 
+        document.getElementById('add-cf-btn').innerText = "+ Add to Calendar";
       } else {
-        // Add new item
-        cashflowData.push({ id: Date.now(), type, name, amount, day, frequency: freq, month: month });
+        cashflowData.push({ id: Date.now(), type, name, amount, day, frequency: freq, month: month, manual: isManual });
       }
 
-      document.getElementById('cf-name').value = ''; document.getElementById('cf-amount').value = '';
+      document.getElementById('cf-name').value = ''; document.getElementById('cf-amount').value = ''; document.getElementById('cf-manual').checked = false;
       saveData(); renderLedger();
     });
 
     window.deleteItem = function(id) { cashflowData = cashflowData.filter(item => item.id !== id); saveData(); renderLedger(); };
 
     window.editItem = function(id) {
-      const item = cashflowData.find(i => i.id === id);
-      if(!item) return;
-      
-      // Scroll form to top
+      const item = cashflowData.find(i => i.id === id); if(!item) return;
       document.getElementById('cf-form-container').scrollIntoView({ behavior: 'smooth' });
-
-      // Populate form
-      document.getElementById('cf-type').value = item.type;
-      document.getElementById('cf-freq').value = item.frequency || 'monthly';
-      document.getElementById('cf-freq').dispatchEvent(new Event('change')); // Trigger UI update
-      document.getElementById('cf-month').value = item.month || currentMonthNum;
-      document.getElementById('cf-day').value = item.day;
-      document.getElementById('cf-name').value = item.name;
-      document.getElementById('cf-amount').value = item.amount;
-      
+      document.getElementById('cf-type').value = item.type; document.getElementById('cf-freq').value = item.frequency || 'monthly';
+      document.getElementById('cf-freq').dispatchEvent(new Event('change')); 
+      document.getElementById('cf-month').value = item.month || currentMonthNum; document.getElementById('cf-day').value = item.day;
+      document.getElementById('cf-name').value = item.name; document.getElementById('cf-amount').value = item.amount;
+      document.getElementById('cf-manual').checked = item.manual || false;
       editingCfId = id;
-
-      // Change button style to indicate edit mode
-      const btn = document.getElementById('add-cf-btn');
-      btn.innerText = "💾 Update Entry";
-      btn.classList.replace('bg-gray-700', 'bg-starling');
-      btn.classList.replace('text-white', 'text-gray-900');
+      document.getElementById('add-cf-btn').innerText = "💾 Update Entry";
     };
 
     function renderLedger() {
@@ -359,108 +393,133 @@
       cashflowData.forEach(item => {
         const isBill = item.type === 'bill';
         const displayDay = item.day === 'last_working_day' ? 'Last Working Day' : `Day ${item.day}`;
-        const freqLabel = (!item.frequency || item.frequency === 'monthly') ? '' : item.frequency === 'quarterly' ? `<span class="bg-starling/20 text-starling text-[9px] px-2 py-0.5 rounded ml-2">Qtrly: from ${monthNames[item.month]}</span>` : `<span class="bg-blue-500/20 text-blue-400 text-[9px] px-2 py-0.5 rounded ml-2">One-Off: ${monthNames[item.month]}</span>`;
+        const manualBadge = item.manual ? `<span class="bg-red-500/20 text-red-400 text-[9px] px-2 py-0.5 rounded ml-2 border border-red-500/50">⚠️ Manual</span>` : '';
         ledger.innerHTML += `
           <div class="bg-gray-800 p-3 rounded-xl flex justify-between items-center mb-2">
-            <div>
-              <p class="text-sm font-bold">${isBill ? '🔴' : '🟢'} ${item.name}</p>
-              <p class="text-[10px] text-gray-400 flex items-center mt-1">${displayDay} ${freqLabel}</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <p class="font-bold ${isBill ? 'text-red-400' : 'text-starling'} mr-2">${isBill ? '-' : '+'}£${item.amount.toFixed(2)}</p>
+            <div><p class="text-sm font-bold">${isBill ? '🔴' : '🟢'} ${item.name}</p><p class="text-[10px] text-gray-400 flex items-center mt-1">${displayDay} ${manualBadge}</p></div>
+            <div class="flex items-center gap-2"><p class="font-bold ${isBill ? 'text-red-400' : 'text-starling'} mr-2">${isBill ? '-' : '+'}£${item.amount.toFixed(2)}</p>
               <button onclick="editItem(${item.id})" class="text-gray-400 hover:text-white bg-gray-700 p-2 rounded-lg text-xs">✏️</button>
               <button onclick="deleteItem(${item.id})" class="text-gray-500 hover:text-red-500 bg-gray-700 p-2 rounded-lg text-xs">🗑</button>
             </div>
-          </div>
-        `;
+          </div>`;
       });
     }
 
-    // --- QUICK SPEND LOGIC ---
-    document.getElementById('quick-spend-btn').addEventListener('click', () => {
-      const accountId = parseInt(document.getElementById('spend-account').value);
-      const amount = parseFloat(document.getElementById('spend-amount').value);
+    // --- QUICK SPEND & TRANSFER LOGIC ---
+    function renderTransactModal() {
+      // Setup Spend Select
+      const spendSelect = document.getElementById('spend-account');
+      spendSelect.innerHTML = '<option value="" disabled selected>Select Account</option>';
+      accounts.forEach(acc => { spendSelect.innerHTML += `<option value="bank_${acc.id}">🏦 ${acc.name} (Avail: £${(acc.balance + (acc.overdraft||0)).toFixed(2)})</option>`; });
+      debts.forEach(debt => { spendSelect.innerHTML += `<option value="debt_${debt.id}">💳 ${debt.name} (£${debt.balance.toFixed(2)})</option>`; });
+
+      // Setup Transfer Selects
+      const tFrom = document.getElementById('transfer-from'); const tTo = document.getElementById('transfer-to');
+      tFrom.innerHTML = '<option value="" disabled selected>Transfer FROM...</option>';
+      tTo.innerHTML = '<option value="" disabled selected>Transfer TO...</option>';
       
-      if (!accountId || !amount) return alert("Please select an account and enter an amount.");
+      // Can transfer FROM Banks
+      accounts.forEach(acc => { tFrom.innerHTML += `<option value="bank_${acc.id}">🏦 ${acc.name} (£${acc.balance.toFixed(2)})</option>`; });
+      
+      // Can transfer TO Banks or Pots
+      accounts.forEach(acc => { tTo.innerHTML += `<option value="bank_${acc.id}">🏦 ${acc.name}</option>`; });
+      pots.forEach(pot => { tTo.innerHTML += `<option value="pot_${pot.id}">🍯 ${pot.name} (£${pot.balance.toFixed(2)})</option>`; });
+    }
 
-      let isBank = true;
-      let targetAccount = accounts.find(a => a.id === accountId);
-      if (!targetAccount) {
-        targetAccount = debts.find(d => d.id === accountId);
-        isBank = false;
-      }
+    document.getElementById('quick-spend-btn').addEventListener('click', () => {
+      const val = document.getElementById('spend-account').value;
+      const amount = parseFloat(document.getElementById('spend-amount').value);
+      const desc = document.getElementById('spend-desc').value || "Quick Spend";
+      if (!val || !amount) return alert("Select account and amount.");
 
-      if (targetAccount) {
-        if (isBank) targetAccount.balance -= amount;
-        else targetAccount.balance += amount; 
-        
+      const [type, idStr] = val.split('_'); const id = parseInt(idStr);
+      let target = type === 'bank' ? accounts.find(a=>a.id===id) : debts.find(d=>d.id===id);
+      
+      if (target) {
+        if (type === 'bank') target.balance -= amount; else target.balance += amount; 
+        recordTx(`Spent on ${target.name}`, `-£${amount.toFixed(2)}`, desc, type==='bank'?'text-white':'text-red-400');
         if (navigator.vibrate) navigator.vibrate([30, 50, 30]); 
-        document.getElementById('spend-amount').value = '';
-        document.getElementById('spend-desc').value = ''; 
-        
+        document.getElementById('spend-amount').value = ''; document.getElementById('spend-desc').value = ''; 
         saveData(); updateApp(); closeModal('update');
       }
     });
 
-    window.modifyDebt = function(id, action) {
-      const input = document.getElementById(`debt-action-input-${id}`); const amount = parseFloat(input.value);
+    document.getElementById('transfer-btn').addEventListener('click', () => {
+      const fromVal = document.getElementById('transfer-from').value;
+      const toVal = document.getElementById('transfer-to').value;
+      const amount = parseFloat(document.getElementById('transfer-amount').value);
+      if (!fromVal || !toVal || !amount) return alert("Fill all transfer fields.");
+      if (fromVal === toVal) return alert("Cannot transfer to the same account.");
+
+      const [fType, fId] = fromVal.split('_'); const [tType, tId] = toVal.split('_');
+      let source = accounts.find(a=>a.id===parseInt(fId));
+      let dest = tType === 'bank' ? accounts.find(a=>a.id===parseInt(tId)) : pots.find(p=>p.id===parseInt(tId));
+
+      if(source && dest) {
+        source.balance -= amount;
+        dest.balance += amount;
+        recordTx(`Transfer: ${source.name} ➡️ ${dest.name}`, `£${amount.toFixed(2)}`, "Internal Transfer", "text-blue-400");
+        if (navigator.vibrate) navigator.vibrate([30, 50, 30]); 
+        document.getElementById('transfer-amount').value = '';
+        saveData(); updateApp(); closeModal('update');
+      }
+    });
+
+    // --- VAULT LOGIC (DEBTS & POTS) ---
+    window.modifyVault = function(type, id, action) {
+      const input = document.getElementById(`vault-action-${type}-${id}`); const amount = parseFloat(input.value);
       if (!amount || amount <= 0) return;
-      const debt = debts.find(d => d.id === id); if (!debt) return;
-      if (action === 'pay') { debt.balance -= amount; if (debt.balance < 0) debt.balance = 0; } else if (action === 'interest') { debt.balance += amount; }
+      
+      let target = type === 'debt' ? debts.find(d => d.id === id) : pots.find(p => p.id === id);
+      if (!target) return;
+
+      if (type === 'debt') {
+        if (action === 'pay') { target.balance -= amount; if (target.balance < 0) target.balance = 0; recordTx(`Paid ${target.name}`, `-£${amount}`, "Manual Payment", "text-starling"); } 
+        else if (action === 'interest') { target.balance += amount; recordTx(`${target.name} Interest`, `+£${amount}`, "Interest Applied", "text-red-400"); }
+      } else if (type === 'pot') {
+        // Just directly withdrawing from pot here (Adding to pot is done via Transfer from bank)
+        if(action === 'withdraw') { target.balance -= amount; if(target.balance < 0) target.balance = 0; recordTx(`Withdrew from ${target.name}`, `-£${amount}`, "Pot Withdrawal", "text-white"); }
+      }
+      
       saveData(); updateApp(); if (navigator.vibrate) navigator.vibrate([30, 50]);
     };
 
-    function renderUpdateModal() {
-      const spendSelect = document.getElementById('spend-account');
-      spendSelect.innerHTML = '<option value="" disabled selected>Select Account</option>';
-      accounts.forEach(acc => { 
-        const avail = acc.balance + (acc.overdraft || 0);
-        spendSelect.innerHTML += `<option value="${acc.id}">🏦 ${acc.name} (Avail: £${avail.toFixed(2)})</option>`; 
-      });
-      debts.forEach(debt => { spendSelect.innerHTML += `<option value="${debt.id}">💳 ${debt.name} (£${debt.balance.toFixed(2)})</option>`; });
-
-      const bankCont = document.getElementById('update-banks-container'); const debtCont = document.getElementById('update-debts-container');
-      bankCont.innerHTML = ''; debtCont.innerHTML = '';
-      accounts.forEach(acc => { bankCont.innerHTML += `<div><label class="text-[10px] text-gray-400 font-bold mb-1 block uppercase">${acc.name}</label><input type="number" id="input-bank-${acc.id}" value="${acc.balance}" class="w-full bg-darkbg border border-gray-700 rounded-xl p-3 text-white focus:outline-none focus:border-starling"></div>`; });
-      debts.forEach(debt => { debtCont.innerHTML += `<div><label class="text-[10px] text-red-400 font-bold mb-1 block uppercase">${debt.name}</label><input type="number" id="input-debt-${debt.id}" value="${debt.balance}" class="w-full bg-red-900/10 border border-red-900/50 rounded-xl p-3 text-white focus:outline-none focus:border-red-500"></div>`; });
+    // --- OVERRIDES ---
+    function renderOverrideModal() {
+      const bCont = document.getElementById('update-banks-container'); const dCont = document.getElementById('update-debts-container'); const pCont = document.getElementById('update-pots-container');
+      bCont.innerHTML = '<h3 class="text-xs font-bold text-gray-400 mb-2 uppercase">Banks</h3>'; dCont.innerHTML = '<h3 class="text-xs font-bold text-red-400 mb-2 uppercase">Debts</h3>'; pCont.innerHTML = '<h3 class="text-xs font-bold text-yellow-400 mb-2 uppercase">Pots</h3>';
+      accounts.forEach(acc => { bCont.innerHTML += `<div><label class="text-[10px] text-gray-400 uppercase">${acc.name}</label><input type="number" id="over-bank-${acc.id}" value="${acc.balance}" class="w-full bg-darkbg border border-gray-700 rounded-xl p-3 text-white"></div>`; });
+      debts.forEach(debt => { dCont.innerHTML += `<div><label class="text-[10px] text-red-400 uppercase">${debt.name}</label><input type="number" id="over-debt-${debt.id}" value="${debt.balance}" class="w-full bg-darkbg border border-gray-700 rounded-xl p-3 text-white"></div>`; });
+      pots.forEach(pot => { pCont.innerHTML += `<div><label class="text-[10px] text-yellow-400 uppercase">${pot.name}</label><input type="number" id="over-pot-${pot.id}" value="${pot.balance}" class="w-full bg-darkbg border border-gray-700 rounded-xl p-3 text-white"></div>`; });
     }
-
-    document.getElementById('save-btn').addEventListener('click', () => {
-      if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
-      accounts.forEach(acc => { const i = document.getElementById(`input-bank-${acc.id}`); if(i) acc.balance = parseFloat(i.value) || 0; });
-      debts.forEach(debt => { const i = document.getElementById(`input-debt-${debt.id}`); if(i) debt.balance = parseFloat(i.value) || 0; });
-      saveData(); updateApp(); closeModal('update');
+    document.getElementById('save-override-btn').addEventListener('click', () => {
+      accounts.forEach(acc => { const i = document.getElementById(`over-bank-${acc.id}`); if(i) acc.balance = parseFloat(i.value) || 0; });
+      debts.forEach(debt => { const i = document.getElementById(`over-debt-${debt.id}`); if(i) debt.balance = parseFloat(i.value) || 0; });
+      pots.forEach(pot => { const i = document.getElementById(`over-pot-${pot.id}`); if(i) pot.balance = parseFloat(i.value) || 0; });
+      saveData(); updateApp(); closeModal('override');
     });
 
     // --- CORE ENGINE ---
     function updateApp() {
-      // MATH: Total Cash now INCLUDES Overdraft limits!
       const totalCash = accounts.reduce((sum, acc) => sum + acc.balance + (acc.overdraft || 0), 0);
       const totalDebtAmount = debts.reduce((sum, debt) => sum + debt.balance, 0);
 
       let remainingBills = 0; let remainingIncome = 0; let upcomingListHTML = '';
-      
+      let alertsHTML = ''; // SMART ALERTS
+
       let activeItemsThisMonth = [];
       cashflowData.forEach(item => {
         if (appliesThisMonth(item)) {
           let actualDay = item.day;
-          
-          if (actualDay === 'last_working_day') {
-            actualDay = getLastWorkingDay(currentYear, currentMonthNum);
-          } else {
+          if (actualDay === 'last_working_day') { actualDay = getLastWorkingDay(currentYear, currentMonthNum); } 
+          else {
             actualDay = parseInt(actualDay);
             let tempDate = new Date(currentYear, currentMonthNum, actualDay);
             if (tempDate.getMonth() !== currentMonthNum) tempDate = new Date(currentYear, currentMonthNum + 1, 0);
-            
             let dayOfWeek = tempDate.getDay();
             if (dayOfWeek === 0 || dayOfWeek === 6) { 
-               if (item.type === 'income') { 
-                  if (dayOfWeek === 0) tempDate.setDate(tempDate.getDate() - 2);
-                  if (dayOfWeek === 6) tempDate.setDate(tempDate.getDate() - 1);
-               } else { 
-                  if (dayOfWeek === 0) tempDate.setDate(tempDate.getDate() + 1);
-                  if (dayOfWeek === 6) tempDate.setDate(tempDate.getDate() + 2);
-               }
+               if (item.type === 'income') { if (dayOfWeek === 0) tempDate.setDate(tempDate.getDate() - 2); if (dayOfWeek === 6) tempDate.setDate(tempDate.getDate() - 1); } 
+               else { if (dayOfWeek === 0) tempDate.setDate(tempDate.getDate() + 1); if (dayOfWeek === 6) tempDate.setDate(tempDate.getDate() + 2); }
             }
             actualDay = tempDate.getDate();
           }
@@ -473,51 +532,71 @@
       upcomingItems.forEach(item => {
         if (item.type === 'bill') remainingBills += item.amount; else remainingIncome += item.amount;
         
-        let dueText = item.actualDay === currentDay ? 'TODAY' : `in ${item.actualDay - currentDay} days`;
-        if (item.actualDay !== parseInt(item.day) && item.day !== 'last_working_day') dueText += ' (Shifted from weekend)';
+        let diff = item.actualDay - currentDay;
+        let dueText = diff === 0 ? 'TODAY' : `in ${diff} days`;
+        if (item.actualDay !== parseInt(item.day) && item.day !== 'last_working_day') dueText += ' (Shifted)';
 
-        upcomingListHTML += `<div class="flex justify-between items-center border-b border-gray-800/50 last:border-0 pb-2 last:pb-0 pt-2 first:pt-0"><div><p class="text-sm font-medium text-white">${item.name}</p><p class="text-[10px] text-gray-500 uppercase">${dueText}</p></div><p class="text-sm font-bold ${item.type === 'bill' ? 'text-red-400' : 'text-starling'}">${item.type === 'bill' ? '-' : '+'}£${item.amount.toFixed(2)}</p></div>`;
+        upcomingListHTML += `<div class="flex justify-between items-center border-b border-gray-800/50 last:border-0 pb-2 last:pb-0 pt-2 first:pt-0"><div><p class="text-sm font-medium text-white">${item.name} ${item.manual ? '⚠️' : ''}</p><p class="text-[10px] text-gray-500 uppercase">${dueText}</p></div><p class="text-sm font-bold ${item.type === 'bill' ? 'text-red-400' : 'text-starling'}">${item.type === 'bill' ? '-' : '+'}£${item.amount.toFixed(2)}</p></div>`;
+        
+        // CHECK SMART ALERTS
+        if (item.manual && item.type === 'bill') {
+          if (diff === 0) alertsHTML += `<div class="bg-red-600 text-white p-3 rounded-xl text-sm font-bold shadow-lg flex items-center gap-2">🚨 <span class="flex-1">TODAY: Pay ${item.name} (£${item.amount})</span><button onclick="this.parentElement.remove()" class="text-white/50 text-xl">✕</button></div>`;
+          else if (diff === 1) alertsHTML += `<div class="bg-yellow-500 text-gray-900 p-3 rounded-xl text-sm font-bold shadow-lg flex items-center gap-2">⚠️ <span class="flex-1">TOMORROW: Pay ${item.name} (£${item.amount})</span><button onclick="this.parentElement.remove()" class="text-gray-900/50 text-xl">✕</button></div>`;
+        }
       });
 
+      document.getElementById('alerts-container').innerHTML = alertsHTML;
       document.getElementById('upcoming-list').innerHTML = upcomingItems.length ? upcomingListHTML : '';
       document.getElementById('no-upcoming').classList.toggle('hidden', upcomingItems.length > 0);
 
       const safeToSpend = totalCash - remainingBills;
       const projectedEOM = totalCash - remainingBills + remainingIncome;
 
-      const safeEl = document.getElementById('safe-to-spend');
-      safeEl.innerText = `£${safeToSpend.toFixed(2)}`;
+      const safeEl = document.getElementById('safe-to-spend'); safeEl.innerText = `£${safeToSpend.toFixed(2)}`;
       safeEl.className = `text-5xl font-extrabold tracking-tight transition-colors duration-300 relative z-10 ${safeToSpend < 0 ? 'text-red-500' : 'text-white'}`;
+      document.getElementById('total-cash').innerText = `£${totalCash.toFixed(2)}`; document.getElementById('display-bills').innerText = `£${remainingBills.toFixed(2)}`; document.getElementById('projected-balance').innerText = `£${projectedEOM.toFixed(2)}`;
 
-      document.getElementById('total-cash').innerText = `£${totalCash.toFixed(2)}`;
-      document.getElementById('display-bills').innerText = `£${remainingBills.toFixed(2)}`;
-      document.getElementById('projected-balance').innerText = `£${projectedEOM.toFixed(2)}`;
+      const barEl = document.getElementById('cash-bar'); const safePercent = totalCash > 0 && safeToSpend > 0 ? Math.round((safeToSpend / totalCash) * 100) : 0;
+      barEl.style.width = `${safePercent}%`; barEl.className = `h-1.5 rounded-full transition-all duration-1000 ease-out ${safePercent < 20 ? 'bg-red-500' : 'bg-starling'}`;
 
-      const barEl = document.getElementById('cash-bar');
-      const safePercent = totalCash > 0 && safeToSpend > 0 ? Math.round((safeToSpend / totalCash) * 100) : 0;
-      barEl.style.width = `${safePercent}%`;
-      barEl.className = `h-1.5 rounded-full transition-all duration-1000 ease-out ${safePercent < 20 ? 'bg-red-500' : 'bg-starling'}`;
-
-      const accountsList = document.getElementById('accounts-list');
-      accountsList.innerHTML = '';
+      // ACCOUNTS DASHBOARD
+      const accountsList = document.getElementById('accounts-list'); accountsList.innerHTML = '';
       accounts.forEach(acc => { 
         const avail = acc.balance + (acc.overdraft || 0);
         const warning = acc.balance < 0 ? `<span class="text-[10px] text-red-400 font-semibold">In Overdraft (£${Math.abs(acc.balance).toFixed(2)})</span>` : '';
         const odLabel = acc.overdraft > 0 ? `<p class="text-[10px] text-gray-500">Available limit: £${avail.toFixed(2)}</p>` : '';
-        
         accountsList.innerHTML += `<div class="flex justify-between items-center bg-cardbg p-4 rounded-2xl border-l-4 shadow-md" style="border-color: ${acc.color}"><div class="flex items-center gap-3"><div class="text-white font-bold text-xs w-8 h-8 flex justify-center items-center rounded-full" style="background-color: ${acc.color}">${acc.name.substring(0,2).toUpperCase()}</div><div><p class="font-medium">${acc.name}</p>${warning} ${odLabel}</div></div><p class="font-bold text-lg ${acc.balance < 0 ? 'text-red-400' : ''}">£${acc.balance.toFixed(2)}</p></div>`; 
       });
 
-      const debtList = document.getElementById('debt-dashboard-list');
-      debtList.innerHTML = '';
-      if(debts.length === 0) debtList.innerHTML = '<p class="text-gray-500 text-center mt-4">No debts tracked. Add them in Admin.</p>';
-      debts.forEach(debt => { debtList.innerHTML += `<div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 mb-3 shadow-lg"><div class="flex justify-between items-center mb-3"><p class="font-bold text-white uppercase tracking-wide text-sm">💳 ${debt.name}</p><p class="font-extrabold text-xl text-red-400">£${debt.balance.toFixed(2)}</p></div><div class="flex gap-2"><input type="number" id="debt-action-input-${debt.id}" placeholder="£ Amount" class="flex-1 bg-darkbg border border-gray-700 rounded-xl p-3 text-white focus:outline-none focus:border-starling text-sm"><button onclick="modifyDebt(${debt.id}, 'pay')" class="bg-starling text-gray-900 font-extrabold px-4 py-3 rounded-xl shadow-lg active:scale-95 transition-transform">Pay</button><button onclick="modifyDebt(${debt.id}, 'interest')" class="bg-red-900/50 text-red-400 border border-red-500/30 font-extrabold px-4 py-3 rounded-xl active:scale-95 transition-transform">+ Int</button></div></div>`; });
+      // VAULT: POTS
+      const potsList = document.getElementById('pots-dashboard-list'); potsList.innerHTML = '';
+      if(pots.length === 0) potsList.innerHTML = '<p class="text-gray-500 text-xs">No pots tracked. Transfer funds here to start saving.</p>';
+      pots.forEach(pot => {
+        potsList.innerHTML += `
+          <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 mb-2 shadow-lg">
+            <div class="flex justify-between items-center mb-2"><p class="font-bold text-white uppercase tracking-wide text-sm">🍯 ${pot.name}</p><p class="font-extrabold text-xl text-yellow-400">£${pot.balance.toFixed(2)}</p></div>
+            <div class="flex gap-2"><input type="number" id="vault-action-pot-${pot.id}" placeholder="£ to withdraw" class="flex-1 bg-darkbg border border-gray-700 rounded-xl p-2 text-white focus:outline-none focus:border-starling text-sm"><button onclick="modifyVault('pot', ${pot.id}, 'withdraw')" class="bg-gray-700 text-white px-3 py-2 rounded-xl active:scale-95 text-xs font-bold">Withdraw</button></div>
+            <p class="text-[9px] text-gray-500 mt-2">Use 'Transfer' in the ➕ menu to add funds here.</p>
+          </div>`;
+      });
+
+      // VAULT: DEBTS
+      const debtList = document.getElementById('debt-dashboard-list'); debtList.innerHTML = '';
+      if(debts.length === 0) debtList.innerHTML = '<p class="text-gray-500 text-xs">No debts tracked.</p>';
+      debts.forEach(debt => { 
+        debtList.innerHTML += `
+          <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 mb-2 shadow-lg">
+            <div class="flex justify-between items-center mb-3"><p class="font-bold text-white uppercase tracking-wide text-sm">💳 ${debt.name}</p><p class="font-extrabold text-xl text-red-400">£${debt.balance.toFixed(2)}</p></div>
+            <div class="flex gap-2"><input type="number" id="vault-action-debt-${debt.id}" placeholder="£ Amount" class="flex-1 bg-darkbg border border-gray-700 rounded-xl p-2 text-white focus:outline-none focus:border-starling text-sm"><button onclick="modifyVault('debt', ${debt.id}, 'pay')" class="bg-starling text-gray-900 font-extrabold px-3 py-2 rounded-xl active:scale-95 text-xs">Pay</button><button onclick="modifyVault('debt', ${debt.id}, 'interest')" class="bg-red-900/50 text-red-400 border border-red-500/30 font-extrabold px-3 py-2 rounded-xl active:scale-95 text-xs">+ Int</button></div>
+          </div>`; 
+      });
       document.getElementById('total-debt-display').innerText = `£${totalDebtAmount.toFixed(2)}`;
     }
 
     function saveData() {
       localStorage.setItem('myAccounts', JSON.stringify(accounts));
       localStorage.setItem('myDebts', JSON.stringify(debts));
+      localStorage.setItem('myPots', JSON.stringify(pots));
       localStorage.setItem('cashflowData', JSON.stringify(cashflowData));
     }
 
