@@ -37,7 +37,6 @@
 
   <div class="bg-gradient-to-br from-cardbg to-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl text-center mb-6 relative overflow-hidden">
     <div class="absolute -top-10 -right-10 w-32 h-32 bg-starling opacity-10 rounded-full blur-3xl"></div>
-    
     <p class="text-gray-400 font-medium mb-1 relative z-10">Safe to Spend Now</p>
     <h2 class="text-5xl font-extrabold tracking-tight transition-colors duration-300 relative z-10" id="safe-to-spend">£0.00</h2>
     
@@ -55,8 +54,7 @@
   </div>
 
   <h3 class="text-lg font-semibold mb-3">Your Accounts 🏦</h3>
-  <div class="space-y-3 mb-6" id="accounts-list">
-    </div>
+  <div class="space-y-3 mb-6" id="accounts-list"></div>
 
   <h3 class="text-lg font-semibold mb-3">Next Up 📅</h3>
   <div class="bg-cardbg rounded-2xl p-4 border border-gray-800 shadow-md">
@@ -93,24 +91,22 @@
   <div id="update-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
     <div class="bg-cardbg rounded-t-3xl p-6 border-t border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col">
       <div class="flex justify-between items-center mb-6 shrink-0">
-        <h2 class="text-xl font-bold">Update Balances</h2>
+        <h2 class="text-xl font-bold">Master Override</h2>
         <button id="close-modal" class="text-gray-400 hover:text-white text-2xl w-10 h-10 flex justify-center items-center rounded-full bg-gray-800">✕</button>
       </div>
-      
       <div class="overflow-y-auto flex-1 pr-2 space-y-6">
         <div>
           <h3 class="text-xs font-bold text-starling mb-3 uppercase tracking-wide border-b border-gray-700 pb-2">Bank Accounts</h3>
           <div id="update-banks-container" class="space-y-3"></div>
         </div>
-        
         <div>
           <h3 class="text-xs font-bold text-red-400 mb-3 uppercase tracking-wide border-b border-gray-700 pb-2">Credit Cards & Loans</h3>
+          <p class="text-[10px] text-gray-500 mb-2">Use the 💳 DEBTS tab for payments/interest. Use this to fully reset a balance.</p>
           <div id="update-debts-container" class="space-y-3"></div>
         </div>
       </div>
-
       <button id="save-btn" class="w-full bg-starling text-gray-900 font-extrabold text-lg p-4 rounded-xl shadow-lg mt-4 shrink-0 active:scale-95 transition-all">
-        Save All Balances
+        Force Save Balances
       </button>
     </div>
   </div>
@@ -118,11 +114,11 @@
   <div id="vault-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
     <div class="bg-cardbg rounded-t-3xl p-6 border-t border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col">
       <div class="flex justify-between items-center mb-6 shrink-0">
-        <h2 class="text-xl font-bold">Credit & Loans 💳</h2>
+        <h2 class="text-xl font-bold">Manage Debt 💳</h2>
         <button id="close-vault" class="text-gray-400 hover:text-white text-2xl w-10 h-10 flex justify-center items-center rounded-full bg-gray-800">✕</button>
       </div>
 
-      <div class="overflow-y-auto flex-1 pr-2 space-y-3" id="debt-dashboard-list">
+      <div class="overflow-y-auto flex-1 pr-2 space-y-4" id="debt-dashboard-list">
         </div>
 
       <div class="mt-4 shrink-0 bg-red-900/20 border border-red-900/50 p-4 rounded-2xl flex justify-between items-center">
@@ -159,7 +155,6 @@
         <h2 class="text-xl font-bold">Admin Settings ⚙️</h2>
         <button id="close-admin" class="text-gray-400 hover:text-white text-2xl w-10 h-10 flex justify-center items-center rounded-full bg-gray-800">✕</button>
       </div>
-      
       <div class="bg-darkbg p-4 rounded-2xl border border-gray-700 mb-6 shrink-0">
         <h3 class="text-sm font-bold text-starling mb-3 uppercase tracking-wide">Add Account / Debt</h3>
         <div class="space-y-3 mb-3">
@@ -169,20 +164,15 @@
           </select>
           <input type="text" id="admin-name" placeholder="Name (e.g. Amex, Monzo)" class="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 text-sm">
         </div>
-        <button id="add-account-btn" class="w-full bg-gray-700 text-white font-bold p-3 rounded-xl active:scale-95 text-sm">
-          Create Entry
-        </button>
+        <button id="add-account-btn" class="w-full bg-gray-700 text-white font-bold p-3 rounded-xl active:scale-95 text-sm">Create Entry</button>
       </div>
-
       <h3 class="text-sm font-bold text-gray-400 mb-2 uppercase tracking-wide shrink-0">Manage Existing</h3>
-      <div class="overflow-y-auto flex-1 pr-2 space-y-2" id="admin-list">
-        </div>
+      <div class="overflow-y-auto flex-1 pr-2 space-y-2" id="admin-list"></div>
     </div>
   </div>
 
   <script>
     // --- STATE & DATA (DYNAMIC) ---
-    // Default Data if completely blank
     let accounts = JSON.parse(localStorage.getItem('myAccounts')) || [
       { id: 1, name: 'Halifax Joint', type: 'bank', balance: 0, color: '#0033A0' },
       { id: 2, name: 'Barclays', type: 'bank', balance: 0, color: '#00AEFF' },
@@ -190,11 +180,8 @@
     ];
     let debts = JSON.parse(localStorage.getItem('myDebts')) || [];
     let cashflowData = JSON.parse(localStorage.getItem('cashflowData')) || [];
-    
-    // UI Theme Colors for new accounts
     const colorThemes = ['#8B5CF6', '#F59E0B', '#EC4899', '#3B82F6', '#10B981', '#EF4444'];
 
-    // --- SETUP CALENDAR ---
     const today = new Date();
     const currentDay = today.getDate();
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -203,7 +190,6 @@
     const daySelect = document.getElementById('cf-day');
     for(let i = 1; i <= 31; i++) { daySelect.innerHTML += `<option value="${i}">${i}</option>`; }
 
-    // --- MODAL TRIGGERS ---
     const modals = {
       update: document.getElementById('update-modal'),
       cashflow: document.getElementById('cashflow-modal'),
@@ -231,59 +217,33 @@
     document.getElementById('nav-vault').addEventListener('click', () => { openModal('vault'); });
     document.getElementById('close-vault').addEventListener('click', () => { closeModal('vault'); });
 
-
-    // --- ADMIN LOGIC (ADD/REMOVE ACCOUNTS & DEBTS) ---
+    // --- ADMIN LOGIC ---
     document.getElementById('add-account-btn').addEventListener('click', () => {
       const type = document.getElementById('admin-type').value;
       const name = document.getElementById('admin-name').value;
-      
-      if (!name) return alert("Please enter a name.");
-
-      const newEntry = {
-        id: Date.now(),
-        name: name,
-        balance: 0,
-        color: colorThemes[Math.floor(Math.random() * colorThemes.length)] // Pick random color
-      };
-
-      if (type === 'bank') accounts.push(newEntry);
-      else debts.push(newEntry);
-
+      if (!name) return;
+      const newEntry = { id: Date.now(), name: name, balance: 0, color: colorThemes[Math.floor(Math.random() * colorThemes.length)] };
+      if (type === 'bank') accounts.push(newEntry); else debts.push(newEntry);
       document.getElementById('admin-name').value = '';
-      saveData();
-      renderAdminList();
-      updateApp();
+      saveData(); renderAdminList(); updateApp();
     });
 
     window.deleteAccount = function(type, id) {
       if(confirm("Are you sure you want to delete this?")) {
         if (type === 'bank') accounts = accounts.filter(a => a.id !== id);
         if (type === 'debt') debts = debts.filter(d => d.id !== id);
-        saveData();
-        renderAdminList();
-        updateApp();
+        saveData(); renderAdminList(); updateApp();
       }
     };
 
     function renderAdminList() {
       const list = document.getElementById('admin-list');
       list.innerHTML = '';
-      
       accounts.forEach(acc => {
-        list.innerHTML += `
-          <div class="bg-gray-800 p-3 rounded-xl flex justify-between items-center border-l-4" style="border-color: ${acc.color}">
-            <p class="text-sm font-bold text-white">🏦 ${acc.name}</p>
-            <button onclick="deleteAccount('bank', ${acc.id})" class="text-gray-500 hover:text-red-500 bg-gray-700 p-2 rounded-lg text-xs">🗑</button>
-          </div>
-        `;
+        list.innerHTML += `<div class="bg-gray-800 p-3 rounded-xl flex justify-between items-center border-l-4" style="border-color: ${acc.color}"><p class="text-sm font-bold text-white">🏦 ${acc.name}</p><button onclick="deleteAccount('bank', ${acc.id})" class="text-gray-500 hover:text-red-500 bg-gray-700 p-2 rounded-lg text-xs">🗑</button></div>`;
       });
       debts.forEach(debt => {
-        list.innerHTML += `
-          <div class="bg-gray-800 p-3 rounded-xl flex justify-between items-center border-l-4 border-red-500">
-            <p class="text-sm font-bold text-white">💳 ${debt.name}</p>
-            <button onclick="deleteAccount('debt', ${debt.id})" class="text-gray-500 hover:text-red-500 bg-gray-700 p-2 rounded-lg text-xs">🗑</button>
-          </div>
-        `;
+        list.innerHTML += `<div class="bg-gray-800 p-3 rounded-xl flex justify-between items-center border-l-4 border-red-500"><p class="text-sm font-bold text-white">💳 ${debt.name}</p><button onclick="deleteAccount('debt', ${debt.id})" class="text-gray-500 hover:text-red-500 bg-gray-700 p-2 rounded-lg text-xs">🗑</button></div>`;
       });
     }
 
@@ -307,100 +267,74 @@
     function renderLedger() {
       const ledger = document.getElementById('full-ledger');
       ledger.innerHTML = '';
-      const sorted = [...cashflowData].sort((a, b) => a.day - b.day);
-      sorted.forEach(item => {
+      [...cashflowData].sort((a, b) => a.day - b.day).forEach(item => {
         const isBill = item.type === 'bill';
-        const color = isBill ? 'text-red-400' : 'text-starling';
-        const icon = isBill ? '🔴' : '🟢';
-        const passed = item.day < currentDay ? 'opacity-50' : '';
         ledger.innerHTML += `
-          <div class="bg-gray-800 p-3 rounded-xl flex justify-between items-center ${passed}">
-            <div><p class="text-sm font-bold">${icon} ${item.name}</p><p class="text-xs text-gray-400">Day ${item.day}</p></div>
-            <div class="flex items-center gap-3"><p class="font-bold ${color}">${isBill ? '-' : '+'}£${item.amount.toFixed(2)}</p>
+          <div class="bg-gray-800 p-3 rounded-xl flex justify-between items-center ${item.day < currentDay ? 'opacity-50' : ''}">
+            <div><p class="text-sm font-bold">${isBill ? '🔴' : '🟢'} ${item.name}</p><p class="text-xs text-gray-400">Day ${item.day}</p></div>
+            <div class="flex items-center gap-3"><p class="font-bold ${isBill ? 'text-red-400' : 'text-starling'}">${isBill ? '-' : '+'}£${item.amount.toFixed(2)}</p>
             <button onclick="deleteItem(${item.id})" class="text-gray-500 bg-gray-700 p-2 rounded-lg text-xs">🗑</button></div>
           </div>
         `;
       });
     }
 
-    // --- INPUT MODAL RENDERER (THE [+] BUTTON) ---
+    // --- ACTIVE DEBT MANAGEMENT LOGIC ---
+    window.modifyDebt = function(id, action) {
+      const input = document.getElementById(`debt-action-input-${id}`);
+      const amount = parseFloat(input.value);
+      
+      if (!amount || amount <= 0) return; // Prevent empty or negative inputs
+      
+      const debt = debts.find(d => d.id === id);
+      if (!debt) return;
+
+      if (action === 'pay') {
+        debt.balance -= amount;
+        if (debt.balance < 0) debt.balance = 0; // Don't let debt go negative
+      } else if (action === 'interest') {
+        debt.balance += amount;
+      }
+
+      saveData();
+      updateApp(); // This instantly redraws the UI with the new balance
+      if (navigator.vibrate) navigator.vibrate([30, 50]); // Success buzz
+    };
+
     function renderUpdateModal() {
       const bankCont = document.getElementById('update-banks-container');
       const debtCont = document.getElementById('update-debts-container');
       bankCont.innerHTML = ''; debtCont.innerHTML = '';
-
       accounts.forEach(acc => {
-        bankCont.innerHTML += `
-          <div>
-            <label class="text-[10px] text-gray-400 font-bold mb-1 block uppercase tracking-wide">${acc.name}</label>
-            <input type="number" id="input-bank-${acc.id}" value="${acc.balance}" class="w-full bg-darkbg border border-gray-700 rounded-xl p-3 text-white focus:outline-none focus:border-starling">
-          </div>
-        `;
+        bankCont.innerHTML += `<div><label class="text-[10px] text-gray-400 font-bold mb-1 block uppercase">${acc.name}</label><input type="number" id="input-bank-${acc.id}" value="${acc.balance}" class="w-full bg-darkbg border border-gray-700 rounded-xl p-3 text-white focus:outline-none focus:border-starling"></div>`;
       });
-
-      if(debts.length === 0) debtCont.innerHTML = '<p class="text-xs text-gray-500">No debts added. Add them in Admin.</p>';
       debts.forEach(debt => {
-        debtCont.innerHTML += `
-          <div>
-            <label class="text-[10px] text-red-400 font-bold mb-1 block uppercase tracking-wide">${debt.name}</label>
-            <input type="number" id="input-debt-${debt.id}" value="${debt.balance}" class="w-full bg-red-900/10 border border-red-900/50 rounded-xl p-3 text-white focus:outline-none focus:border-red-500">
-          </div>
-        `;
+        debtCont.innerHTML += `<div><label class="text-[10px] text-red-400 font-bold mb-1 block uppercase">${debt.name}</label><input type="number" id="input-debt-${debt.id}" value="${debt.balance}" class="w-full bg-red-900/10 border border-red-900/50 rounded-xl p-3 text-white focus:outline-none focus:border-red-500"></div>`;
       });
     }
 
-    // SAVE BALANCES BUTTON
     document.getElementById('save-btn').addEventListener('click', () => {
       if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
-      
-      // Read Bank Inputs
-      accounts.forEach(acc => {
-        const input = document.getElementById(`input-bank-${acc.id}`);
-        if(input) acc.balance = parseFloat(input.value) || 0;
-      });
-
-      // Read Debt Inputs
-      debts.forEach(debt => {
-        const input = document.getElementById(`input-debt-${debt.id}`);
-        if(input) debt.balance = parseFloat(input.value) || 0;
-      });
-
-      saveData();
-      updateApp();
-      closeModal('update');
+      accounts.forEach(acc => { const i = document.getElementById(`input-bank-${acc.id}`); if(i) acc.balance = parseFloat(i.value) || 0; });
+      debts.forEach(debt => { const i = document.getElementById(`input-debt-${debt.id}`); if(i) debt.balance = parseFloat(i.value) || 0; });
+      saveData(); updateApp(); closeModal('update');
     });
 
-    // --- CORE ENGINE (MATH & RENDER DASHBOARD) ---
+    // --- CORE ENGINE ---
     function updateApp() {
-      // 1. Math: Total Cash
       const totalCash = accounts.reduce((sum, acc) => sum + acc.balance, 0);
       const totalDebtAmount = debts.reduce((sum, debt) => sum + debt.balance, 0);
 
-      // 2. Math: Cashflow
-      let remainingBills = 0; let remainingIncome = 0;
-      let upcomingListHTML = '';
+      let remainingBills = 0; let remainingIncome = 0; let upcomingListHTML = '';
       const upcomingItems = [...cashflowData].sort((a, b) => a.day - b.day).filter(item => item.day >= currentDay);
-
       upcomingItems.forEach(item => {
-        const isBill = item.type === 'bill';
-        if (isBill) remainingBills += item.amount; else remainingIncome += item.amount;
-
-        const color = isBill ? 'text-red-400' : 'text-starling';
-        const prefix = isBill ? '-' : '+';
-        const dueText = item.day === currentDay ? 'TODAY' : `in ${item.day - currentDay} days`;
-
-        upcomingListHTML += `
-          <div class="flex justify-between items-center border-b border-gray-800/50 last:border-0 pb-2 last:pb-0 pt-2 first:pt-0">
-            <div><p class="text-sm font-medium text-white">${item.name}</p><p class="text-[10px] text-gray-500 uppercase">${dueText}</p></div>
-            <p class="text-sm font-bold ${color}">${prefix}£${item.amount.toFixed(2)}</p>
-          </div>
-        `;
+        if (item.type === 'bill') remainingBills += item.amount; else remainingIncome += item.amount;
+        upcomingListHTML += `<div class="flex justify-between items-center border-b border-gray-800/50 last:border-0 pb-2 last:pb-0 pt-2 first:pt-0"><div><p class="text-sm font-medium text-white">${item.name}</p><p class="text-[10px] text-gray-500 uppercase">${item.day === currentDay ? 'TODAY' : `in ${item.day - currentDay} days`}</p></div><p class="text-sm font-bold ${item.type === 'bill' ? 'text-red-400' : 'text-starling'}">${item.type === 'bill' ? '-' : '+'}£${item.amount.toFixed(2)}</p></div>`;
       });
 
       document.getElementById('upcoming-list').innerHTML = upcomingItems.length ? upcomingListHTML : '';
       document.getElementById('no-upcoming').classList.toggle('hidden', upcomingItems.length > 0);
 
-      // 3. Update Top Card UI
       const safeToSpend = totalCash - remainingBills;
       const projectedEOM = totalCash - remainingBills + remainingIncome;
 
@@ -417,35 +351,30 @@
       barEl.style.width = `${safePercent}%`;
       barEl.className = `h-1.5 rounded-full transition-all duration-1000 ease-out ${safePercent < 20 ? 'bg-red-500' : 'bg-starling'}`;
 
-      // 4. Render Dynamic Bank Accounts on Dashboard
       const accountsList = document.getElementById('accounts-list');
       accountsList.innerHTML = '';
       accounts.forEach(acc => {
-        const initials = acc.name.substring(0,2).toUpperCase();
-        accountsList.innerHTML += `
-          <div class="flex justify-between items-center bg-cardbg p-4 rounded-2xl border-l-4 shadow-md" style="border-color: ${acc.color}">
-            <div class="flex items-center gap-3">
-              <div class="text-white p-2 rounded-full font-bold text-xs w-8 h-8 flex justify-center items-center" style="background-color: ${acc.color}">${initials}</div>
-              <div>
-                <p class="font-medium">${acc.name}</p>
-                ${acc.balance < 0 ? '<span class="text-[10px] text-red-400 font-semibold">Overdraft 🚨</span>' : ''}
-              </div>
-            </div>
-            <p class="font-bold text-lg ${acc.balance < 0 ? 'text-red-400' : ''}">£${acc.balance.toFixed(2)}</p>
-          </div>
-        `;
+        accountsList.innerHTML += `<div class="flex justify-between items-center bg-cardbg p-4 rounded-2xl border-l-4 shadow-md" style="border-color: ${acc.color}"><div class="flex items-center gap-3"><div class="text-white font-bold text-xs w-8 h-8 flex justify-center items-center rounded-full" style="background-color: ${acc.color}">${acc.name.substring(0,2).toUpperCase()}</div><div><p class="font-medium">${acc.name}</p>${acc.balance < 0 ? '<span class="text-[10px] text-red-400 font-semibold">Overdraft 🚨</span>' : ''}</div></div><p class="font-bold text-lg ${acc.balance < 0 ? 'text-red-400' : ''}">£${acc.balance.toFixed(2)}</p></div>`;
       });
 
-      // 5. Render Debt Dashboard (Vault Modal)
+      // RENDER ACTIVE DEBT DASHBOARD
       const debtList = document.getElementById('debt-dashboard-list');
       debtList.innerHTML = '';
       if(debts.length === 0) debtList.innerHTML = '<p class="text-gray-500 text-center mt-4">No debts tracked. Add them in Admin.</p>';
       
       debts.forEach(debt => {
         debtList.innerHTML += `
-          <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex justify-between items-center">
-            <p class="font-bold text-white">💳 ${debt.name}</p>
-            <p class="font-bold text-lg text-red-400">£${debt.balance.toFixed(2)}</p>
+          <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 mb-3 shadow-lg">
+            <div class="flex justify-between items-center mb-3">
+              <p class="font-bold text-white uppercase tracking-wide text-sm">💳 ${debt.name}</p>
+              <p class="font-extrabold text-xl text-red-400">£${debt.balance.toFixed(2)}</p>
+            </div>
+            
+            <div class="flex gap-2">
+              <input type="number" id="debt-action-input-${debt.id}" placeholder="£ Amount" class="flex-1 bg-darkbg border border-gray-700 rounded-xl p-3 text-white focus:outline-none focus:border-starling text-sm">
+              <button onclick="modifyDebt(${debt.id}, 'pay')" class="bg-starling text-gray-900 font-extrabold px-4 py-3 rounded-xl shadow-lg active:scale-95 transition-transform">Pay</button>
+              <button onclick="modifyDebt(${debt.id}, 'interest')" class="bg-red-900/50 text-red-400 border border-red-500/30 font-extrabold px-4 py-3 rounded-xl active:scale-95 transition-transform">+ Int</button>
+            </div>
           </div>
         `;
       });
@@ -458,7 +387,6 @@
       localStorage.setItem('cashflowData', JSON.stringify(cashflowData));
     }
 
-    // Boot Up
     updateApp();
   </script>
 </body>
