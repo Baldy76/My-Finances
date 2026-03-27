@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Command Center</title>
   
-  <link rel="stylesheet" href="./style.css">
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#0F172A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1378/1378598.png">
   
+  <link rel="stylesheet" href="./style.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -51,6 +51,9 @@
       <span>Available: <span id="total-cash" class="font-bold text-slate-800 dark:text-white">£0.00</span></span>
       <span>Bills Left: <span id="display-bills" class="font-bold text-red-500">£0.00</span></span>
     </p>
+    <p class="text-[10px] text-slate-500 dark:text-gray-400 pt-2 relative z-10 font-bold uppercase tracking-widest text-center">
+      Projected Month End: <span id="projected-balance" class="text-starling">£0.00</span>
+    </p>
   </div>
 
   <div class="flex justify-between items-center mb-3">
@@ -85,140 +88,185 @@
     </button>
   </nav>
 
-  <div id="update-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
+  <div id="update-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end backdrop-blur-sm">
     <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-4 shrink-0">
+      <div class="flex justify-between items-center mb-4">
         <h2 class="text-2xl font-black">Transact</h2>
-        <button id="close-modal" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
+        <button id="close-update" class="text-slate-400 text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800">✕</button>
       </div>
       <div class="overflow-y-auto flex-1 pr-2 space-y-6">
         <div class="bg-white dark:bg-darkbg p-5 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-sm">
-          <h3 class="text-xs font-black text-starling mb-4 uppercase tracking-wider flex items-center gap-2">⚡ Quick Spend</h3>
+          <h3 class="text-xs font-black text-starling mb-4 uppercase tracking-wider">⚡ Quick Spend</h3>
           <div class="grid grid-cols-2 gap-3 mb-3">
-            <select id="spend-account" class="bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none"></select>
-            <input type="number" id="spend-amount" placeholder="£ 0.00" class="bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-bold focus:outline-none">
+            <select id="spend-account" class="bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-medium"></select>
+            <input type="number" id="spend-amount" placeholder="£ 0.00" class="bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-bold">
           </div>
-          <input type="text" id="spend-desc" placeholder="What was it? (e.g. Coffee)" class="w-full bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium mb-4 focus:outline-none">
-          <button id="quick-spend-btn" class="w-full bg-starling text-slate-900 font-black p-4 rounded-xl active:scale-95 text-sm shadow-md">Record Purchase</button>
+          <input type="text" id="spend-desc" placeholder="What was it?" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm mb-4">
+          <button id="quick-spend-btn" class="w-full bg-starling text-slate-900 font-black p-4 rounded-xl active:scale-95">Record Purchase</button>
         </div>
         <div class="bg-white dark:bg-darkbg p-5 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-sm">
-          <h3 class="text-xs font-black text-blue-500 dark:text-blue-400 mb-4 uppercase tracking-wider flex items-center gap-2">🔄 Internal Transfer</h3>
+          <h3 class="text-xs font-black text-blue-500 mb-4 uppercase tracking-wider">🔄 Transfer Funds</h3>
           <div class="space-y-3 mb-4">
-            <select id="transfer-from" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium"></select>
-            <select id="transfer-to" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium"></select>
-            <input type="number" id="transfer-amount" placeholder="£ Amount to move" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-bold">
+            <select id="transfer-from" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm"></select>
+            <select id="transfer-to" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm"></select>
+            <input type="number" id="transfer-amount" placeholder="£ Amount" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm">
           </div>
-          <button id="transfer-btn" class="w-full bg-blue-500 text-white font-black p-4 rounded-xl active:scale-95 text-sm shadow-md">Execute Transfer</button>
+          <button id="transfer-btn" class="w-full bg-blue-500 text-white font-black p-4 rounded-xl active:scale-95">Execute Transfer</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="vault-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
+  <div id="vault-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end backdrop-blur-sm">
     <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6 shrink-0">
+      <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-black">The Vault</h2>
-        <button id="close-vault" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800">✕</button>
+        <button id="close-vault" class="text-slate-400 text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800">✕</button>
       </div>
       <div class="overflow-y-auto flex-1 pr-2 space-y-6">
+        <div><h3 class="text-xs font-black text-yellow-500 uppercase tracking-widest mb-3">🍯 Savings Pots</h3><div id="pots-dashboard-list" class="space-y-3"></div></div>
         <div>
-          <h3 class="text-xs font-black text-yellow-500 uppercase tracking-widest mb-3">🍯 Savings Pots</h3>
-          <div id="pots-dashboard-list" class="space-y-3"></div>
-        </div>
-        <div>
-          <h3 class="text-xs font-black text-red-500 uppercase tracking-widest mb-3">💳 Credit & Loans</h3>
-          <div id="debt-dashboard-list" class="space-y-3"></div>
-          <div class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 p-4 rounded-2xl flex justify-between items-center shadow-sm">
-            <p class="text-red-600 dark:text-red-400 font-black uppercase tracking-widest text-[10px]">Total Liabilities</p>
-            <h2 class="text-xl font-black text-red-600 dark:text-red-500" id="total-debt-display">£0.00</h2>
-          </div>
+            <h3 class="text-xs font-black text-red-500 uppercase tracking-widest mb-3">💳 Credit & Loans</h3>
+            <div id="debt-dashboard-list" class="space-y-3"></div>
+            <div class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 p-4 rounded-2xl flex justify-between items-center shadow-sm">
+                <p class="text-red-600 dark:text-red-400 font-black uppercase text-[10px]">Total Liabilities</p>
+                <h2 class="text-xl font-black text-red-600 dark:text-red-500" id="total-debt-display">£0.00</h2>
+            </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="cashflow-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
+  <div id="cashflow-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end backdrop-blur-sm">
     <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-4 shrink-0">
+      <div class="flex justify-between items-center mb-4">
         <h2 class="text-2xl font-black">Calendar</h2>
-        <button id="close-cashflow" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800">✕</button>
+        <button id="close-cashflow" class="text-slate-400 text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800">✕</button>
       </div>
-      <div class="bg-white dark:bg-darkbg p-5 rounded-3xl border border-slate-200 dark:border-gray-700 mb-6 shrink-0 shadow-sm" id="cf-form-container">
+      <div class="bg-white dark:bg-darkbg p-5 rounded-3xl shadow-sm mb-6 shrink-0 border border-slate-100 dark:border-gray-700" id="cf-form-container">
         <div class="grid grid-cols-2 gap-3 mb-3">
-          <select id="cf-type" class="bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium"><option value="bill">🔴 Bill</option><option value="income">🟢 Income</option></select>
-          <select id="cf-freq" class="bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="one_off">One-Off</option></select>
+          <select id="cf-type" class="bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-medium"><option value="bill">🔴 Bill</option><option value="income">🟢 Income</option></select>
+          <select id="cf-freq" class="bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-medium"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="one_off">One-Off</option></select>
         </div>
         <div class="grid grid-cols-2 gap-3 mb-3">
-          <select id="cf-month" class="hidden bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm text-center"></select>
-          <select id="cf-day" class="col-span-2 bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm text-center font-medium"><option value="" disabled selected>Select Day...</option><option value="last_working_day">⭐ Last Working Day</option></select>
+          <select id="cf-month" class="hidden bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm text-center"></select>
+          <select id="cf-day" class="col-span-2 bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm text-center font-medium"><option value="" disabled selected>Select Day...</option><option value="last_working_day">⭐ Last Working Day</option></select>
         </div>
-        <input type="text" id="cf-name" placeholder="Entry Name" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium mb-3">
-        <input type="number" id="cf-amount" placeholder="£ Amount" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-black mb-4">
+        <input type="text" id="cf-name" placeholder="Entry Name" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-medium mb-3">
+        <input type="number" id="cf-amount" placeholder="£ Amount" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-black mb-4">
         <label class="flex items-center gap-3 mb-5 text-sm p-2 cursor-pointer">
           <input type="checkbox" id="cf-manual" class="w-5 h-5 rounded accent-starling"><span>Enable Alerting</span>
         </label>
-        <button id="add-cf-btn" class="w-full bg-slate-800 dark:bg-gray-700 text-white font-black p-4 rounded-xl active:scale-95 text-sm shadow-md transition-colors hover:bg-starling hover:text-slate-900">+ Add to Calendar</button>
+        <button id="add-cf-btn" class="w-full bg-slate-800 dark:bg-gray-700 text-white font-black p-4 rounded-xl active:scale-95 text-sm">+ Add to Calendar</button>
       </div>
       <div class="overflow-y-auto flex-1 pr-2 space-y-3" id="full-ledger"></div>
     </div>
   </div>
 
-  <div id="admin-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
+  <div id="admin-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end backdrop-blur-sm">
     <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6 shrink-0">
-        <h2 class="text-2xl font-black text-slate-900 dark:text-white">Admin</h2>
-        <button id="close-admin" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-black">Admin</h2>
+        <button id="close-admin" class="text-slate-400 text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800">✕</button>
       </div>
       <div class="overflow-y-auto flex-1 pr-2 space-y-6">
-        
-        <div class="bg-white dark:bg-darkbg border border-slate-200 dark:border-gray-700 p-5 rounded-3xl flex justify-between items-center shadow-sm">
-          <div><h3 class="text-sm font-black tracking-wide text-slate-800 dark:text-white">Interface Theme</h3><p class="text-[10px] text-slate-500 font-medium">Toggle Light / Dark Mode</p></div>
-          <button id="theme-toggle-btn" class="bg-slate-100 dark:bg-gray-800 p-3 rounded-full border border-slate-200 dark:border-gray-700 text-xl transition-transform active:scale-90">🌙</button>
+        <div class="bg-white dark:bg-darkbg p-5 rounded-3xl flex justify-between items-center border border-slate-100 dark:border-gray-700 shadow-sm">
+          <div><h3 class="text-sm font-black text-slate-800 dark:text-white">Theme</h3><p class="text-[10px] text-slate-400">Toggle Light / Dark Mode</p></div>
+          <button id="theme-toggle-btn" class="bg-slate-100 dark:bg-gray-800 p-3 rounded-full border border-slate-200 dark:border-gray-600 text-xl">🌙</button>
         </div>
 
-        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/50 p-5 rounded-3xl shadow-sm">
-          <h3 class="text-sm font-black text-blue-600 dark:text-blue-400 mb-4 uppercase tracking-wider">💾 Backup System</h3>
-          <div class="grid grid-cols-2 gap-3">
-            <button id="export-data-btn" class="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-400 font-black p-3.5 rounded-xl active:scale-95 text-sm">Export</button>
-            <button id="import-data-btn" class="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-400 font-black p-3.5 rounded-xl active:scale-95 text-sm">Import</button>
-          </div>
-          <input type="file" id="import-file-input" accept=".json" class="hidden">
-        </div>
-
-        <div class="bg-white dark:bg-darkbg p-5 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-sm">
-          <h3 class="text-sm font-black text-starling mb-4 uppercase tracking-wider">Create New</h3>
+        <div class="bg-white dark:bg-darkbg p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-700">
+          <h3 class="text-sm font-black text-starling mb-4 uppercase">Create New</h3>
           <div class="space-y-3 mb-4">
-            <select id="admin-type" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-starling">
+            <select id="admin-type" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none">
               <option value="bank">🏦 Bank Account</option><option value="debt">💳 Credit Card / Loan</option><option value="pot">🍯 Savings Pot</option>
             </select>
-            <input type="text" id="admin-name" placeholder="Name (e.g. Halifax Joint)" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-starling">
+            <input type="text" id="admin-name" placeholder="Name (e.g. Halifax Joint)" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium">
             <input type="text" id="admin-domain" placeholder="Domain (e.g. halifax.co.uk)" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-[10px] opacity-70">
-            <input type="number" id="admin-secondary" placeholder="Overdraft Limit (£)" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-starling">
+            <input type="number" id="admin-secondary" placeholder="Secondary Limit (£)" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium">
           </div>
-          <button id="add-account-btn" class="w-full bg-slate-800 dark:bg-gray-700 text-white font-black p-4 rounded-xl active:scale-95 text-sm shadow-md transition-colors hover:bg-starling hover:text-slate-900">Create Entry</button>
+          <button id="add-account-btn" class="w-full bg-slate-800 dark:bg-gray-700 text-white font-black p-4 rounded-xl active:scale-95 text-sm shadow-md">Create Entry</button>
         </div>
         
-        <button id="force-override-btn" class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 p-4 rounded-xl font-black text-sm flex justify-between items-center shadow-sm active:scale-95 transition-transform">
+        <button id="force-override-btn" class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 p-4 rounded-xl font-black text-sm flex justify-between items-center shadow-sm">
           <span>⚠️ Force Override Balances</span> <i data-lucide="chevron-right" class="w-4 h-4"></i>
         </button>
 
         <div class="space-y-3" id="admin-list"></div>
 
         <div class="pt-8 pb-4 text-center opacity-30">
-          <p class="text-[10px] font-black tracking-widest uppercase">Command Center v1.0.0</p>
+          <p class="text-[10px] font-black tracking-widest uppercase text-slate-500">Command Center v1.0.0</p>
         </div>
       </div>
     </div>
   </div>
 
+  <div id="override-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-60 hidden flex-col justify-end backdrop-blur-sm">
+    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
+      <div class="flex justify-between items-center mb-6 shrink-0">
+        <h2 class="text-2xl font-black">Force Overrides</h2>
+        <button id="close-override" class="text-slate-400 text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800">✕</button>
+      </div>
+      <div class="overflow-y-auto flex-1 pr-2 space-y-6">
+        <div id="update-banks-container" class="space-y-3"></div>
+        <div id="update-pots-container" class="space-y-3"></div>
+        <div id="update-debts-container" class="space-y-3"></div>
+      </div>
+      <button id="save-override-btn" class="w-full bg-starling text-slate-900 font-black text-lg p-4 rounded-xl shadow-lg mt-4 shrink-0 active:scale-95">Force Save Overrides</button>
+    </div>
+  </div>
+
+  <div id="analytics-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end backdrop-blur-sm">
+    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-black">Analytics</h2>
+        <button id="close-analytics" class="text-slate-400 text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800">✕</button>
+      </div>
+      <div class="overflow-y-auto flex-1 pr-2 space-y-6 text-center">
+        <div class="bg-white dark:bg-darkbg p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800 flex flex-col items-center">
+          <div class="relative w-48 h-48 rounded-full shadow-inner border-4 border-slate-100 dark:border-gray-800 flex justify-center items-center" id="donut-chart" style="background: conic-gradient(#00E6C3 0% 100%);">
+            <div class="absolute w-36 h-36 bg-white dark:bg-darkbg rounded-full shadow-md flex flex-col justify-center items-center">
+              <span class="text-[10px] text-slate-400 uppercase font-black">Net Worth</span>
+              <span class="text-xl font-black" id="analytics-total">£0.00</span>
+            </div>
+          </div>
+          <div class="w-full grid grid-cols-3 gap-2 mt-8 text-center">
+            <div class="bg-slate-50 dark:bg-gray-800/50 p-2 rounded-xl"><div class="w-2 h-2 rounded-full bg-starling mx-auto mb-1"></div><p class="text-[8px] font-black uppercase text-slate-500">Cash</p><p class="text-xs font-black" id="an-cash">£0</p></div>
+            <div class="bg-slate-50 dark:bg-gray-800/50 p-2 rounded-xl"><div class="w-2 h-2 rounded-full bg-yellow-400 mx-auto mb-1"></div><p class="text-[8px] font-black uppercase text-slate-500">Pots</p><p class="text-xs font-black" id="an-pots">£0</p></div>
+            <div class="bg-slate-50 dark:bg-gray-800/50 p-2 rounded-xl"><div class="w-2 h-2 rounded-full bg-red-500 mx-auto mb-1"></div><p class="text-[8px] font-black uppercase text-slate-500">Debt</p><p class="text-xs font-black" id="an-debt">£0</p></div>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-darkbg p-6 rounded-3xl text-left border border-slate-100 dark:border-gray-800 shadow-sm">
+          <h3 class="text-xs font-black text-slate-500 uppercase mb-2">Monthly Spend Total</h3>
+          <p class="text-3xl font-black" id="monthly-spend-total">£0.00</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="history-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end backdrop-blur-sm">
+    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
+      <div class="flex justify-between items-center mb-6 shrink-0">
+        <h2 class="text-2xl font-black">History</h2>
+        <button id="close-history" class="text-slate-400 text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
+      </div>
+      <div class="overflow-y-auto flex-1 pr-2 space-y-3" id="history-list"></div>
+      <button onclick="clearHistory()" class="mt-5 w-full bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400 font-black p-4 rounded-xl text-sm active:scale-95 transition-transform border border-red-100 dark:border-red-900/50">Wipe Log</button>
+    </div>
+  </div>
+
   <script src="./app.js"></script>
   <script>
+    // Initialize Lucide Icons
     lucide.createIcons();
+
+    // Register Service Worker for PWA (Offline Mode)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log("SW Reg Error: ", err));
       });
     }
   </script>
+
 </body>
 </html>
