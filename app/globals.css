@@ -1,15 +1,8 @@
-@import "tailwindcss";
-
-@theme {
-  --color-halifax: #0033A0;
-  --color-barclays: #00AEFF;
-  --color-starling: #00E6C3;
-  --color-darkbg: #0F172A;
-  --color-cardbg: #1E293B;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 body {
-  background-color: var(--color-darkbg);
-  color: white;
+  @apply bg-darkbg text-white;
   min-height: 100vh;
 }
