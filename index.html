@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Command Center</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            halifax: '#0033A0',
+            barclays: '#00AEFF',
+            starling: '#00E6C3',
+            darkbg: '#0F172A',
+            cardbg: '#1E293B',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #0F172A; color: white; font-family: sans-serif; padding-bottom: 6rem; }
+  </style>
+</head>
+<body class="p-4">
+
+  <header class="flex justify-between items-center mb-6 pt-4">
+    <div>
+      <h1 class="text-2xl font-bold">Command Center 🚀</h1>
+      <p class="text-gray-400 text-sm">Welcome back, Boss.</p>
+    </div>
+  </header>
+
+  <div class="bg-gradient-to-br from-cardbg to-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl text-center mb-8">
+    <p class="text-gray-400 font-medium mb-2">Safe to Spend</p>
+    <h2 class="text-5xl font-extrabold tracking-tight text-white" id="safe-to-spend">£1450.00</h2>
+    <p class="text-sm text-gray-500 mt-4">Total Cash: £1900.00 | Pending Bills: £450.00</p>
+  </div>
+
+  <h3 class="text-lg font-semibold mb-4">Your Vaults 🏦</h3>
+  <div class="space-y-3">
+    
+    <div class="flex justify-between items-center bg-cardbg p-4 rounded-2xl border-l-4 border-halifax">
+      <div class="flex items-center gap-3">
+        <div class="bg-halifax text-white p-2 rounded-full font-bold text-xs">HX</div>
+        <p class="font-medium">Halifax Joint</p>
+      </div>
+      <p class="font-bold">£1250.00</p>
+    </div>
+
+    <div class="flex justify-between items-center bg-cardbg p-4 rounded-2xl border-l-4 border-barclays">
+      <div class="flex items-center gap-3">
+        <div class="bg-barclays text-white p-2 rounded-full font-bold text-xs">BC</div>
+        <div>
+          <p class="font-medium">Barclays Current</p>
+          <span class="text-xs text-red-400">Overdraft Active 🚨</span>
+        </div>
+      </div>
+      <p class="font-bold text-red-400">-£150.00</p>
+    </div>
+
+    <div class="flex justify-between items-center bg-cardbg p-4 rounded-2xl border-l-4 border-starling">
+      <div class="flex items-center gap-3">
+        <div class="bg-starling text-gray-900 p-2 rounded-full font-bold text-xs">ST</div>
+        <p class="font-medium">Starling Savings</p>
+      </div>
+      <p class="font-bold">£800.00</p>
+    </div>
+
+  </div>
+
+  <nav class="fixed bottom-0 left-0 w-full bg-cardbg/90 backdrop-blur-lg border-t border-gray-800 p-4 flex justify-around items-center rounded-t-2xl z-50">
+    <button class="flex flex-col items-center text-gray-400 hover:text-white">
+      <span class="text-2xl">🏠</span>
+      <span class="text-xs mt-1">Home</span>
+    </button>
+    <button class="flex flex-col items-center text-gray-400 hover:text-white">
+      <span class="text-2xl">🎯</span>
+      <span class="text-xs mt-1">Goals</span>
+    </button>
+    <button class="flex flex-col items-center text-starling -mt-10 bg-darkbg rounded-full p-3 border-4 border-cardbg shadow-lg">
+      <span class="text-4xl">➕</span>
+    </button>
+    <button class="flex flex-col items-center text-gray-400 hover:text-white">
+      <span class="text-2xl">🏦</span>
+      <span class="text-xs mt-1">Vault</span>
+    </button>
+  </nav>
+
+</body>
+</html>
