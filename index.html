@@ -1,14 +1,20 @@
 <!DOCTYPE html>
-<html lang="en" class="dark"> <head>
+<html lang="en" class="dark">
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Command Center</title>
+  
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0F172A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1378/1378598.png">
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class', // Enables the manual Light/Dark toggle
+      darkMode: 'class', 
       theme: {
         extend: {
           colors: {
@@ -25,8 +31,6 @@
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-bottom: 6rem; transition: background-color 0.3s, color 0.3s; }
     input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-    
-    /* Smooth Modal Animations */
     .modal-enter { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
@@ -103,7 +107,6 @@
         <h2 class="text-2xl font-black">Transact</h2>
         <button id="close-modal" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
       </div>
-      
       <div class="overflow-y-auto flex-1 pr-2 space-y-6">
         <div class="bg-white dark:bg-darkbg p-5 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-sm">
           <h3 class="text-xs font-black text-starling mb-4 uppercase tracking-wider flex items-center gap-2">⚡ Quick Spend</h3>
@@ -135,12 +138,10 @@
         <button id="close-vault" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
       </div>
       <div class="overflow-y-auto flex-1 pr-2 space-y-6">
-        
         <div>
           <h3 class="text-xs font-black text-yellow-500 dark:text-yellow-400 mb-3 uppercase tracking-wider">🍯 Savings Pots</h3>
           <div id="pots-dashboard-list" class="space-y-3"></div>
         </div>
-
         <div>
           <h3 class="text-xs font-black text-red-500 dark:text-red-400 mb-3 uppercase tracking-wider">💳 Credit & Loans</h3>
           <div id="debt-dashboard-list" class="space-y-3"></div>
@@ -197,9 +198,7 @@
             <h3 class="text-sm font-black text-slate-800 dark:text-white mb-1 tracking-wide">🎨 Interface Theme</h3>
             <p class="text-[10px] text-slate-500 dark:text-gray-400 font-medium">Toggle Light / Dark Mode</p>
           </div>
-          <button id="theme-toggle-btn" class="bg-slate-100 dark:bg-gray-800 p-3 rounded-full shadow-inner border border-slate-200 dark:border-gray-700 text-xl transition-transform active:scale-90">
-            🌙
-          </button>
+          <button id="theme-toggle-btn" class="bg-slate-100 dark:bg-gray-800 p-3 rounded-full shadow-inner border border-slate-200 dark:border-gray-700 text-xl transition-transform active:scale-90">🌙</button>
         </div>
 
         <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/50 p-5 rounded-3xl shadow-sm">
@@ -303,7 +302,6 @@
           <p class="text-3xl font-black text-slate-800 dark:text-white mb-2" id="monthly-spend-total">£0.00</p>
           <p class="text-xs text-slate-500 dark:text-gray-400 font-medium">Based on your Quick Spend history and Bill tracking.</p>
         </div>
-
       </div>
     </div>
   </div>
@@ -315,17 +313,11 @@
     let currentTheme = localStorage.getItem('appTheme') || 'dark';
 
     function applyTheme(theme) {
-      if (theme === 'light') {
-        htmlEl.classList.remove('dark');
-        themeBtn.innerText = '☀️';
-      } else {
-        htmlEl.classList.add('dark');
-        themeBtn.innerText = '🌙';
-      }
-      localStorage.setItem('appTheme', theme);
-      currentTheme = theme;
+      if (theme === 'light') { htmlEl.classList.remove('dark'); themeBtn.innerText = '☀️'; } 
+      else { htmlEl.classList.add('dark'); themeBtn.innerText = '🌙'; }
+      localStorage.setItem('appTheme', theme); currentTheme = theme;
     }
-    applyTheme(currentTheme); // Run on boot
+    applyTheme(currentTheme);
 
     themeBtn.addEventListener('click', () => {
       if (navigator.vibrate) navigator.vibrate(20);
@@ -333,7 +325,6 @@
     });
 
     // --- STATE & DATA ---
-    // Safely upgrade old data (ensure limits exist)
     let accounts = (JSON.parse(localStorage.getItem('myAccounts')) || []).map(a => ({...a, overdraft: a.overdraft || 0}));
     let debts = (JSON.parse(localStorage.getItem('myDebts')) || []).map(d => ({...d, limit: d.limit || 0})); 
     let pots = JSON.parse(localStorage.getItem('myPots')) || [];
@@ -361,12 +352,10 @@
       const list = document.getElementById('history-list'); list.innerHTML = '';
       if(historyLog.length === 0) return list.innerHTML = '<p class="text-center text-slate-500 dark:text-gray-500 mt-4 font-medium">No transactions yet.</p>';
       historyLog.forEach(tx => {
-        // Adjust default color for light mode if it was saved as 'text-white' originally
         let c = tx.color; if(c === 'text-white') c = 'text-slate-800 dark:text-white';
         list.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl mb-3 flex justify-between items-center shadow-sm border border-slate-100 dark:border-transparent"><div class="flex-1"><p class="text-sm font-black text-slate-800 dark:text-white">${tx.title}</p><p class="text-[10px] text-slate-400 dark:text-gray-400 font-medium">${tx.desc} • ${tx.timestamp}</p></div><p class="font-black ${c}">${tx.amount}</p></div>`;
       });
     }
-    window.clearHistory = function() { if(confirm("Wipe all history?")) { historyLog = []; localStorage.setItem('myHistory', JSON.stringify(historyLog)); renderHistory(); } }
 
     // --- SMART CALENDAR LOGIC ---
     function getLastWorkingDay(year, month) {
@@ -395,7 +384,6 @@
       else { m.classList.remove('hidden'); d.classList.remove('col-span-2'); }
     });
     
-    // Dynamic Input in Admin (Overdraft vs Credit Limit)
     document.getElementById('admin-type').addEventListener('change', (e) => {
       const sec = document.getElementById('admin-secondary');
       if(e.target.value === 'bank') { sec.classList.remove('hidden'); sec.placeholder = "Overdraft Limit (£)"; }
@@ -571,7 +559,7 @@
       }
     });
 
-    // --- VAULT LOGIC (DEBTS & POTS) ---
+    // --- VAULT LOGIC ---
     window.modifyVault = function(type, id, action) {
       const input = document.getElementById(`vault-action-${type}-${id}`); const amount = parseFloat(input.value);
       if (!amount || amount <= 0) return;
@@ -613,22 +601,14 @@
       document.getElementById('an-debt').innerText = `£${totalDebt.toFixed(0)}`;
       document.getElementById('analytics-total').innerText = `£${grandTotal > 0 ? grandTotal.toFixed(0) : 0}`;
 
-      // Calculate Donut Segments (Degrees)
       let degC = 0, degP = 0, degD = 0;
       if (grandTotal > 0) {
-        degC = (totalCash / grandTotal) * 360;
-        degP = (totalPots / grandTotal) * 360;
-        degD = (totalDebt / grandTotal) * 360;
+        degC = (totalCash / grandTotal) * 360; degP = (totalPots / grandTotal) * 360; degD = (totalDebt / grandTotal) * 360;
       }
-      // Conic Gradient string: Cash(Starling), Pots(Yellow), Debt(Red)
       const chart = document.getElementById('donut-chart');
-      if (grandTotal === 0) {
-        chart.style.background = '#1E293B'; // Empty state
-      } else {
-        chart.style.background = `conic-gradient(#00E6C3 0deg ${degC}deg, #FBBF24 ${degC}deg ${degC+degP}deg, #EF4444 ${degC+degP}deg 360deg)`;
-      }
+      if (grandTotal === 0) chart.style.background = '#1E293B'; 
+      else chart.style.background = `conic-gradient(#00E6C3 0deg ${degC}deg, #FBBF24 ${degC}deg ${degC+degP}deg, #EF4444 ${degC+degP}deg 360deg)`;
 
-      // Calculate Monthly Spend (Rough estimate from history: negative txns not marked as transfer)
       let monthlySpend = 0;
       const currentMonthStr = new Date().toLocaleString('en-GB', { month: 'short' });
       historyLog.forEach(tx => {
@@ -693,7 +673,6 @@
       const barEl = document.getElementById('cash-bar'); const safePercent = totalCash > 0 && safeToSpend > 0 ? Math.round((safeToSpend / totalCash) * 100) : 0;
       barEl.style.width = `${safePercent}%`; barEl.className = `h-2 rounded-full transition-all duration-1000 ease-out ${safePercent < 20 ? 'bg-red-500' : 'bg-starling'}`;
 
-      // ACCOUNTS DASHBOARD
       const accountsList = document.getElementById('accounts-list'); accountsList.innerHTML = '';
       accounts.forEach(acc => { 
         const avail = acc.balance + (acc.overdraft || 0);
@@ -702,26 +681,18 @@
         accountsList.innerHTML += `<div class="flex justify-between items-center bg-white dark:bg-cardbg p-5 rounded-3xl border-l-4 shadow-sm mb-3 transition-colors duration-300" style="border-color: ${acc.color}"><div class="flex items-center gap-4"><div class="text-white font-black text-xs w-10 h-10 flex justify-center items-center rounded-full shadow-inner" style="background-color: ${acc.color}">${acc.name.substring(0,2).toUpperCase()}</div><div><p class="font-black text-slate-800 dark:text-white">${acc.name}</p>${warning} ${odLabel}</div></div><p class="font-black text-xl ${acc.balance < 0 ? 'text-red-500 dark:text-red-400' : 'text-slate-800 dark:text-white'}">£${acc.balance.toFixed(2)}</p></div>`; 
       });
 
-      // VAULT: POTS
       const potsList = document.getElementById('pots-dashboard-list'); potsList.innerHTML = '';
       if(pots.length === 0) potsList.innerHTML = '<p class="text-slate-500 dark:text-gray-500 text-xs font-medium">No pots tracked. Transfer funds here to start saving.</p>';
       pots.forEach(pot => { potsList.innerHTML += `<div class="bg-white dark:bg-gray-800 p-5 rounded-3xl border border-slate-200 dark:border-gray-700 mb-3 shadow-sm"><div class="flex justify-between items-center mb-4"><p class="font-black text-slate-800 dark:text-white uppercase tracking-wider text-sm">🍯 ${pot.name}</p><p class="font-black text-2xl text-yellow-500 dark:text-yellow-400">£${pot.balance.toFixed(2)}</p></div><div class="flex gap-2"><input type="number" id="vault-action-pot-${pot.id}" placeholder="£ to withdraw" class="flex-1 bg-slate-50 dark:bg-darkbg border border-slate-200 dark:border-gray-700 rounded-xl p-3 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-starling text-sm"><button onclick="modifyVault('pot', ${pot.id}, 'withdraw')" class="bg-slate-200 dark:bg-gray-700 text-slate-700 dark:text-white px-4 py-3 rounded-xl active:scale-95 text-xs font-black shadow-sm transition-transform">Withdraw</button></div></div>`; });
 
-      // VAULT: DEBTS (WITH CREDIT LIMIT VISUALIZATION)
       const debtList = document.getElementById('debt-dashboard-list'); debtList.innerHTML = '';
       if(debts.length === 0) debtList.innerHTML = '<p class="text-slate-500 dark:text-gray-500 text-xs font-medium">No debts tracked.</p>';
       debts.forEach(debt => { 
         let limitUI = '';
         if (debt.limit > 0) {
-          const utilPercent = Math.min((debt.balance / debt.limit) * 100, 100);
-          const availCr = debt.limit - debt.balance;
-          limitUI = `
-            <div class="mt-2 mb-4">
-              <div class="flex justify-between text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span>Avail Cr: £${availCr.toFixed(2)}</span><span>Limit: £${debt.limit.toFixed(2)}</span></div>
-              <div class="w-full bg-slate-100 dark:bg-gray-900 rounded-full h-1.5 overflow-hidden"><div class="bg-red-500 h-1.5 rounded-full" style="width: ${utilPercent}%"></div></div>
-            </div>`;
+          const utilPercent = Math.min((debt.balance / debt.limit) * 100, 100); const availCr = debt.limit - debt.balance;
+          limitUI = `<div class="mt-2 mb-4"><div class="flex justify-between text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span>Avail Cr: £${availCr.toFixed(2)}</span><span>Limit: £${debt.limit.toFixed(2)}</span></div><div class="w-full bg-slate-100 dark:bg-gray-900 rounded-full h-1.5 overflow-hidden"><div class="bg-red-500 h-1.5 rounded-full" style="width: ${utilPercent}%"></div></div></div>`;
         }
-        
         debtList.innerHTML += `<div class="bg-white dark:bg-gray-800 p-5 rounded-3xl border border-slate-200 dark:border-gray-700 mb-3 shadow-sm"><div class="flex justify-between items-center mb-1"><p class="font-black text-slate-800 dark:text-white uppercase tracking-wider text-sm">💳 ${debt.name}</p><p class="font-black text-2xl text-red-600 dark:text-red-400">£${debt.balance.toFixed(2)}</p></div>${limitUI}<div class="flex gap-2"><input type="number" id="vault-action-debt-${debt.id}" placeholder="£ Amount" class="flex-1 bg-slate-50 dark:bg-darkbg border border-slate-200 dark:border-gray-700 rounded-xl p-3 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-starling text-sm"><button onclick="modifyVault('debt', ${debt.id}, 'pay')" class="bg-starling text-slate-900 font-black px-4 py-3 rounded-xl active:scale-95 text-xs shadow-md transition-transform">Pay</button><button onclick="modifyVault('debt', ${debt.id}, 'interest')" class="bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30 font-black px-4 py-3 rounded-xl active:scale-95 text-xs shadow-sm transition-transform">+ Int</button></div></div>`; 
       });
       document.getElementById('total-debt-display').innerText = `£${totalDebtAmount.toFixed(2)}`;
@@ -735,6 +706,16 @@
     }
 
     updateApp();
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker Registered!'))
+          .catch(err => console.log('Service Worker Failed to Register', err));
+      });
+    }
   </script>
 </body>
 </html>
