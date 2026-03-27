@@ -2,19 +2,16 @@
 import { useState } from 'react'
 
 export default function Dashboard() {
-  // Phase 1: Manual State (Later we will replace this with LocalStorage/CSV or API)
   const [halifax, setHalifax] = useState(1250.00)
-  const [barclays, setBarclays] = useState(-150.00) // Into the overdraft!
+  const [barclays, setBarclays] = useState(-150.00) 
   const [starling, setStarling] = useState(800.00)
   const [pendingBills, setPendingBills] = useState(450.00)
 
-  // The Magic Math
   const totalCash = halifax + barclays + starling
   const safeToSpend = totalCash - pendingBills
 
   return (
     <div className="space-y-6 pt-4">
-      {/* Header */}
       <header className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">Command Center 🚀</h1>
@@ -22,7 +19,6 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Hero Metric: Safe to Spend */}
       <div className="bg-gradient-to-br from-cardbg to-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl text-center">
         <p className="text-gray-400 font-medium mb-2">Safe to Spend</p>
         <h2 className={`text-5xl font-extrabold tracking-tight ${safeToSpend < 0 ? 'text-red-500' : 'text-white'}`}>
@@ -33,11 +29,9 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Bank Accounts Row */}
       <h3 className="text-lg font-semibold mt-8 mb-4">Your Vaults 🏦</h3>
       <div className="space-y-3">
         
-        {/* Halifax Card */}
         <div className="flex justify-between items-center bg-cardbg p-4 rounded-2xl border-l-4 border-halifax">
           <div className="flex items-center gap-3">
             <div className="bg-halifax text-white p-2 rounded-full font-bold text-xs">HX</div>
@@ -46,7 +40,6 @@ export default function Dashboard() {
           <p className="font-bold">£{halifax.toFixed(2)}</p>
         </div>
 
-        {/* Barclays Card */}
         <div className="flex justify-between items-center bg-cardbg p-4 rounded-2xl border-l-4 border-barclays">
           <div className="flex items-center gap-3">
             <div className="bg-barclays text-white p-2 rounded-full font-bold text-xs">BC</div>
@@ -58,7 +51,6 @@ export default function Dashboard() {
           <p className={`font-bold ${barclays < 0 ? 'text-red-400' : ''}`}>£{barclays.toFixed(2)}</p>
         </div>
 
-        {/* Starling Card */}
         <div className="flex justify-between items-center bg-cardbg p-4 rounded-2xl border-l-4 border-starling">
           <div className="flex items-center gap-3">
             <div className="bg-starling text-gray-900 p-2 rounded-full font-bold text-xs">ST</div>
