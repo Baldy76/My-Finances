@@ -1,260 +1,81 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Command Center</title>
-  
-  <link rel="stylesheet" href="./style.css">
-  <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#0F172A">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class', 
-      theme: { extend: { colors: { starling: '#00E6C3', darkbg: '#0F172A', cardbg: '#1E293B', lightbg: '#F8FAFC', lightcard: '#FFFFFF' } } }
-    }
-  </script>
-  <style>
-    .btn-close-mac {
-      width: 28px; height: 28px; background-color: #ff5f56; border: 1px solid #e0443e;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;
-    }
-    .btn-close-mac i { color: rgba(0,0,0,0.5); width: 14px; height: 14px; stroke-width: 4px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Banking Portal</title>
     
-    .view-section { display: none; width: 100%; min-height: 100vh; padding-bottom: 120px; }
-    .view-active { display: block; animation: fadeIn 0.2s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-    /* iOS Style Bottom Sheets */
-    .bottom-sheet-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-      z-index: 60; display: none; opacity: 0; transition: opacity 0.3s;
-    }
-    .bottom-sheet {
-      position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-color, #1E293B);
-      border-radius: 24px 24px 0 0; padding: 24px; z-index: 70;
-      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      max-height: 90vh; overflow-y: auto;
-    }
-    .sheet-open .bottom-sheet-overlay { display: block; opacity: 1; }
-    .sheet-open .bottom-sheet { transform: translateY(0); }
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    /* Quick Pick Pills */
-    .merchant-pill {
-      padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 900;
-      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-      transition: all 0.2s; cursor: pointer; text-align: center;
-    }
-    .merchant-pill.active { background: #00E6C3; color: #0F172A; border-color: #00E6C3; }
-
-    /* Hide date picker icon on mobile for clean look */
-    input[type="date"]::-webkit-calendar-picker-indicator { display: none; }
-  </style>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
+<body class="bg-gray-50 min-h-screen p-6 font-sans flex items-start justify-center pt-20">
 
-<body class="bg-lightbg dark:bg-darkbg text-slate-900 dark:text-white transition-colors duration-300 overflow-x-hidden">
+    <div id="root" class="w-full max-w-md"></div>
 
-  <div id="loading-shield" class="fixed inset-0 z-[100] bg-darkbg flex flex-col items-center justify-center transition-opacity duration-500">
-    <div class="w-10 h-10 border-4 border-starling border-t-transparent rounded-full animate-spin mb-4"></div>
-    <p class="text-starling font-black text-[10px] uppercase tracking-widest">v2.0 Architecture</p>
-  </div>
+    <script type="text/babel">
+        const { useState } = React;
 
-  <main id="app-container" class="p-4">
+        function AccountSelector() {
+            const [selectedAccount, setSelectedAccount] = useState('');
 
-    <div id="view-home" class="view-section view-active">
-      <header class="flex justify-between items-center mb-6 pt-4">
-        <div>
-          <h1 class="text-3xl font-black tracking-tight">Your Accounts</h1>
-          <p class="text-slate-500 dark:text-gray-400 text-sm font-medium" id="date-display-home">---</p>
-        </div>
-      </header>
+            const handleAccountChange = (e) => {
+                setSelectedAccount(e.target.value);
+            };
 
-      <div id="accounts-hub-list" class="space-y-5"></div>
-      
-      <div id="empty-state-home" class="hidden text-center py-12 opacity-50">
-        <i data-lucide="wallet" class="w-12 h-12 mx-auto mb-4"></i>
-        <p class="font-black text-sm uppercase tracking-widest">No Accounts Yet</p>
-        <p class="text-xs mt-2">Go to Admin to add your first bank.</p>
-      </div>
-    </div>
+            const handleLogCharge = () => {
+                alert(`Charging to ${selectedAccount}... Transaction pending.`);
+            };
 
-    <div id="view-vault" class="view-section">
-      <div class="flex justify-between items-center mb-6 pt-4"><h2 class="text-3xl font-black">The Vault</h2></div>
-      <div class="space-y-8">
-        <div><h3 class="text-xs font-black text-yellow-500 uppercase tracking-widest mb-4">🍯 Savings Pots</h3><div id="pots-dashboard-list" class="space-y-3"></div></div>
-        <div>
-          <h3 class="text-xs font-black text-red-500 uppercase tracking-widest mb-4">💳 Credit & Debts</h3>
-          <div id="debt-dashboard-list" class="space-y-3"></div>
-          <div class="mt-4 bg-red-50 dark:bg-red-900/20 p-6 rounded-3xl flex justify-between items-center">
-            <p class="text-red-600 dark:text-red-400 font-black uppercase text-[10px]">Total Liabilities</p>
-            <h2 class="text-2xl font-black text-red-600 dark:text-red-500" id="total-debt-display">£0.00</h2>
-          </div>
-        </div>
-      </div>
-    </div>
+            return (
+                <div className="p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6 tracking-tight">Link New Account</h2>
+                    
+                    <div className="mb-6">
+                        <label htmlFor="account-type" className="block text-sm font-medium text-gray-500 mb-2">
+                            Select Funding Source
+                        </label>
+                        <div className="relative">
+                            <select
+                                id="account-type"
+                                value={selectedAccount}
+                                onChange={handleAccountChange}
+                                className="block w-full pl-4 pr-10 py-3 text-base border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent sm:text-sm rounded-xl bg-gray-50 transition ease-in-out duration-200 cursor-pointer shadow-sm hover:bg-gray-100"
+                            >
+                                <option value="" disabled>Choose an option...</option>
+                                <option value="Bank Account">Bank Account</option>
+                                <option value="Savings Account">Savings Account</option>
+                                <option value="Credit Card">Credit Card</option>
+                                <option value="Bank Loan">Bank Loan</option>
+                                <option value="PayPal">PayPal</option>
+                                <option value="Klarna">Klarna</option>
+                            </select>
+                        </div>
+                    </div>
 
-    <div id="view-admin" class="view-section">
-      <div class="flex justify-between items-center mb-6 pt-4"><h2 class="text-3xl font-black">Admin</h2></div>
-      <div class="space-y-6">
-        <div class="bg-white dark:bg-darkbg p-5 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-sm">
-          <h3 class="text-sm font-black text-starling mb-4 uppercase">New Account</h3>
-          <div class="space-y-3 mb-4">
-            <select id="admin-type" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-medium focus:outline-none">
-              <option value="bank">🏦 Bank Account</option><option value="debt">💳 Credit / Debt</option><option value="pot">🍯 Savings Pot</option>
-            </select>
-            <input type="text" id="admin-name" placeholder="Name (e.g. Halifax)" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-medium">
-            <input type="number" id="admin-secondary" placeholder="Limit / Overdraft £" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-medium">
-          </div>
-          <button id="add-account-btn" class="w-full bg-slate-800 dark:bg-gray-700 text-white font-black p-4 rounded-xl active:scale-95">Create Entry</button>
-        </div>
-        
-        <div class="bg-white dark:bg-darkbg p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-gray-700 flex justify-between items-center">
-          <div><h3 class="text-sm font-black text-slate-800 dark:text-white">Dark Mode</h3></div>
-          <button id="theme-toggle-btn" class="bg-slate-100 dark:bg-gray-800 p-3 rounded-full text-xl">🌙</button>
-        </div>
-        <div class="space-y-3" id="admin-list"></div>
-      </div>
-    </div>
+                    {/* Smooth transition for the button appearing */}
+                    <div 
+                        className={`transition-all duration-500 ease-in-out overflow-hidden ${
+                            selectedAccount === 'Credit Card' ? 'max-h-20 opacity-100 mt-4' : 'max-h-0 opacity-0 mt-0'
+                        }`}
+                    >
+                        <button
+                            onClick={handleLogCharge}
+                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 transition-all duration-300 transform hover:-translate-y-0.5"
+                        >
+                            Log Credit Card Charge
+                        </button>
+                    </div>
+                </div>
+            );
+        }
 
-    <div id="view-history" class="view-section">
-      <div class="flex justify-between items-center mb-6 pt-4"><h2 class="text-3xl font-black">History</h2></div>
-      <div id="history-list" class="space-y-3"></div>
-      <button onclick="clearHistory()" class="mt-8 w-full bg-red-50 dark:bg-red-900/30 text-red-600 font-black p-4 rounded-xl">Wipe All Logs</button>
-    </div>
-
-    <div id="view-analytics" class="view-section">
-      <div class="flex justify-between items-center mb-6 pt-4"><h2 class="text-3xl font-black">Analytics</h2></div>
-      <div class="bg-white dark:bg-darkbg p-8 rounded-3xl border border-slate-200 dark:border-gray-800 flex flex-col items-center mb-6">
-        <div class="relative w-48 h-48 rounded-full shadow-inner border-4 border-slate-100 dark:border-gray-800 flex justify-center items-center" id="donut-chart">
-          <div class="absolute w-36 h-36 bg-white dark:bg-darkbg rounded-full shadow-md flex flex-col justify-center items-center">
-            <span class="text-[10px] text-slate-400 uppercase font-black">Net Assets</span>
-            <span class="text-xl font-black" id="analytics-total">£0.00</span>
-          </div>
-        </div>
-        <div class="w-full grid grid-cols-3 gap-2 mt-8 text-center" id="analytics-breakdown"></div>
-      </div>
-    </div>
-
-  </main>
-
-  <div id="sheet-spend" class="bottom-sheet-container">
-    <div class="bottom-sheet-overlay" onclick="closeSheet('sheet-spend')"></div>
-    <div class="bottom-sheet bg-white dark:bg-cardbg">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-black" id="spend-sheet-title">Log Purchase</h2>
-        <button onclick="closeSheet('sheet-spend')" class="btn-close-mac"><i data-lucide="x"></i></button>
-      </div>
-      
-      <input type="hidden" id="spend-active-account">
-      
-      <div class="space-y-4 mb-6">
-        <div>
-          <label class="text-[10px] uppercase font-black text-slate-400 ml-1">Amount</label>
-          <input type="number" id="spend-amt" placeholder="£ 0.00" class="w-full bg-slate-50 dark:bg-gray-800 p-4 rounded-2xl text-2xl font-black focus:outline-none focus:ring-2 focus:ring-starling mt-1">
-        </div>
-        
-        <div>
-          <label class="text-[10px] uppercase font-black text-slate-400 ml-1">Merchant</label>
-          <div class="grid grid-cols-3 gap-2 mt-2" id="merchant-pills">
-            <div class="merchant-pill" onclick="selectMerchant(this, 'Amazon')">Amazon</div>
-            <div class="merchant-pill" onclick="selectMerchant(this, 'Costa')">Costa</div>
-            <div class="merchant-pill" onclick="selectMerchant(this, 'Tesco')">Tesco</div>
-            <div class="merchant-pill" onclick="selectMerchant(this, 'Asda')">Asda</div>
-            <div class="merchant-pill" onclick="selectMerchant(this, 'Uber')">Uber</div>
-            <div class="merchant-pill active" onclick="selectMerchant(this, 'Other')">Other</div>
-          </div>
-          <input type="text" id="spend-custom-merchant" placeholder="Type merchant name..." class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-medium mt-2 focus:outline-none focus:ring-2 focus:ring-starling">
-        </div>
-
-        <div>
-          <label class="text-[10px] uppercase font-black text-slate-400 ml-1">Date</label>
-          <input type="date" id="spend-date" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm font-bold focus:outline-none mt-1">
-        </div>
-      </div>
-      
-      <button onclick="submitSpend()" class="w-full bg-starling text-slate-900 font-black p-4 rounded-2xl active:scale-95 shadow-lg">Deduct from Account</button>
-    </div>
-  </div>
-
-  <div id="sheet-bills" class="bottom-sheet-container">
-    <div class="bottom-sheet-overlay" onclick="closeSheet('sheet-bills')"></div>
-    <div class="bottom-sheet bg-white dark:bg-cardbg">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-black" id="bills-sheet-title">Account Bills</h2>
-        <button onclick="closeSheet('sheet-bills')" class="btn-close-mac"><i data-lucide="x"></i></button>
-      </div>
-      
-      <input type="hidden" id="bills-active-account">
-      
-      <div class="mb-6">
-        <h3 class="text-[10px] uppercase font-black text-red-500 tracking-widest mb-3">Due This Month</h3>
-        <div id="bills-due-list" class="space-y-2"></div>
-        <p id="no-bills-due" class="text-xs text-slate-400 opacity-50 hidden">All caught up!</p>
-      </div>
-
-      <div class="mb-6">
-        <h3 class="text-[10px] uppercase font-black text-starling tracking-widest mb-3">Paid This Month</h3>
-        <div id="bills-paid-list" class="space-y-2 opacity-60"></div>
-      </div>
-
-      <div class="border-t border-slate-200 dark:border-gray-800 pt-4 mt-6">
-        <button onclick="openAddBillModal()" class="w-full bg-slate-100 dark:bg-gray-800 text-slate-800 dark:text-white font-black p-4 rounded-2xl active:scale-95 flex items-center justify-center gap-2">
-          <i data-lucide="plus-circle" class="w-5 h-5"></i> Add New Bill
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div id="sheet-add-bill" class="bottom-sheet-container">
-    <div class="bottom-sheet-overlay" onclick="closeSheet('sheet-add-bill')"></div>
-    <div class="bottom-sheet bg-white dark:bg-cardbg">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-black">New Bill</h2>
-        <button onclick="closeSheet('sheet-add-bill')" class="btn-close-mac"><i data-lucide="x"></i></button>
-      </div>
-      <div class="space-y-4 mb-6">
-        <input type="text" id="new-bill-name" placeholder="Bill Name (e.g. Netflix)" class="w-full bg-slate-50 dark:bg-gray-800 p-4 rounded-xl text-sm font-bold focus:outline-none">
-        <input type="number" id="new-bill-amount" placeholder="£ Amount" class="w-full bg-slate-50 dark:bg-gray-800 p-4 rounded-xl text-sm font-black focus:outline-none">
-        <div class="grid grid-cols-2 gap-2">
-           <select id="new-bill-day" class="bg-slate-50 dark:bg-gray-800 p-4 rounded-xl text-sm font-medium focus:outline-none"><option value="" disabled selected>Day...</option><option value="last_working_day">⭐ Last Working Day</option></select>
-           <select id="new-bill-freq" class="bg-slate-50 dark:bg-gray-800 p-4 rounded-xl text-sm font-medium focus:outline-none"><option value="monthly">Monthly</option><option value="one_off">One-Off</option></select>
-        </div>
-      </div>
-      <button onclick="submitNewBill()" class="w-full bg-starling text-slate-900 font-black p-4 rounded-2xl active:scale-95 shadow-lg">Save to Account</button>
-    </div>
-  </div>
-
-  <nav class="fixed bottom-0 left-0 w-full bg-white/95 dark:bg-cardbg/95 backdrop-blur-xl border-t border-slate-200 dark:border-gray-800 px-6 pb-8 pt-4 transition-colors z-40">
-    <div class="flex justify-between items-center relative max-w-md mx-auto">
-      
-      <button onclick="switchView('history')" class="flex flex-col items-center text-slate-400 hover:text-starling w-12 active:opacity-50">
-        <i data-lucide="history" class="w-6 h-6"></i><span class="text-[8px] mt-1 font-black uppercase tracking-widest">Logs</span>
-      </button>
-      <button onclick="switchView('vault')" class="flex flex-col items-center text-slate-400 hover:text-yellow-400 w-12 active:opacity-50">
-        <i data-lucide="shield-check" class="w-6 h-6"></i><span class="text-[8px] mt-1 font-black uppercase tracking-widest">Vault</span>
-      </button>
-
-      <div class="w-16 flex justify-center">
-        <button onclick="switchView('home')" class="absolute -top-10 bg-slate-900 dark:bg-white text-white dark:text-slate-900 w-16 h-16 rounded-full flex items-center justify-center shadow-[0_10px_20px_rgba(0,0,0,0.2)] dark:shadow-[0_10px_20px_rgba(255,255,255,0.1)] border-4 border-lightbg dark:border-darkbg active:scale-90 transition-transform">
-          <i data-lucide="wallet" class="w-7 h-7"></i>
-        </button>
-      </div>
-
-      <button onclick="switchView('analytics')" class="flex flex-col items-center text-slate-400 hover:text-starling w-12 active:opacity-50">
-        <i data-lucide="bar-chart-3" class="w-6 h-6"></i><span class="text-[8px] mt-1 font-black uppercase tracking-widest">Data</span>
-      </button>
-      <button onclick="switchView('admin')" class="flex flex-col items-center text-slate-400 hover:text-white w-12 active:opacity-50">
-        <i data-lucide="settings" class="w-6 h-6"></i><span class="text-[8px] mt-1 font-black uppercase tracking-widest">Admin</span>
-      </button>
-      
-    </div>
-  </nav>
-
-  <script src="./app.js"></script>
+        // Render the app to the screen
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<AccountSelector />);
+    </script>
 </body>
 </html>
