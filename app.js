@@ -1,11 +1,11 @@
 /**
  * COMMAND CENTER BRAIN (app.js)
- * v1.0.1 - Form Clear & Logo Logic Update
+ * v1.0.2 - MacOS Buttons & Logo Engine Fix
  */
 
-console.log("Brain Waking Up...");
+console.log("Brain Initializing...");
 
-// --- DATA STATE ---
+// --- DATA ---
 let accounts = (JSON.parse(localStorage.getItem('myAccounts')) || []).map(a => ({...a, overdraft: parseFloat(a.overdraft) || 0, domain: a.domain || ''}));
 let debts = (JSON.parse(localStorage.getItem('myDebts')) || []).map(d => ({...d, limit: parseFloat(d.limit) || 0, domain: d.domain || ''})); 
 let pots = (JSON.parse(localStorage.getItem('myPots')) || []).map(p => ({...p, balance: parseFloat(p.balance) || 0}));
@@ -18,14 +18,12 @@ const currentDay = today.getDate();
 const currentMonthNum = today.getMonth(); 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-// --- INITIALIZATION ---
+// --- BOOT ---
 document.addEventListener('DOMContentLoaded', () => {
-    try {
-        initUI();
-        updateApp();
-        const shield = document.getElementById('loading-shield');
-        if(shield) { setTimeout(() => { shield.style.opacity = '0'; setTimeout(() => shield.remove(), 500); }, 400); }
-    } catch (err) { console.error("Boot failure:", err); }
+    initUI();
+    updateApp();
+    const shield = document.getElementById('loading-shield');
+    if(shield) setTimeout(() => { shield.style.opacity = '0'; setTimeout(() => shield.remove(), 500); }, 400);
 });
 
 function initUI() {
@@ -40,23 +38,25 @@ function initUI() {
     setupListeners();
 }
 
-// --- LOGO ENGINE ---
+// --- LOGO ENGINE 2.0 ---
 function getLogoUrl(item) {
-    if (item.domain && item.domain.trim() !== '') {
-        // Construct the URL and return it
-        return `https://logo.clearbit.com/${item.domain.replace('https://', '').replace('http://', '').trim()}`;
+    let domain = item.domain || '';
+    if (domain.trim() === '') {
+        const n = item.name.toLowerCase();
+        if (n.includes('halifax')) domain = 'halifax.co.uk';
+        else if (n.includes('barclays')) domain = 'barclays.co.uk';
+        else if (n.includes('starling')) domain = 'starlingbank.com';
+        else if (n.includes('amex')) domain = 'americanexpress.com';
+        else if (n.includes('monzo')) domain = 'monzo.com';
+        else if (n.includes('natwest')) domain = 'natwest.com';
+        else return null;
     }
-    const n = item.name.toLowerCase();
-    if (n.includes('halifax')) return 'https://logo.clearbit.com/halifax.co.uk';
-    if (n.includes('barclays')) return 'https://logo.clearbit.com/barclays.co.uk';
-    if (n.includes('starling')) return 'https://logo.clearbit.com/starlingbank.com';
-    if (n.includes('amex')) return 'https://logo.clearbit.com/americanexpress.com';
-    if (n.includes('monzo')) return 'https://logo.clearbit.com/monzo.com';
-    if (n.includes('natwest')) return 'https://logo.clearbit.com/natwest.com';
-    return null;
+    // Clean domain: Remove https://, www., and trailing slashes
+    domain = domain.replace('https://', '').replace('http://', '').replace('www.', '').split('/')[0].trim();
+    return `https://logo.clearbit.com/${domain}`;
 }
 
-// --- CALENDAR & RULE ENGINE ---
+// --- WEEKEND PAYROLL RULE ---
 function resolveActualDay(item) {
     if (item.day === 'last_working_day') {
         let lastDay = new Date(currentYear, currentMonthNum + 1, 0); 
@@ -92,23 +92,20 @@ function updateApp() {
     sorted.filter(i => i.actualDay >= currentDay).forEach(item => {
         if (item.type === 'bill') remBills += item.amount;
         let diff = item.actualDay - currentDay;
-        upH += `<div class="flex justify-between items-center border-b dark:border-gray-800/50 pb-3 last:border-0"><div><p class="text-sm font-black">${item.name}</p><p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">${diff===0?'Today':'in '+diff+' days'}</p></div><p class="text-sm font-black ${item.type==='bill'?'text-red-500':'text-starling'}">${item.type==='bill'?'-':'+'}£${item.amount.toFixed(2)}</p></div>`;
-        if (item.manual && item.type === 'bill' && (diff === 0 || diff === 1)) {
-            alertH += `<div class="bg-red-500 text-white p-4 rounded-2xl text-sm font-black shadow-lg flex items-center gap-3">🚨 <span class="flex-1">Pay ${item.name} ${diff === 0 ? 'Today' : 'Tomorrow'}!</span><button onclick="this.parentElement.remove()" class="text-xl">✕</button></div>`;
-        }
+        upH += `<div class="flex justify-between items-center border-b dark:border-gray-800/50 pb-3 last:border-0">
+            <div><p class="text-sm font-black">${item.name}</p><p class="text-[10px] text-slate-500 uppercase font-black">${diff===0?'Today':'in '+diff+' days'}</p></div>
+            <p class="text-sm font-black ${item.type==='bill'?'text-red-500':'text-starling'}">${item.type==='bill'?'-':'+'}£${item.amount.toFixed(2)}</p></div>`;
     });
 
-    document.getElementById('alerts-container').innerHTML = alertH;
     document.getElementById('upcoming-list').innerHTML = upH;
     document.getElementById('no-upcoming').classList.toggle('hidden', sorted.length > 0);
-
     const safeToSpend = totalRes - remBills;
     document.getElementById('safe-to-spend').innerText = `£${safeToSpend.toFixed(2)}`;
     document.getElementById('total-cash').innerText = `£${totalRes.toFixed(2)}`;
     document.getElementById('display-bills').innerText = `£${remBills.toFixed(2)}`;
     
-    const bar = document.getElementById('cash-bar');
     const pc = totalRes > 0 ? Math.max(0, Math.min(100, (safeToSpend / totalRes) * 100)) : 0;
+    const bar = document.getElementById('cash-bar');
     bar.style.width = `${pc}%`;
     bar.className = `h-2 rounded-full transition-all duration-1000 ${pc < 20 ? 'bg-red-500' : 'bg-starling'}`;
 
@@ -121,14 +118,14 @@ function renderAccounts() {
     const list = document.getElementById('accounts-list'); list.innerHTML = '';
     accounts.forEach(acc => {
         const logo = getLogoUrl(acc);
-        const iconHtml = logo ? `<img src="${logo}" class="w-10 h-10 rounded-xl bg-white p-1 shadow-sm border border-slate-100 dark:border-transparent">` : `<div class="w-10 h-10 rounded-xl flex justify-center items-center font-black text-xs text-white" style="background-color:${acc.color}">${acc.name.substring(0,2).toUpperCase()}</div>`;
+        const iconHtml = logo ? `<img src="${logo}" class="w-10 h-10 rounded-xl bg-white p-1 shadow-sm">` : `<div class="w-10 h-10 rounded-xl flex justify-center items-center font-black text-xs text-white" style="background-color:${acc.color}">${acc.name.substring(0,2).toUpperCase()}</div>`;
         list.innerHTML += `<div class="flex justify-between items-center bg-white dark:bg-cardbg p-4 rounded-3xl shadow-sm mb-3">
-            <div class="flex items-center gap-4">${iconHtml}<div><p class="font-black">${acc.name}</p><p class="text-[9px] text-slate-500 font-bold uppercase">Avail: £${((parseFloat(acc.balance)||0)+(parseFloat(acc.overdraft)||0)).toFixed(2)}</p></div></div>
-            <p class="font-black text-xl ${(parseFloat(acc.balance)||0)<0?'text-red-500':''}">£${(parseFloat(acc.balance)||0).toFixed(2)}</p></div>`;
+            <div class="flex items-center gap-4">${iconHtml}<div><p class="font-black text-sm">${acc.name}</p><p class="text-[9px] text-slate-400 font-bold uppercase">Avail: £${((parseFloat(acc.balance)||0)+(parseFloat(acc.overdraft)||0)).toFixed(2)}</p></div></div>
+            <p class="font-black text-lg ${(parseFloat(acc.balance)||0)<0?'text-red-500':''}">£${(parseFloat(acc.balance)||0).toFixed(2)}</p></div>`;
     });
 }
 
-// --- ACTIONS & LISTENERS ---
+// --- SETUP ---
 function setupListeners() {
     const triggerMap = {
         'add-btn': {id: 'update-modal', render: renderTransactModal},
@@ -145,8 +142,8 @@ function setupListeners() {
         if(btn) btn.onclick = (e) => { e.preventDefault(); if(config.render) config.render(); openModal(config.id); };
     });
 
-    const closeIds = ['update', 'vault', 'cashflow', 'admin', 'history', 'analytics', 'override'];
-    closeIds.forEach(id => {
+    // Close logic for all 7 buttons
+    ['update','vault','cashflow','admin','history','analytics','override'].forEach(id => {
         const btn = document.getElementById(`close-${id}`);
         if(btn) btn.onclick = () => closeModal(`${id}-modal`);
     });
@@ -156,9 +153,6 @@ function setupListeners() {
     document.getElementById('quick-spend-btn').onclick = quickSpend;
     document.getElementById('transfer-btn').onclick = executeTransfer;
     document.getElementById('save-override-btn').onclick = saveOverrides;
-    document.getElementById('export-data-btn').onclick = exportData;
-    document.getElementById('import-data-btn').onclick = () => document.getElementById('import-file-input').click();
-    document.getElementById('import-file-input').onchange = importData;
     document.getElementById('theme-toggle-btn').onclick = () => {
         const h = document.documentElement;
         if(h.classList.contains('dark')) { h.classList.remove('dark'); localStorage.setItem('appTheme', 'light'); }
@@ -170,8 +164,7 @@ function openModal(id) {
     const el = document.getElementById(id);
     if(el) { 
         el.classList.remove('hidden'); el.classList.add('flex'); 
-        if(navigator.vibrate) navigator.vibrate(10);
-        if(window.lucide) lucide.createIcons(); // RE-RENDER ICONS FOR MODAL
+        if(window.lucide) lucide.createIcons(); // Force refresh Icons
     }
 }
 
@@ -188,31 +181,22 @@ function createAccount() {
     if(type === 'bank') newObj.overdraft = sec; else if(type === 'debt') newObj.limit = sec;
     if(type === 'bank') accounts.push(newObj); else if(type === 'debt') debts.push(newObj); else pots.push(newObj);
     
-    // --- CLEAR ADMIN FORM ---
+    // FORM CLEAR
     document.getElementById('admin-name').value = '';
     document.getElementById('admin-domain').value = '';
     document.getElementById('admin-secondary').value = '';
-
-    saveData(); renderAdminList(); updateApp();
+    renderAdminList(); updateApp();
 }
 
 function addCashflow() {
     const type = document.getElementById('cf-type').value;
-    const freq = document.getElementById('cf-freq').value;
-    const day = document.getElementById('cf-day').value;
-    const month = document.getElementById('cf-month').value;
     const name = document.getElementById('cf-name').value;
     const amount = parseFloat(document.getElementById('cf-amount').value);
-    const manual = document.getElementById('cf-manual').checked;
-    if(!day || !name || !amount) return alert("Missing info");
-    cashflowData.push({ id: Date.now(), type, frequency: freq, day, month, name, amount, manual });
-    
-    // --- CLEAR BILLS FORM ---
+    if(!name || !amount) return alert("Enter name and amount");
+    cashflowData.push({ id: Date.now(), type, frequency: document.getElementById('cf-freq').value, day: document.getElementById('cf-day').value, month: document.getElementById('cf-month').value, name, amount, manual: document.getElementById('cf-manual').checked });
     document.getElementById('cf-name').value = '';
     document.getElementById('cf-amount').value = '';
-    document.getElementById('cf-manual').checked = false;
-
-    saveData(); closeModal('cashflow-modal');
+    closeModal('cashflow-modal');
 }
 
 function renderAdminList() {
@@ -242,7 +226,7 @@ function renderLedger() {
     });
     lucide.createIcons();
 }
-window.deleteCf = function(id) { cashflowData = cashflowData.filter(c=>c.id!==id); saveData(); renderLedger(); updateApp(); };
+window.deleteCf = function(id) { cashflowData = cashflowData.filter(c=>c.id!==id); renderLedger(); updateApp(); };
 
 function renderVault() {
     const pList = document.getElementById('pots-dashboard-list'); pList.innerHTML = '';
@@ -261,12 +245,11 @@ function renderVault() {
                 <button onclick="payDebt(${d.id})" class="flex-1 bg-starling py-2 rounded-xl font-black text-xs text-slate-900">Pay</button>
                 <button onclick="addInterest(${d.id})" class="flex-1 bg-red-100 dark:bg-red-900/30 text-red-500 py-2 rounded-xl font-black text-xs">+ Int</button></div></div>`;
     });
-    document.getElementById('total-debt-display').innerText = `£${debts.reduce((s,d)=>s+(parseFloat(d.balance)||0),0).toFixed(2)}`;
 }
 
-window.payDebt = function(id) { let a = prompt("Amount?"); if(a) { let d = debts.find(x=>x.id==id); d.balance -= parseFloat(a); saveData(); renderVault(); updateApp(); recordTx(`Paid ${d.name}`, `-£${a}`); } };
-window.addInterest = function(id) { let a = prompt("Amount?"); if(a) { let d = debts.find(x=>x.id==id); d.balance += parseFloat(a); saveData(); renderVault(); updateApp(); recordTx(`${d.name} Int`, `+£${a}`); } };
-window.withdrawFromPot = function(id) { let a = prompt("Amount?"); if(a) { let p = pots.find(x=>x.id==id); p.balance -= parseFloat(a); saveData(); renderVault(); updateApp(); recordTx(`Withdraw`, `-£${a}`, p.name); } };
+window.payDebt = function(id) { let a = prompt("Amount?"); if(a) { debts.find(x=>x.id==id).balance -= parseFloat(a); updateApp(); renderVault(); } };
+window.addInterest = function(id) { let a = prompt("Amount?"); if(a) { debts.find(x=>x.id==id).balance += parseFloat(a); updateApp(); renderVault(); } };
+window.withdrawFromPot = function(id) { let a = prompt("Amount?"); if(a) { pots.find(x=>x.id==id).balance -= parseFloat(a); updateApp(); renderVault(); } };
 
 function renderTransactModal() {
     const sAcc = document.getElementById('spend-account'); const tF = document.getElementById('transfer-from'); const tT = document.getElementById('transfer-to');
@@ -277,30 +260,27 @@ function renderTransactModal() {
 }
 
 function quickSpend() {
-    const v = document.getElementById('spend-account').value; const a = parseFloat(document.getElementById('spend-amount').value);
-    const desc = document.getElementById('spend-desc').value || 'Purchase';
+    const v = document.getElementById('spend-account').value, a = parseFloat(document.getElementById('spend-amount').value);
     if(!v || !a) return;
     const [type, id] = v.split('_');
     let t = type === 'bank' ? accounts.find(x=>x.id==id) : debts.find(x=>x.id==id);
     if(type==='bank') t.balance -= a; else t.balance += a;
-    recordTx(`Spend: ${t.name}`, `-£${a.toFixed(2)}`, desc, 'text-red-500');
+    recordTx(`Spend: ${t.name}`, `-£${a.toFixed(2)}`, document.getElementById('spend-desc').value, 'text-red-500');
     saveData(); closeModal('update-modal');
 }
 
 function executeTransfer() {
-    const fId = document.getElementById('transfer-from').value; const tId = document.getElementById('transfer-to').value;
-    const amt = parseFloat(document.getElementById('transfer-amount').value);
+    const fId = document.getElementById('transfer-from').value, tId = document.getElementById('transfer-to').value, amt = parseFloat(document.getElementById('transfer-amount').value);
     if(!fId || !tId || !amt) return;
-    const [fT, fI] = fId.split('_'); const [tT, tI] = tId.split('_');
-    let src = accounts.find(x=>x.id==fI); let dest = tT === 'bank' ? accounts.find(x=>x.id==tI) : pots.find(x=>x.id==tI);
+    const [fT, fI] = fId.split('_'), [tT, tI] = tId.split('_');
+    let src = accounts.find(x=>x.id==fI), dest = tT === 'bank' ? accounts.find(x=>x.id==tI) : pots.find(x=>x.id==tI);
     src.balance -= amt; dest.balance += amt;
     recordTx(`Transfer`, `£${amt.toFixed(2)}`, `${src.name} ➔ ${dest.name}`, 'text-blue-500');
     saveData(); closeModal('update-modal');
 }
 
-function recordTx(title, amt, desc, color='text-slate-800 dark:text-white') {
-    const ts = new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-    historyLog.unshift({ id: Date.now(), title, amount:amt, desc: desc||'', timestamp: ts, color });
+function recordTx(title, amt, desc, color) {
+    historyLog.unshift({ id: Date.now(), title, amount:amt, desc: desc||'', timestamp: new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}), color });
     if(historyLog.length > 100) historyLog.pop(); localStorage.setItem('myHistory', JSON.stringify(historyLog));
 }
 
@@ -309,21 +289,15 @@ function renderHistory() {
     if(historyLog.length===0) list.innerHTML = '<p class="text-center p-8 opacity-50 font-bold text-[10px]">No History</p>';
     historyLog.forEach(tx => {
         list.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl mb-2 flex justify-between shadow-sm">
-            <div><p class="text-sm font-black">${tx.title}</p><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${tx.timestamp} • ${tx.desc}</p></div>
+            <div><p class="text-sm font-black">${tx.title}</p><p class="text-[10px] text-slate-400 font-bold uppercase">${tx.timestamp} • ${tx.desc}</p></div>
             <p class="font-black ${tx.color}">${tx.amount}</p></div>`;
     });
 }
 
 function generateAnalytics() {
-    const cash = accounts.reduce((s,a)=>s+(parseFloat(a.balance)||0),0);
-    const potVal = pots.reduce((s,p)=>s+(parseFloat(p.balance)||0),0);
-    const debtVal = debts.reduce((s,d)=>s+(parseFloat(d.balance)||0),0);
-    const grand = cash + potVal - debtVal;
-    document.getElementById('an-cash').innerText = `£${cash.toFixed(0)}`;
-    document.getElementById('an-pots').innerText = `£${potVal.toFixed(0)}`;
-    document.getElementById('an-debt').innerText = `£${debtVal.toFixed(0)}`;
+    const cash = accounts.reduce((s,a)=>s+(parseFloat(a.balance)||0),0), potVal = pots.reduce((s,p)=>s+(parseFloat(p.balance)||0),0), debtVal = debts.reduce((s,d)=>s+(parseFloat(d.balance)||0),0);
+    const grand = cash + potVal - debtVal, total = Math.abs(cash) + Math.abs(potVal) + Math.abs(debtVal);
     document.getElementById('analytics-total').innerText = `£${grand.toFixed(0)}`;
-    const total = Math.abs(cash) + Math.abs(potVal) + Math.abs(debtVal);
     const chart = document.getElementById('donut-chart');
     if(total <= 0) chart.style.background = '#334155';
     else {
@@ -337,11 +311,8 @@ function renderOverrideModal() {
     const sections = [ {t:'Banks', d:accounts, i:'over-bank-'}, {t:'Pots', d:pots, i:'over-pot-'}, {t:'Debts', d:debts, i:'over-debt-'} ];
     sections.forEach(s => {
         if(s.d.length === 0) return;
-        let h = `<h3 class="text-xs font-black uppercase mb-3 tracking-widest opacity-40">${s.t}</h3>`;
-        s.d.forEach(item => {
-            h += `<div class="mb-3"><label class="text-[9px] uppercase font-black text-slate-400 mb-1 block">${item.name}</label>
-                  <input type="number" id="${s.i}${item.id}" value="${item.balance}" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl font-black"></div>`;
-        });
+        let h = `<h3 class="text-xs font-black uppercase mb-3 opacity-40">${s.t}</h3>`;
+        s.d.forEach(item => { h += `<div class="mb-3"><label class="text-[9px] uppercase font-black text-slate-400 mb-1 block">${item.name}</label><input type="number" id="${s.i}${item.id}" value="${item.balance}" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl font-black"></div>`; });
         cont.innerHTML += `<div class="bg-white dark:bg-darkbg p-5 rounded-3xl mb-4 border dark:border-gray-700 shadow-sm">${h}</div>`;
     });
 }
@@ -358,20 +329,4 @@ function saveData() {
     localStorage.setItem('myDebts', JSON.stringify(debts));
     localStorage.setItem('myPots', JSON.stringify(pots));
     localStorage.setItem('cashflowData', JSON.stringify(cashflowData));
-}
-
-function exportData() {
-    const data = JSON.stringify({accounts, debts, pots, cashflowData, historyLog});
-    const blob = new Blob([data], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `CC_Backup.json`; a.click();
-}
-
-function importData(e) {
-    const r = new FileReader();
-    r.onload = (ev) => {
-        const d = JSON.parse(ev.target.result);
-        accounts = d.accounts; debts = d.debts; pots = d.pots; cashflowData = d.cashflowData; historyLog = d.historyLog || [];
-        saveData(); location.reload();
-    }; r.readAsText(e.target.files[0]);
 }
