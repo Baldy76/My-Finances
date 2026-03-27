@@ -33,32 +33,31 @@
   <header class="flex justify-between items-center mb-6 pt-4">
     <div>
       <h1 class="text-2xl font-bold">Command Center 🚀</h1>
-      <p class="text-gray-400 text-sm">Welcome back, Boss.</p>
+      <p class="text-gray-400 text-sm" id="date-display">Checking calendar...</p>
     </div>
   </header>
 
-  <div class="bg-gradient-to-br from-cardbg to-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl text-center mb-8 relative overflow-hidden">
+  <div class="bg-gradient-to-br from-cardbg to-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl text-center mb-6 relative overflow-hidden">
     <div class="absolute -top-10 -right-10 w-32 h-32 bg-starling opacity-10 rounded-full blur-3xl"></div>
     
-    <p class="text-gray-400 font-medium mb-1 relative z-10">Safe to Spend</p>
+    <p class="text-gray-400 font-medium mb-1 relative z-10">Safe to Spend Now</p>
     <h2 class="text-5xl font-extrabold tracking-tight transition-colors duration-300 relative z-10" id="safe-to-spend">£0.00</h2>
     
     <div class="w-full bg-gray-800 rounded-full h-1.5 mt-5 mb-2 overflow-hidden relative z-10">
       <div id="cash-bar" class="bg-starling h-1.5 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
     </div>
-    <div class="flex justify-between text-[10px] text-gray-500 font-bold uppercase tracking-wider relative z-10 mb-4">
-      <span>Safe: <span id="safe-percent">0%</span></span>
-      <span>Bills: <span id="bills-percent">0%</span></span>
-    </div>
-
-    <p class="text-xs text-gray-400 border-t border-gray-700/50 pt-3 relative z-10">
-      Total Cash: <span id="total-cash" class="font-bold text-white">£0.00</span> | Bills: <span id="display-bills" class="font-bold text-red-400">£0.00</span>
+    
+    <p class="text-xs text-gray-400 border-t border-gray-700/50 pt-3 mt-4 relative z-10 flex justify-between">
+      <span>Cash: <span id="total-cash" class="font-bold text-white">£0.00</span></span>
+      <span>Remaining Bills: <span id="display-bills" class="font-bold text-red-400">£0.00</span></span>
+    </p>
+    <p class="text-xs text-gray-400 pt-2 relative z-10 bg-gray-800/50 rounded-lg p-2 mt-2">
+      Projected Month End: <span id="projected-balance" class="font-bold text-starling">£0.00</span>
     </p>
   </div>
 
-  <h3 class="text-lg font-semibold mb-4">Your Vaults 🏦</h3>
-  <div class="space-y-3">
-    
+  <h3 class="text-lg font-semibold mb-3">Your Vaults 🏦</h3>
+  <div class="space-y-3 mb-6">
     <div class="flex justify-between items-center bg-cardbg p-4 rounded-2xl border-l-4 border-halifax shadow-md">
       <div class="flex items-center gap-3">
         <div class="bg-halifax text-white p-2 rounded-full font-bold text-xs">HX</div>
@@ -66,18 +65,16 @@
       </div>
       <p class="font-bold text-lg" id="display-halifax">£0.00</p>
     </div>
-
     <div class="flex justify-between items-center bg-cardbg p-4 rounded-2xl border-l-4 border-barclays shadow-md">
       <div class="flex items-center gap-3">
         <div class="bg-barclays text-white p-2 rounded-full font-bold text-xs">BC</div>
         <div>
-          <p class="font-medium">Barclays Current</p>
-          <span class="text-xs text-red-400 hidden font-semibold" id="barclays-warning">Overdraft Active 🚨</span>
+          <p class="font-medium">Barclays</p>
+          <span class="text-[10px] text-red-400 hidden font-semibold" id="barclays-warning">Overdraft 🚨</span>
         </div>
       </div>
       <p class="font-bold text-lg transition-colors" id="display-barclays">£0.00</p>
     </div>
-
     <div class="flex justify-between items-center bg-cardbg p-4 rounded-2xl border-l-4 border-starling shadow-md">
       <div class="flex items-center gap-3">
         <div class="bg-starling text-gray-900 p-2 rounded-full font-bold text-xs">ST</div>
@@ -85,7 +82,13 @@
       </div>
       <p class="font-bold text-lg" id="display-starling">£0.00</p>
     </div>
+  </div>
 
+  <h3 class="text-lg font-semibold mb-3">Next Up 📅</h3>
+  <div class="bg-cardbg rounded-2xl p-4 border border-gray-800 shadow-md">
+    <div id="upcoming-list" class="space-y-3">
+      </div>
+    <p id="no-upcoming" class="text-sm text-gray-500 text-center py-2 hidden">Nothing else this month!</p>
   </div>
 
   <nav class="fixed bottom-0 left-0 w-full bg-cardbg/95 backdrop-blur-xl border-t border-gray-800 p-4 flex justify-around items-center rounded-t-3xl z-40 pb-6">
@@ -93,9 +96,10 @@
       <span class="text-2xl">🏠</span>
       <span class="text-[10px] mt-1 font-bold tracking-wide">HOME</span>
     </button>
-    <button class="flex flex-col items-center text-gray-500 hover:text-white transition-colors">
-      <span class="text-2xl">🎯</span>
-      <span class="text-[10px] mt-1 font-bold tracking-wide">GOALS</span>
+    
+    <button id="nav-cashflow" class="flex flex-col items-center text-gray-500 hover:text-starling transition-colors">
+      <span class="text-2xl">📅</span>
+      <span class="text-[10px] mt-1 font-bold tracking-wide">BILLS</span>
     </button>
     
     <button id="add-btn" class="flex flex-col items-center text-starling -mt-12 bg-darkbg rounded-full p-4 border-4 border-cardbg shadow-xl transform active:scale-90 transition-transform duration-200">
@@ -109,159 +113,278 @@
   </nav>
 
   <div id="update-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
-    <div class="bg-cardbg rounded-t-3xl p-6 border-t border-gray-700 pb-12 animate-slide-up shadow-2xl">
+    <div class="bg-cardbg rounded-t-3xl p-6 border-t border-gray-700 pb-12 shadow-2xl">
       <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-bold">Update Balances</h2>
+        <h2 class="text-xl font-bold">Update Bank Balances</h2>
         <button id="close-modal" class="text-gray-400 hover:text-white text-2xl w-10 h-10 flex justify-center items-center rounded-full bg-gray-800">✕</button>
       </div>
-      
       <div class="space-y-4 mb-6">
+        <div>
+          <label class="text-xs text-halifax font-bold mb-1 block uppercase tracking-wide">Halifax Joint (£)</label>
+          <input type="number" id="input-halifax" class="w-full bg-darkbg border border-gray-700 rounded-xl p-4 text-white text-xl focus:border-halifax focus:outline-none">
+        </div>
         <div class="grid grid-cols-2 gap-4">
-          <div class="col-span-2">
-            <label class="text-xs text-halifax font-bold mb-1 block uppercase tracking-wide">Halifax Joint (£)</label>
-            <input type="number" id="input-halifax" class="w-full bg-darkbg border border-gray-700 rounded-xl p-4 text-white text-xl focus:border-halifax focus:ring-1 focus:ring-halifax focus:outline-none transition-all" placeholder="0.00">
-          </div>
           <div>
             <label class="text-xs text-barclays font-bold mb-1 block uppercase tracking-wide">Barclays (£)</label>
-            <input type="number" id="input-barclays" class="w-full bg-darkbg border border-gray-700 rounded-xl p-4 text-white text-xl focus:border-barclays focus:ring-1 focus:ring-barclays focus:outline-none transition-all" placeholder="0.00">
+            <input type="number" id="input-barclays" class="w-full bg-darkbg border border-gray-700 rounded-xl p-4 text-white text-xl focus:border-barclays focus:outline-none">
           </div>
           <div>
             <label class="text-xs text-starling font-bold mb-1 block uppercase tracking-wide">Starling (£)</label>
-            <input type="number" id="input-starling" class="w-full bg-darkbg border border-gray-700 rounded-xl p-4 text-white text-xl focus:border-starling focus:ring-1 focus:ring-starling focus:outline-none transition-all" placeholder="0.00">
+            <input type="number" id="input-starling" class="w-full bg-darkbg border border-gray-700 rounded-xl p-4 text-white text-xl focus:border-starling focus:outline-none">
           </div>
         </div>
-        
-        <div class="pt-2">
-          <label class="text-xs text-red-400 font-bold mb-1 block uppercase tracking-wide">Pending Bills to Deduct (£)</label>
-          <input type="number" id="input-bills" class="w-full bg-red-900/20 border border-red-900/50 rounded-xl p-4 text-red-100 text-xl focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none transition-all" placeholder="0.00">
-        </div>
       </div>
-
-      <button id="save-btn" class="w-full bg-starling text-gray-900 font-extrabold text-lg p-4 rounded-xl shadow-lg shadow-starling/20 active:scale-95 transition-all duration-200">
-        Save & Calculate
+      <button id="save-btn" class="w-full bg-starling text-gray-900 font-extrabold text-lg p-4 rounded-xl shadow-lg active:scale-95 transition-all">
+        Save Balances
       </button>
     </div>
   </div>
 
+  <div id="cashflow-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
+    <div class="bg-cardbg rounded-t-3xl p-6 border-t border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Manage Cashflow</h2>
+        <button id="close-cashflow" class="text-gray-400 hover:text-white text-2xl w-10 h-10 flex justify-center items-center rounded-full bg-gray-800">✕</button>
+      </div>
+      
+      <div class="bg-darkbg p-4 rounded-2xl border border-gray-700 mb-6 shrink-0">
+        <h3 class="text-sm font-bold text-starling mb-3 uppercase tracking-wide">Add New</h3>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <select id="cf-type" class="bg-gray-800 text-white p-3 rounded-xl border border-gray-700 focus:outline-none text-sm">
+            <option value="bill">🔴 Bill / Direct Debit</option>
+            <option value="income">🟢 Income / Salary</option>
+          </select>
+          <input type="number" id="cf-day" placeholder="Day (1-31)" class="bg-gray-800 text-white p-3 rounded-xl border border-gray-700 focus:outline-none text-sm" min="1" max="31">
+        </div>
+        <div class="grid grid-cols-3 gap-3 mb-3">
+          <input type="text" id="cf-name" placeholder="Name (e.g. Gas)" class="col-span-2 bg-gray-800 text-white p-3 rounded-xl border border-gray-700 focus:outline-none text-sm">
+          <input type="number" id="cf-amount" placeholder="£ Amount" class="bg-gray-800 text-white p-3 rounded-xl border border-gray-700 focus:outline-none text-sm">
+        </div>
+        <button id="add-cf-btn" class="w-full bg-gray-700 text-white font-bold p-3 rounded-xl active:scale-95 transition-all text-sm">
+          + Add to Calendar
+        </button>
+      </div>
+
+      <h3 class="text-sm font-bold text-gray-400 mb-2 uppercase tracking-wide shrink-0">Your Monthly Ledger</h3>
+      <div class="overflow-y-auto flex-1 pr-2 space-y-2" id="full-ledger">
+        </div>
+    </div>
+  </div>
+
   <script>
-    const modal = document.getElementById('update-modal');
-    const addBtn = document.getElementById('add-btn');
-    const closeBtn = document.getElementById('close-modal');
-    const saveBtn = document.getElementById('save-btn');
+    // --- STATE & DATA ---
+    let bankData = { halifax: 0, barclays: 0, starling: 0 };
+    // Example default data structure
+    let cashflowData = [
+      { id: Date.now()+1, type: 'bill', name: 'Mobile Phone', amount: 45, day: 10 },
+      { id: Date.now()+2, type: 'bill', name: 'Energy', amount: 120, day: 15 },
+      { id: Date.now()+3, type: 'income', name: 'Salary', amount: 2500, day: 28 }
+    ];
 
-    // UI Triggers
-    addBtn.addEventListener('click', () => {
-      // Haptic feedback (if supported by phone)
+    // --- SETUP CALENDAR ---
+    const today = new Date();
+    const currentDay = today.getDate(); // 1-31
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    document.getElementById('date-display').innerText = `Today is ${monthNames[today.getMonth()]} ${currentDay}`;
+
+    // --- UI ELEMENTS ---
+    const updateModal = document.getElementById('update-modal');
+    const cashflowModal = document.getElementById('cashflow-modal');
+    
+    // Buttons
+    document.getElementById('add-btn').addEventListener('click', () => {
       if (navigator.vibrate) navigator.vibrate(50);
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
+      updateModal.classList.remove('hidden'); updateModal.classList.add('flex');
+    });
+    document.getElementById('close-modal').addEventListener('click', () => {
+      updateModal.classList.add('hidden'); updateModal.classList.remove('flex');
+    });
+    
+    document.getElementById('nav-cashflow').addEventListener('click', () => {
+      if (navigator.vibrate) navigator.vibrate(50);
+      renderLedger();
+      cashflowModal.classList.remove('hidden'); cashflowModal.classList.add('flex');
+    });
+    document.getElementById('close-cashflow').addEventListener('click', () => {
+      cashflowModal.classList.add('hidden'); cashflowModal.classList.remove('flex');
+      updateApp(); // Recalculate everything when closing manager
     });
 
-    closeBtn.addEventListener('click', () => {
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
+    // --- CASHFLOW MANAGER LOGIC ---
+    document.getElementById('add-cf-btn').addEventListener('click', () => {
+      const type = document.getElementById('cf-type').value;
+      const day = parseInt(document.getElementById('cf-day').value);
+      const name = document.getElementById('cf-name').value;
+      const amount = parseFloat(document.getElementById('cf-amount').value);
+
+      if (!day || day < 1 || day > 31 || !name || !amount) {
+        alert("Please fill out all fields correctly."); return;
+      }
+
+      cashflowData.push({ id: Date.now(), type, name, amount, day });
+      
+      // Clear form
+      document.getElementById('cf-name').value = '';
+      document.getElementById('cf-amount').value = '';
+      document.getElementById('cf-day').value = '';
+      
+      saveData();
+      renderLedger();
+      if (navigator.vibrate) navigator.vibrate(50);
     });
 
-    // The Core Brain
+    function deleteItem(id) {
+      cashflowData = cashflowData.filter(item => item.id !== id);
+      saveData();
+      renderLedger();
+    }
+
+    // Draws the list inside the Manager Modal
+    function renderLedger() {
+      const ledger = document.getElementById('full-ledger');
+      ledger.innerHTML = '';
+      
+      // Sort by day of month
+      const sorted = [...cashflowData].sort((a, b) => a.day - b.day);
+      
+      sorted.forEach(item => {
+        const isBill = item.type === 'bill';
+        const color = isBill ? 'text-red-400' : 'text-starling';
+        const icon = isBill ? '🔴' : '🟢';
+        const passed = item.day < currentDay ? 'opacity-50 line-through' : '';
+
+        ledger.innerHTML += `
+          <div class="bg-gray-800 p-3 rounded-xl flex justify-between items-center ${passed}">
+            <div>
+              <p class="text-sm font-bold">${icon} ${item.name}</p>
+              <p class="text-xs text-gray-400">Day ${item.day}</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <p class="font-bold ${color}">${isBill ? '-' : '+'}£${item.amount.toFixed(2)}</p>
+              <button onclick="deleteItem(${item.id})" class="text-gray-500 hover:text-red-500 bg-gray-700 p-2 rounded-lg text-xs">🗑</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // --- CORE ENGINE: CALCULATE AND UPDATE ---
     function updateApp() {
-      // Get numbers from inputs
-      const halifax = parseFloat(document.getElementById('input-halifax').value) || 0;
-      const barclays = parseFloat(document.getElementById('input-barclays').value) || 0;
-      const starling = parseFloat(document.getElementById('input-starling').value) || 0;
-      const pendingBills = parseFloat(document.getElementById('input-bills').value) || 0;
+      // 1. Get Bank Data from inputs
+      bankData.halifax = parseFloat(document.getElementById('input-halifax').value) || 0;
+      bankData.barclays = parseFloat(document.getElementById('input-barclays').value) || 0;
+      bankData.starling = parseFloat(document.getElementById('input-starling').value) || 0;
 
-      // Do the Math
-      const totalCash = halifax + barclays + starling;
-      const safeToSpend = totalCash - pendingBills;
+      const totalCash = bankData.halifax + bankData.barclays + bankData.starling;
 
-      // Update the Big Numbers
+      // 2. Calendar Math
+      let remainingBills = 0;
+      let remainingIncome = 0;
+      let upcomingListHTML = '';
+
+      // Sort chronological for the dashboard
+      const upcomingItems = [...cashflowData].sort((a, b) => a.day - b.day).filter(item => item.day >= currentDay);
+
+      upcomingItems.forEach(item => {
+        const isBill = item.type === 'bill';
+        
+        if (isBill) remainingBills += item.amount;
+        else remainingIncome += item.amount;
+
+        // Add to dashboard list
+        const color = isBill ? 'text-red-400' : 'text-starling';
+        const prefix = isBill ? '-' : '+';
+        const dueText = item.day === currentDay ? 'TODAY' : `in ${item.day - currentDay} days`;
+
+        upcomingListHTML += `
+          <div class="flex justify-between items-center border-b border-gray-800/50 last:border-0 pb-2 last:pb-0 pt-2 first:pt-0">
+            <div>
+              <p class="text-sm font-medium text-white">${item.name}</p>
+              <p class="text-[10px] text-gray-500 uppercase">${dueText}</p>
+            </div>
+            <p class="text-sm font-bold ${color}">${prefix}£${item.amount.toFixed(2)}</p>
+          </div>
+        `;
+      });
+
+      // Update Dashboard Upcoming List
+      const listEl = document.getElementById('upcoming-list');
+      const emptyEl = document.getElementById('no-upcoming');
+      if (upcomingItems.length === 0) {
+        listEl.innerHTML = ''; emptyEl.classList.remove('hidden');
+      } else {
+        listEl.innerHTML = upcomingListHTML; emptyEl.classList.add('hidden');
+      }
+
+      // 3. Final Calculations
+      const safeToSpend = totalCash - remainingBills;
+      const projectedEOM = totalCash - remainingBills + remainingIncome;
+
+      // Update UI Numbers
       const safeEl = document.getElementById('safe-to-spend');
       safeEl.innerText = `£${safeToSpend.toFixed(2)}`;
-      
-      // Color logic for overdrafts
-      if (safeToSpend < 0) {
-        safeEl.classList.add('text-red-500');
-        safeEl.classList.remove('text-white');
-      } else {
-        safeEl.classList.remove('text-red-500');
-        safeEl.classList.add('text-white');
-      }
+      safeEl.className = `text-5xl font-extrabold tracking-tight transition-colors duration-300 relative z-10 ${safeToSpend < 0 ? 'text-red-500' : 'text-white'}`;
 
       document.getElementById('total-cash').innerText = `£${totalCash.toFixed(2)}`;
-      document.getElementById('display-bills').innerText = `£${pendingBills.toFixed(2)}`;
+      document.getElementById('display-bills').innerText = `£${remainingBills.toFixed(2)}`;
+      document.getElementById('projected-balance').innerText = `£${projectedEOM.toFixed(2)}`;
 
-      // Update Bank Vaults
-      document.getElementById('display-halifax').innerText = `£${halifax.toFixed(2)}`;
-      document.getElementById('display-starling').innerText = `£${starling.toFixed(2)}`;
-
-      const displayBarclays = document.getElementById('display-barclays');
-      const warningBarclays = document.getElementById('barclays-warning');
-      displayBarclays.innerText = `£${barclays.toFixed(2)}`;
-
-      if (barclays < 0) {
-        displayBarclays.classList.add('text-red-400');
-        warningBarclays.classList.remove('hidden');
-      } else {
-        displayBarclays.classList.remove('text-red-400');
-        warningBarclays.classList.add('hidden');
-      }
-
-      // Calculate Progress Bar (Health Bar)
-      let safePercent = 0;
-      let billsPercent = 0;
+      // Update Bank Cards
+      document.getElementById('display-halifax').innerText = `£${bankData.halifax.toFixed(2)}`;
+      document.getElementById('display-starling').innerText = `£${bankData.starling.toFixed(2)}`;
+      const barclaysEl = document.getElementById('display-barclays');
+      barclaysEl.innerText = `£${bankData.barclays.toFixed(2)}`;
       
-      if (totalCash > 0) {
-        if (safeToSpend > 0) {
-          safePercent = Math.round((safeToSpend / totalCash) * 100);
-          billsPercent = Math.round((pendingBills / totalCash) * 100);
-        } else {
-          billsPercent = 100; // Bills ate everything
-        }
+      if (bankData.barclays < 0) {
+        barclaysEl.classList.add('text-red-400');
+        document.getElementById('barclays-warning').classList.remove('hidden');
+      } else {
+        barclaysEl.classList.remove('text-red-400');
+        document.getElementById('barclays-warning').classList.add('hidden');
       }
 
-      // Animate the bar
+      // Calculate Progress Bar (based on remaining cash vs bills)
+      let safePercent = 0;
+      if (totalCash > 0) {
+        safePercent = safeToSpend > 0 ? Math.round((safeToSpend / totalCash) * 100) : 0;
+      }
       const barEl = document.getElementById('cash-bar');
       barEl.style.width = `${safePercent}%`;
-      
-      // Color the bar red if things are bad
-      if (safePercent < 20) {
-        barEl.className = "bg-red-500 h-1.5 rounded-full transition-all duration-1000 ease-out";
-      } else {
-        barEl.className = "bg-starling h-1.5 rounded-full transition-all duration-1000 ease-out";
-      }
+      barEl.className = `h-1.5 rounded-full transition-all duration-1000 ease-out ${safePercent < 20 ? 'bg-red-500' : 'bg-starling'}`;
 
-      document.getElementById('safe-percent').innerText = `${safePercent}%`;
-      document.getElementById('bills-percent').innerText = `${billsPercent}%`;
-
-      // Save everything to phone memory
-      localStorage.setItem('bankData', JSON.stringify({ halifax, barclays, starling, pendingBills }));
-
-      // Close menu & Vibrate
-      if (navigator.vibrate) navigator.vibrate([30, 50, 30]); // Success double-buzz
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
+      // Finalize
+      saveData();
+      updateModal.classList.add('hidden'); updateModal.classList.remove('flex');
     }
 
-    // Boot Up Data
+    // --- DATA MANAGEMENT ---
+    function saveData() {
+      localStorage.setItem('bankData', JSON.stringify(bankData));
+      localStorage.setItem('cashflowData', JSON.stringify(cashflowData));
+    }
+
     function loadData() {
-      const savedData = JSON.parse(localStorage.getItem('bankData'));
-      if (savedData) {
-        document.getElementById('input-halifax').value = savedData.halifax;
-        document.getElementById('input-barclays').value = savedData.barclays;
-        document.getElementById('input-starling').value = savedData.starling;
-        
-        // Handle older saves that didn't have bills
-        if (savedData.pendingBills !== undefined) {
-          document.getElementById('input-bills').value = savedData.pendingBills;
-        } else {
-          document.getElementById('input-bills').value = 450;
-        }
-        
-        updateApp(); 
+      const savedBank = JSON.parse(localStorage.getItem('bankData'));
+      const savedCF = JSON.parse(localStorage.getItem('cashflowData'));
+
+      if (savedBank) {
+        document.getElementById('input-halifax').value = savedBank.halifax;
+        document.getElementById('input-barclays').value = savedBank.barclays;
+        document.getElementById('input-starling').value = savedBank.starling;
       }
+      if (savedCF) {
+        cashflowData = savedCF;
+      }
+      updateApp();
     }
 
-    saveBtn.addEventListener('click', updateApp);
+    // Triggers
+    document.getElementById('save-btn').addEventListener('click', () => {
+      if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+      updateApp();
+    });
+    
+    // Boot Up
     loadData();
   </script>
 </body>
