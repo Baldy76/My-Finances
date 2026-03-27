@@ -1,11 +1,9 @@
 /**
  * COMMAND CENTER BRAIN (app.js)
- * v1.0.2 - MacOS Buttons & Logo Engine Fix
+ * v1.0.2 - Page-based Navigation & Data Integrity Fix
  */
 
-console.log("Brain Initializing...");
-
-// --- DATA ---
+// --- DATA ENGINE ---
 let accounts = (JSON.parse(localStorage.getItem('myAccounts')) || []).map(a => ({...a, overdraft: parseFloat(a.overdraft) || 0, domain: a.domain || ''}));
 let debts = (JSON.parse(localStorage.getItem('myDebts')) || []).map(d => ({...d, limit: parseFloat(d.limit) || 0, domain: d.domain || ''})); 
 let pots = (JSON.parse(localStorage.getItem('myPots')) || []).map(p => ({...p, balance: parseFloat(p.balance) || 0}));
@@ -18,7 +16,28 @@ const currentDay = today.getDate();
 const currentMonthNum = today.getMonth(); 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-// --- BOOT ---
+// --- NAVIGATION ENGINE ---
+window.switchView = function(viewId) {
+    console.log("Navigating to:", viewId);
+    document.querySelectorAll('.view-section').forEach(section => section.classList.remove('view-active'));
+    const target = document.getElementById(`view-${viewId}`);
+    if(target) target.classList.add('view-active');
+    
+    // Auto-scroll to top
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    
+    // Force specific renders based on view
+    if(viewId === 'admin') renderAdminList();
+    if(viewId === 'vault') renderVault();
+    if(viewId === 'bills') renderLedger();
+    if(viewId === 'history') renderHistory();
+    if(viewId === 'analytics') generateAnalytics();
+    
+    if(window.lucide) lucide.createIcons();
+    if(navigator.vibrate) navigator.vibrate(10);
+};
+
+// --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     initUI();
     updateApp();
@@ -27,36 +46,36 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initUI() {
-    const dEl = document.getElementById('date-display');
-    if(dEl) dEl.innerText = `${monthNames[currentMonthNum]} ${currentDay}`;
-
+    document.getElementById('date-display-home').innerText = `${monthNames[currentMonthNum]} ${currentDay}`;
+    // Fill select day/month
     const daySel = document.getElementById('cf-day');
     if(daySel) { for(let i=1; i<=31; i++) { let o = document.createElement('option'); o.value=i; o.innerText=i; daySel.appendChild(o); } }
     const moSel = document.getElementById('cf-month');
     if(moSel) { monthNames.forEach((m, i) => { let o = document.createElement('option'); o.value=i; o.innerText=m; moSel.appendChild(o); }); moSel.value = currentMonthNum; }
-    
     setupListeners();
 }
 
-// --- LOGO ENGINE 2.0 ---
+// --- LOGO LOGIC (SANITISED) ---
 function getLogoUrl(item) {
-    let domain = item.domain || '';
-    if (domain.trim() === '') {
+    let d = item.domain || '';
+    if (d.trim() === '') {
         const n = item.name.toLowerCase();
-        if (n.includes('halifax')) domain = 'halifax.co.uk';
-        else if (n.includes('barclays')) domain = 'barclays.co.uk';
-        else if (n.includes('starling')) domain = 'starlingbank.com';
-        else if (n.includes('amex')) domain = 'americanexpress.com';
-        else if (n.includes('monzo')) domain = 'monzo.com';
-        else if (n.includes('natwest')) domain = 'natwest.com';
+        if (n.includes('halifax')) d = 'halifax.co.uk';
+        else if (n.includes('barclays')) d = 'barclays.co.uk';
+        else if (n.includes('starling')) d = 'starlingbank.com';
+        else if (n.includes('amex')) d = 'americanexpress.com';
+        else if (n.includes('monzo')) d = 'monzo.com';
+        else if (n.includes('natwest')) d = 'natwest.com';
+        else if (n.includes('sky')) d = 'sky.com';
+        else if (n.includes('amazon')) d = 'amazon.co.uk';
         else return null;
     }
-    // Clean domain: Remove https://, www., and trailing slashes
-    domain = domain.replace('https://', '').replace('http://', '').replace('www.', '').split('/')[0].trim();
-    return `https://logo.clearbit.com/${domain}`;
+    // Clean string: Remove leading/trailing space and protocols
+    d = d.toLowerCase().replace('https://', '').replace('http://', '').replace('www.', '').split('/')[0].trim();
+    return `https://logo.clearbit.com/${d}`;
 }
 
-// --- WEEKEND PAYROLL RULE ---
+// --- CALENDAR LOGIC (WEEKEND PAY SHIFTS) ---
 function resolveActualDay(item) {
     if (item.day === 'last_working_day') {
         let lastDay = new Date(currentYear, currentMonthNum + 1, 0); 
@@ -74,6 +93,7 @@ function resolveActualDay(item) {
     return checkDate.getDate();
 }
 
+// --- CORE APP REFRESH ---
 function updateApp() {
     const totalRes = accounts.reduce((s, a) => s + (parseFloat(a.balance)||0) + (parseFloat(a.overdraft)||0), 0);
     let remBills = 0, upH = '', alertH = '';
@@ -92,13 +112,18 @@ function updateApp() {
     sorted.filter(i => i.actualDay >= currentDay).forEach(item => {
         if (item.type === 'bill') remBills += item.amount;
         let diff = item.actualDay - currentDay;
-        upH += `<div class="flex justify-between items-center border-b dark:border-gray-800/50 pb-3 last:border-0">
-            <div><p class="text-sm font-black">${item.name}</p><p class="text-[10px] text-slate-500 uppercase font-black">${diff===0?'Today':'in '+diff+' days'}</p></div>
+        upH += `<div class="flex justify-between items-center border-b dark:border-gray-800/50 pb-4 last:border-0">
+            <div><p class="text-sm font-black">${item.name}</p><p class="text-[9px] text-slate-500 uppercase font-black">${diff===0?'Today':'in '+diff+' days'}</p></div>
             <p class="text-sm font-black ${item.type==='bill'?'text-red-500':'text-starling'}">${item.type==='bill'?'-':'+'}£${item.amount.toFixed(2)}</p></div>`;
+        if (item.manual && item.type === 'bill' && (diff === 0 || diff === 1)) {
+            alertH += `<div class="bg-red-500 text-white p-4 rounded-2xl text-sm font-black shadow-lg flex items-center gap-3">🚨 <span class="flex-1">Alert: Pay ${item.name} ${diff === 0 ? 'Today' : 'Tomorrow'}</span><button onclick="this.parentElement.remove()" class="text-lg opacity-50">✕</button></div>`;
+        }
     });
 
+    document.getElementById('alerts-container').innerHTML = alertH;
     document.getElementById('upcoming-list').innerHTML = upH;
     document.getElementById('no-upcoming').classList.toggle('hidden', sorted.length > 0);
+
     const safeToSpend = totalRes - remBills;
     document.getElementById('safe-to-spend').innerText = `£${safeToSpend.toFixed(2)}`;
     document.getElementById('total-cash').innerText = `£${totalRes.toFixed(2)}`;
@@ -106,8 +131,10 @@ function updateApp() {
     
     const pc = totalRes > 0 ? Math.max(0, Math.min(100, (safeToSpend / totalRes) * 100)) : 0;
     const bar = document.getElementById('cash-bar');
-    bar.style.width = `${pc}%`;
-    bar.className = `h-2 rounded-full transition-all duration-1000 ${pc < 20 ? 'bg-red-500' : 'bg-starling'}`;
+    if(bar) {
+        bar.style.width = `${pc}%`;
+        bar.className = `h-2 rounded-full transition-all duration-1000 ${pc < 20 ? 'bg-red-500' : 'bg-starling'}`;
+    }
 
     renderAccounts();
     saveData();
@@ -115,44 +142,113 @@ function updateApp() {
 }
 
 function renderAccounts() {
-    const list = document.getElementById('accounts-list'); list.innerHTML = '';
+    const list = document.getElementById('accounts-list'); if(!list) return;
+    list.innerHTML = '';
     accounts.forEach(acc => {
         const logo = getLogoUrl(acc);
         const iconHtml = logo ? `<img src="${logo}" class="w-10 h-10 rounded-xl bg-white p-1 shadow-sm">` : `<div class="w-10 h-10 rounded-xl flex justify-center items-center font-black text-xs text-white" style="background-color:${acc.color}">${acc.name.substring(0,2).toUpperCase()}</div>`;
         list.innerHTML += `<div class="flex justify-between items-center bg-white dark:bg-cardbg p-4 rounded-3xl shadow-sm mb-3">
-            <div class="flex items-center gap-4">${iconHtml}<div><p class="font-black text-sm">${acc.name}</p><p class="text-[9px] text-slate-400 font-bold uppercase">Avail: £${((parseFloat(acc.balance)||0)+(parseFloat(acc.overdraft)||0)).toFixed(2)}</p></div></div>
-            <p class="font-black text-lg ${(parseFloat(acc.balance)||0)<0?'text-red-500':''}">£${(parseFloat(acc.balance)||0).toFixed(2)}</p></div>`;
+            <div class="flex items-center gap-4">${iconHtml}<div><p class="font-black text-sm">${acc.name}</p><p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Balance: £${(parseFloat(acc.balance)||0).toFixed(2)}</p></div></div>
+            <p class="font-black text-lg ${(parseFloat(acc.balance)||0)<0?'text-red-500':''}">£${((parseFloat(acc.balance)||0)+(parseFloat(acc.overdraft)||0)).toFixed(2)}</p></div>`;
     });
 }
 
-// --- SETUP ---
+// --- LISTENER SETUP ---
 function setupListeners() {
-    const triggerMap = {
-        'add-btn': {id: 'update-modal', render: renderTransactModal},
-        'nav-cashflow': {id: 'cashflow-modal', render: renderLedger},
-        'nav-vault': {id: 'vault-modal', render: renderVault},
-        'nav-admin': {id: 'admin-modal', render: renderAdminList},
-        'view-history-btn': {id: 'history-modal', render: renderHistory},
-        'force-override-btn': {id: 'override-modal', render: renderOverrideModal},
-        'nav-analytics': {id: 'analytics-modal', render: generateAnalytics}
+    // Top-level View Nav
+    document.getElementById('nav-home').onclick = () => switchView('home');
+    document.getElementById('nav-cashflow').onclick = () => switchView('bills');
+    document.getElementById('add-btn').onclick = () => switchView('transact');
+    document.getElementById('nav-vault').onclick = () => switchView('vault');
+    document.getElementById('nav-admin').onclick = () => switchView('admin');
+    document.getElementById('btn-to-analytics').onclick = () => switchView('analytics');
+    document.getElementById('btn-to-history').onclick = () => switchView('history');
+
+    // Admin Creation
+    document.getElementById('add-account-btn').onclick = () => {
+        const type = document.getElementById('admin-type').value;
+        const name = document.getElementById('admin-name').value;
+        const domain = document.getElementById('admin-domain').value;
+        const sec = parseFloat(document.getElementById('admin-secondary').value) || 0;
+        if(!name) return alert("Enter account name");
+        const colorThemes = ['#8B5CF6', '#F59E0B', '#EC4899', '#3B82F6', '#10B981', '#EF4444'];
+        const newObj = { id: Date.now(), name, domain, balance: 0, color: colorThemes[Math.floor(Math.random() * colorThemes.length)] };
+        if(type === 'bank') newObj.overdraft = sec; else if(type === 'debt') newObj.limit = sec;
+        if(type === 'bank') accounts.push(newObj); else if(type === 'debt') debts.push(newObj); else pots.push(newObj);
+        
+        // --- CLEAR ADMIN FORM ---
+        document.getElementById('admin-name').value = '';
+        document.getElementById('admin-domain').value = '';
+        document.getElementById('admin-secondary').value = '';
+        saveData(); renderAdminList(); updateApp();
     };
 
-    Object.entries(triggerMap).forEach(([btnId, config]) => {
-        const btn = document.getElementById(btnId);
-        if(btn) btn.onclick = (e) => { e.preventDefault(); if(config.render) config.render(); openModal(config.id); };
-    });
+    // Calendar Creation
+    document.getElementById('add-cf-btn').onclick = () => {
+        const name = document.getElementById('cf-name').value;
+        const amount = parseFloat(document.getElementById('cf-amount').value);
+        if(!name || !amount) return alert("Fill in details");
+        cashflowData.push({ id: Date.now(), type: document.getElementById('cf-type').value, frequency: document.getElementById('cf-freq').value, day: document.getElementById('cf-day').value, month: document.getElementById('cf-month').value, name, amount, manual: document.getElementById('cf-manual').checked });
+        document.getElementById('cf-name').value = ''; document.getElementById('cf-amount').value = ''; document.getElementById('cf-manual').checked = false;
+        saveData(); switchView('home');
+    };
 
-    // Close logic for all 7 buttons
-    ['update','vault','cashflow','admin','history','analytics','override'].forEach(id => {
-        const btn = document.getElementById(`close-${id}`);
-        if(btn) btn.onclick = () => closeModal(`${id}-modal`);
-    });
+    // Force Overrides Button
+    document.getElementById('force-override-btn').onclick = () => {
+        renderOverrideView();
+        document.getElementById('override-modal').classList.remove('hidden');
+        document.getElementById('override-modal').classList.add('flex');
+    };
+    document.getElementById('close-override').onclick = () => {
+        document.getElementById('override-modal').classList.add('hidden');
+        document.getElementById('override-modal').classList.remove('flex');
+    };
+    document.getElementById('save-override-btn').onclick = () => {
+        accounts.forEach(a => { let el = document.getElementById(`over-bank-${a.id}`); if(el) a.balance = parseFloat(el.value) || 0; });
+        pots.forEach(p => { let el = document.getElementById(`over-pot-${p.id}`); if(el) p.balance = parseFloat(el.value) || 0; });
+        debts.forEach(d => { let el = document.getElementById(`over-debt-${d.id}`); if(el) d.balance = parseFloat(el.value) || 0; });
+        saveData(); updateApp(); document.getElementById('override-modal').classList.add('hidden');
+    };
 
-    document.getElementById('add-account-btn').onclick = createAccount;
-    document.getElementById('add-cf-btn').onclick = addCashflow;
-    document.getElementById('quick-spend-btn').onclick = quickSpend;
-    document.getElementById('transfer-btn').onclick = executeTransfer;
-    document.getElementById('save-override-btn').onclick = saveOverrides;
+    // Transact Actions
+    document.getElementById('quick-spend-btn').onclick = () => {
+        const v = document.getElementById('spend-account').value, a = parseFloat(document.getElementById('spend-amount').value);
+        if(!v || !a) return;
+        const [type, id] = v.split('_');
+        let t = type === 'bank' ? accounts.find(x=>x.id==id) : debts.find(x=>x.id==id);
+        if(type==='bank') t.balance -= a; else t.balance += a;
+        recordTx(`Spend: ${t.name}`, `-£${a.toFixed(2)}`, document.getElementById('spend-desc').value, 'text-red-500');
+        document.getElementById('spend-amount').value = ''; document.getElementById('spend-desc').value = '';
+        saveData(); switchView('home');
+    };
+
+    document.getElementById('transfer-btn').onclick = () => {
+        const fId = document.getElementById('transfer-from').value, tId = document.getElementById('transfer-to').value, amt = parseFloat(document.getElementById('transfer-amount').value);
+        if(!fId || !tId || !amt) return;
+        const [fT, fI] = fId.split('_'), [tT, tI] = tId.split('_');
+        let src = accounts.find(x=>x.id==fI), dest = tT === 'bank' ? accounts.find(x=>x.id==tI) : pots.find(x=>x.id==tI);
+        src.balance -= amt; dest.balance += amt;
+        recordTx(`Transfer`, `£${amt.toFixed(2)}`, `${src.name} ➔ ${dest.name}`, 'text-blue-500');
+        document.getElementById('transfer-amount').value = '';
+        saveData(); switchView('home');
+    };
+
+    // Data backups
+    document.getElementById('export-data-btn').onclick = () => {
+        const d = JSON.stringify({accounts, debts, pots, cashflowData, historyLog});
+        const blob = new Blob([d], {type: 'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `CC_Backup.json`; a.click();
+    };
+    document.getElementById('import-data-btn').onclick = () => document.getElementById('import-file-input').click();
+    document.getElementById('import-file-input').onchange = (e) => {
+        const r = new FileReader(); r.onload = (ev) => {
+            const d = JSON.parse(ev.target.result);
+            accounts = d.accounts; debts = d.debts; pots = d.pots; cashflowData = d.cashflowData; historyLog = d.historyLog || [];
+            saveData(); location.reload();
+        }; r.readAsText(e.target.files[0]);
+    };
+
+    // Theme
     document.getElementById('theme-toggle-btn').onclick = () => {
         const h = document.documentElement;
         if(h.classList.contains('dark')) { h.classList.remove('dark'); localStorage.setItem('appTheme', 'light'); }
@@ -160,91 +256,66 @@ function setupListeners() {
     };
 }
 
-function openModal(id) { 
-    const el = document.getElementById(id);
-    if(el) { 
-        el.classList.remove('hidden'); el.classList.add('flex'); 
-        if(window.lucide) lucide.createIcons(); // Force refresh Icons
-    }
-}
-
-function closeModal(id) { const el = document.getElementById(id); if(el) { el.classList.add('hidden'); el.classList.remove('flex'); } updateApp(); }
-
-function createAccount() {
-    const type = document.getElementById('admin-type').value;
-    const name = document.getElementById('admin-name').value;
-    const domain = document.getElementById('admin-domain').value;
-    const sec = parseFloat(document.getElementById('admin-secondary').value) || 0;
-    if(!name) return alert("Enter account name");
-    const colorThemes = ['#8B5CF6', '#F59E0B', '#EC4899', '#3B82F6', '#10B981', '#EF4444'];
-    const newObj = { id: Date.now(), name, domain, balance: 0, color: colorThemes[Math.floor(Math.random() * colorThemes.length)] };
-    if(type === 'bank') newObj.overdraft = sec; else if(type === 'debt') newObj.limit = sec;
-    if(type === 'bank') accounts.push(newObj); else if(type === 'debt') debts.push(newObj); else pots.push(newObj);
-    
-    // FORM CLEAR
-    document.getElementById('admin-name').value = '';
-    document.getElementById('admin-domain').value = '';
-    document.getElementById('admin-secondary').value = '';
-    renderAdminList(); updateApp();
-}
-
-function addCashflow() {
-    const type = document.getElementById('cf-type').value;
-    const name = document.getElementById('cf-name').value;
-    const amount = parseFloat(document.getElementById('cf-amount').value);
-    if(!name || !amount) return alert("Enter name and amount");
-    cashflowData.push({ id: Date.now(), type, frequency: document.getElementById('cf-freq').value, day: document.getElementById('cf-day').value, month: document.getElementById('cf-month').value, name, amount, manual: document.getElementById('cf-manual').checked });
-    document.getElementById('cf-name').value = '';
-    document.getElementById('cf-amount').value = '';
-    closeModal('cashflow-modal');
+function renderOverrideView() {
+    const cont = document.getElementById('override-inputs-container'); cont.innerHTML = '';
+    const sections = [ {t:'Banks', d:accounts, i:'over-bank-'}, {t:'Pots', d:pots, i:'over-pot-'}, {t:'Debts', d:debts, i:'over-debt-'} ];
+    sections.forEach(s => {
+        if(s.d.length === 0) return;
+        let h = `<h3 class="text-xs font-black uppercase mb-3 opacity-40">${s.t}</h3>`;
+        s.d.forEach(item => { h += `<div class="mb-3"><label class="text-[9px] uppercase font-black text-slate-400 mb-1 block">${item.name}</label><input type="number" id="${s.i}${item.id}" value="${item.balance}" class="w-full bg-slate-50 dark:bg-gray-800 p-4 rounded-2xl font-black focus:ring-2 focus:ring-starling outline-none"></div>`; });
+        cont.innerHTML += `<div class="bg-white dark:bg-darkbg p-5 rounded-3xl mb-4 border dark:border-gray-700 shadow-sm">${h}</div>`;
+    });
 }
 
 function renderAdminList() {
-    const list = document.getElementById('admin-list'); list.innerHTML = '';
+    const list = document.getElementById('admin-list'); if(!list) return;
+    list.innerHTML = '';
     const all = [...accounts.map(a=>({...a, t:'bank'})), ...debts.map(d=>({...d, t:'debt'})), ...pots.map(p=>({...p, t:'pot'}))];
     all.forEach(item => {
         list.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl flex justify-between items-center mb-2 shadow-sm">
-            <p class="text-sm font-black">${item.name} <span class="text-[9px] opacity-40 uppercase ml-2">${item.t}</span></p>
-            <button onclick="deleteAccount('${item.t}', ${item.id})" class="text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`;
+            <p class="text-sm font-black text-slate-800 dark:text-white">${item.name} <span class="text-[9px] opacity-40 uppercase ml-2">${item.t}</span></p>
+            <button onclick="deleteAccount('${item.t}', ${item.id})" class="text-red-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`;
     });
     lucide.createIcons();
 }
 
 window.deleteAccount = function(type, id) {
-    if(!confirm("Delete?")) return;
+    if(!confirm("Delete account?")) return;
     if(type==='bank') accounts=accounts.filter(a=>a.id!==id); else if(type==='debt') debts=debts.filter(d=>d.id!==id); else pots=pots.filter(p=>p.id!==id);
     renderAdminList(); updateApp();
 };
 
 function renderLedger() {
-    const ledger = document.getElementById('full-ledger'); ledger.innerHTML = '';
+    const ledger = document.getElementById('full-ledger'); if(!ledger) return;
+    ledger.innerHTML = '';
     cashflowData.forEach(item => {
-        ledger.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl flex justify-between items-center mb-2 shadow-sm border border-slate-50 dark:border-transparent">
-            <div><p class="text-sm font-black">${item.name}</p><p class="text-[10px] text-slate-400 font-bold">Day ${item.day}</p></div>
+        ledger.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl flex justify-between items-center mb-2 shadow-sm border dark:border-transparent">
+            <div><p class="text-sm font-black">${item.name}</p><p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Day ${item.day}</p></div>
             <div class="flex items-center gap-2"><p class="font-black">£${item.amount.toFixed(2)}</p>
-            <button onclick="deleteCf(${item.id})" class="text-red-400"><i data-lucide="x-circle" class="w-4 h-4"></i></button></div></div>`;
+            <button onclick="deleteCf(${item.id})" class="text-red-400 p-2"><i data-lucide="x-circle" class="w-4 h-4"></i></button></div></div>`;
     });
     lucide.createIcons();
 }
-window.deleteCf = function(id) { cashflowData = cashflowData.filter(c=>c.id!==id); renderLedger(); updateApp(); };
+window.deleteCf = function(id) { if(confirm("Remove?")) { cashflowData = cashflowData.filter(c=>c.id!==id); renderLedger(); updateApp(); } };
 
 function renderVault() {
     const pList = document.getElementById('pots-dashboard-list'); pList.innerHTML = '';
     pots.forEach(p => {
         pList.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-3xl mb-3 shadow-sm flex justify-between items-center">
-            <div><p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">${p.name}</p><p class="text-2xl font-black text-yellow-500">£${(parseFloat(p.balance)||0).toFixed(2)}</p></div>
+            <div><p class="text-[9px] font-black uppercase text-slate-400 tracking-widest">${p.name}</p><p class="text-2xl font-black text-yellow-500">£${(parseFloat(p.balance)||0).toFixed(2)}</p></div>
             <button onclick="withdrawFromPot(${p.id})" class="bg-slate-100 dark:bg-gray-700 px-4 py-2 rounded-xl font-black text-xs">Withdraw</button></div>`;
     });
     const dList = document.getElementById('debt-dashboard-list'); dList.innerHTML = '';
     debts.forEach(d => {
         const util = d.limit > 0 ? Math.min((d.balance / d.limit) * 100, 100) : 0;
-        dList.innerHTML += `<div class="bg-white dark:bg-gray-800 p-5 rounded-3xl mb-3 shadow-sm">
+        dList.innerHTML += `<div class="bg-white dark:bg-gray-800 p-5 rounded-3xl mb-3 shadow-sm border dark:border-transparent">
             <div class="flex justify-between items-center mb-2"><p class="text-sm font-black">${d.name}</p><p class="text-xl font-black text-red-500">£${(parseFloat(d.balance)||0).toFixed(2)}</p></div>
             ${d.limit > 0 ? `<div class="w-full bg-slate-100 dark:bg-gray-900 h-1.5 rounded-full overflow-hidden mb-4"><div class="bg-red-500 h-full" style="width: ${util}%"></div></div>` : ''}
             <div class="flex gap-2">
                 <button onclick="payDebt(${d.id})" class="flex-1 bg-starling py-2 rounded-xl font-black text-xs text-slate-900">Pay</button>
                 <button onclick="addInterest(${d.id})" class="flex-1 bg-red-100 dark:bg-red-900/30 text-red-500 py-2 rounded-xl font-black text-xs">+ Int</button></div></div>`;
     });
+    document.getElementById('total-debt-display').innerText = `£${debts.reduce((s,d)=>s+(parseFloat(d.balance)||0),0).toFixed(2)}`;
 }
 
 window.payDebt = function(id) { let a = prompt("Amount?"); if(a) { debts.find(x=>x.id==id).balance -= parseFloat(a); updateApp(); renderVault(); } };
@@ -259,37 +330,17 @@ function renderTransactModal() {
     pots.forEach(p => { tT.innerHTML += `<option value="pot_${p.id}">🍯 ${p.name} (£${(parseFloat(p.balance)||0).toFixed(2)})</option>`; });
 }
 
-function quickSpend() {
-    const v = document.getElementById('spend-account').value, a = parseFloat(document.getElementById('spend-amount').value);
-    if(!v || !a) return;
-    const [type, id] = v.split('_');
-    let t = type === 'bank' ? accounts.find(x=>x.id==id) : debts.find(x=>x.id==id);
-    if(type==='bank') t.balance -= a; else t.balance += a;
-    recordTx(`Spend: ${t.name}`, `-£${a.toFixed(2)}`, document.getElementById('spend-desc').value, 'text-red-500');
-    saveData(); closeModal('update-modal');
-}
-
-function executeTransfer() {
-    const fId = document.getElementById('transfer-from').value, tId = document.getElementById('transfer-to').value, amt = parseFloat(document.getElementById('transfer-amount').value);
-    if(!fId || !tId || !amt) return;
-    const [fT, fI] = fId.split('_'), [tT, tI] = tId.split('_');
-    let src = accounts.find(x=>x.id==fI), dest = tT === 'bank' ? accounts.find(x=>x.id==tI) : pots.find(x=>x.id==tI);
-    src.balance -= amt; dest.balance += amt;
-    recordTx(`Transfer`, `£${amt.toFixed(2)}`, `${src.name} ➔ ${dest.name}`, 'text-blue-500');
-    saveData(); closeModal('update-modal');
-}
-
-function recordTx(title, amt, desc, color) {
+function recordTx(title, amt, desc, color='text-slate-800 dark:text-white') {
     historyLog.unshift({ id: Date.now(), title, amount:amt, desc: desc||'', timestamp: new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}), color });
     if(historyLog.length > 100) historyLog.pop(); localStorage.setItem('myHistory', JSON.stringify(historyLog));
 }
 
 function renderHistory() {
     const list = document.getElementById('history-list'); list.innerHTML = '';
-    if(historyLog.length===0) list.innerHTML = '<p class="text-center p-8 opacity-50 font-bold text-[10px]">No History</p>';
+    if(historyLog.length===0) list.innerHTML = '<p class="text-center p-8 opacity-50 font-bold text-[10px] uppercase">No logs yet</p>';
     historyLog.forEach(tx => {
-        list.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl mb-2 flex justify-between shadow-sm">
-            <div><p class="text-sm font-black">${tx.title}</p><p class="text-[10px] text-slate-400 font-bold uppercase">${tx.timestamp} • ${tx.desc}</p></div>
+        list.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl mb-2 flex justify-between shadow-sm border dark:border-transparent">
+            <div><p class="text-sm font-black">${tx.title}</p><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${tx.timestamp} • ${tx.desc}</p></div>
             <p class="font-black ${tx.color}">${tx.amount}</p></div>`;
     });
 }
@@ -304,24 +355,6 @@ function generateAnalytics() {
         const p1 = (Math.abs(cash)/total)*360, p2 = (Math.abs(potVal)/total)*360;
         chart.style.background = `conic-gradient(#00E6C3 0deg ${p1}deg, #FBBF24 ${p1}deg ${p1+p2}deg, #EF4444 ${p1+p2}deg 360deg)`;
     }
-}
-
-function renderOverrideModal() {
-    const cont = document.getElementById('override-inputs-container'); cont.innerHTML = '';
-    const sections = [ {t:'Banks', d:accounts, i:'over-bank-'}, {t:'Pots', d:pots, i:'over-pot-'}, {t:'Debts', d:debts, i:'over-debt-'} ];
-    sections.forEach(s => {
-        if(s.d.length === 0) return;
-        let h = `<h3 class="text-xs font-black uppercase mb-3 opacity-40">${s.t}</h3>`;
-        s.d.forEach(item => { h += `<div class="mb-3"><label class="text-[9px] uppercase font-black text-slate-400 mb-1 block">${item.name}</label><input type="number" id="${s.i}${item.id}" value="${item.balance}" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl font-black"></div>`; });
-        cont.innerHTML += `<div class="bg-white dark:bg-darkbg p-5 rounded-3xl mb-4 border dark:border-gray-700 shadow-sm">${h}</div>`;
-    });
-}
-
-function saveOverrides() {
-    accounts.forEach(a => { const el = document.getElementById(`over-bank-${a.id}`); if(el) a.balance = parseFloat(el.value) || 0; });
-    pots.forEach(p => { const el = document.getElementById(`over-pot-${p.id}`); if(el) p.balance = parseFloat(el.value) || 0; });
-    debts.forEach(d => { const el = document.getElementById(`over-debt-${d.id}`); if(el) d.balance = parseFloat(el.value) || 0; });
-    saveData(); closeModal('override-modal');
 }
 
 function saveData() {
