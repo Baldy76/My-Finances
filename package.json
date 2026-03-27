@@ -15,12 +15,12 @@
     "lucide-react": "latest",
     "framer-motion": "latest",
     "clsx": "latest",
-    "tailwind-merge": "latest"
-  },
-  "devDependencies": {
+    "tailwind-merge": "latest",
     "typescript": "latest",
     "@types/react": "latest",
-    "@types/node": "latest",
+    "@types/node": "latest"
+  },
+  "devDependencies": {
     "tailwindcss": "latest",
     "postcss": "latest",
     "autoprefixer": "latest"
