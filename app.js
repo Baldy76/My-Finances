@@ -1,9 +1,9 @@
 /**
  * COMMAND CENTER BRAIN (app.js)
- * v1.0.1 - Mobile Stability Build
+ * v1.0.1 - Form Clear & Logo Logic Update
  */
 
-console.log("Brain Initializing...");
+console.log("Brain Waking Up...");
 
 // --- DATA STATE ---
 let accounts = (JSON.parse(localStorage.getItem('myAccounts')) || []).map(a => ({...a, overdraft: parseFloat(a.overdraft) || 0, domain: a.domain || ''}));
@@ -18,17 +18,13 @@ const currentDay = today.getDate();
 const currentMonthNum = today.getMonth(); 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-// --- BOOT ENGINE ---
+// --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     try {
         initUI();
         updateApp();
-        
-        // Hide loader
         const shield = document.getElementById('loading-shield');
-        if(shield) {
-            setTimeout(() => { shield.style.opacity = '0'; setTimeout(() => shield.remove(), 500); }, 400);
-        }
+        if(shield) { setTimeout(() => { shield.style.opacity = '0'; setTimeout(() => shield.remove(), 500); }, 400); }
     } catch (err) { console.error("Boot failure:", err); }
 });
 
@@ -36,7 +32,6 @@ function initUI() {
     const dEl = document.getElementById('date-display');
     if(dEl) dEl.innerText = `${monthNames[currentMonthNum]} ${currentDay}`;
 
-    // Fill selectors
     const daySel = document.getElementById('cf-day');
     if(daySel) { for(let i=1; i<=31; i++) { let o = document.createElement('option'); o.value=i; o.innerText=i; daySel.appendChild(o); } }
     const moSel = document.getElementById('cf-month');
@@ -45,7 +40,23 @@ function initUI() {
     setupListeners();
 }
 
-// --- CALENDAR & LOGO LOGIC ---
+// --- LOGO ENGINE ---
+function getLogoUrl(item) {
+    if (item.domain && item.domain.trim() !== '') {
+        // Construct the URL and return it
+        return `https://logo.clearbit.com/${item.domain.replace('https://', '').replace('http://', '').trim()}`;
+    }
+    const n = item.name.toLowerCase();
+    if (n.includes('halifax')) return 'https://logo.clearbit.com/halifax.co.uk';
+    if (n.includes('barclays')) return 'https://logo.clearbit.com/barclays.co.uk';
+    if (n.includes('starling')) return 'https://logo.clearbit.com/starlingbank.com';
+    if (n.includes('amex')) return 'https://logo.clearbit.com/americanexpress.com';
+    if (n.includes('monzo')) return 'https://logo.clearbit.com/monzo.com';
+    if (n.includes('natwest')) return 'https://logo.clearbit.com/natwest.com';
+    return null;
+}
+
+// --- CALENDAR & RULE ENGINE ---
 function resolveActualDay(item) {
     if (item.day === 'last_working_day') {
         let lastDay = new Date(currentYear, currentMonthNum + 1, 0); 
@@ -63,21 +74,9 @@ function resolveActualDay(item) {
     return checkDate.getDate();
 }
 
-function getLogoUrl(item) {
-    if (item.domain && item.domain.trim() !== '') return `https://logo.clearbit.com/${item.domain}`;
-    const n = item.name.toLowerCase();
-    if (n.includes('halifax')) return 'https://logo.clearbit.com/halifax.co.uk';
-    if (n.includes('barclays')) return 'https://logo.clearbit.com/barclays.co.uk';
-    if (n.includes('starling')) return 'https://logo.clearbit.com/starlingbank.com';
-    if (n.includes('amex')) return 'https://logo.clearbit.com/americanexpress.com';
-    if (n.includes('monzo')) return 'https://logo.clearbit.com/monzo.com';
-    return null;
-}
-
-// --- CORE ENGINE ---
 function updateApp() {
     const totalRes = accounts.reduce((s, a) => s + (parseFloat(a.balance)||0) + (parseFloat(a.overdraft)||0), 0);
-    let remBills = 0, remInc = 0, alertH = '', upH = '';
+    let remBills = 0, upH = '', alertH = '';
 
     const sorted = cashflowData
         .filter(item => {
@@ -91,9 +90,9 @@ function updateApp() {
         .sort((a, b) => a.actualDay - b.actualDay);
 
     sorted.filter(i => i.actualDay >= currentDay).forEach(item => {
-        if (item.type === 'bill') remBills += item.amount; else remInc += item.amount;
+        if (item.type === 'bill') remBills += item.amount;
         let diff = item.actualDay - currentDay;
-        upH += `<div class="flex justify-between items-center border-b dark:border-gray-800/50 pb-3 last:border-0"><div><p class="text-sm font-black">${item.name}</p><p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">${diff===0?'Today':'in '+diff+' days'}</p></div><p class="text-sm font-black ${item.type==='bill'?'text-red-500':'text-starling'}">${item.type==='bill'?'-':'+'}£${item.amount.toFixed(2)}</p></div>`;
+        upH += `<div class="flex justify-between items-center border-b dark:border-gray-800/50 pb-3 last:border-0"><div><p class="text-sm font-black">${item.name}</p><p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">${diff===0?'Today':'in '+diff+' days'}</p></div><p class="text-sm font-black ${item.type==='bill'?'text-red-500':'text-starling'}">${item.type==='bill'?'-':'+'}£${item.amount.toFixed(2)}</p></div>`;
         if (item.manual && item.type === 'bill' && (diff === 0 || diff === 1)) {
             alertH += `<div class="bg-red-500 text-white p-4 rounded-2xl text-sm font-black shadow-lg flex items-center gap-3">🚨 <span class="flex-1">Pay ${item.name} ${diff === 0 ? 'Today' : 'Tomorrow'}!</span><button onclick="this.parentElement.remove()" class="text-xl">✕</button></div>`;
         }
@@ -122,14 +121,14 @@ function renderAccounts() {
     const list = document.getElementById('accounts-list'); list.innerHTML = '';
     accounts.forEach(acc => {
         const logo = getLogoUrl(acc);
-        const iconHtml = logo ? `<img src="${logo}" class="w-10 h-10 rounded-xl bg-white p-1">` : `<div class="w-10 h-10 rounded-xl flex justify-center items-center font-black text-xs text-white" style="background-color:${acc.color}">${acc.name.substring(0,2).toUpperCase()}</div>`;
+        const iconHtml = logo ? `<img src="${logo}" class="w-10 h-10 rounded-xl bg-white p-1 shadow-sm border border-slate-100 dark:border-transparent">` : `<div class="w-10 h-10 rounded-xl flex justify-center items-center font-black text-xs text-white" style="background-color:${acc.color}">${acc.name.substring(0,2).toUpperCase()}</div>`;
         list.innerHTML += `<div class="flex justify-between items-center bg-white dark:bg-cardbg p-4 rounded-3xl shadow-sm mb-3">
-            <div class="flex items-center gap-4">${iconHtml}<div><p class="font-black">${acc.name}</p><p class="text-[9px] text-slate-500 font-bold">Avail: £${((parseFloat(acc.balance)||0)+(parseFloat(acc.overdraft)||0)).toFixed(2)}</p></div></div>
+            <div class="flex items-center gap-4">${iconHtml}<div><p class="font-black">${acc.name}</p><p class="text-[9px] text-slate-500 font-bold uppercase">Avail: £${((parseFloat(acc.balance)||0)+(parseFloat(acc.overdraft)||0)).toFixed(2)}</p></div></div>
             <p class="font-black text-xl ${(parseFloat(acc.balance)||0)<0?'text-red-500':''}">£${(parseFloat(acc.balance)||0).toFixed(2)}</p></div>`;
     });
 }
 
-// --- ACTION LOGIC ---
+// --- ACTIONS & LISTENERS ---
 function setupListeners() {
     const triggerMap = {
         'add-btn': {id: 'update-modal', render: renderTransactModal},
@@ -146,7 +145,6 @@ function setupListeners() {
         if(btn) btn.onclick = (e) => { e.preventDefault(); if(config.render) config.render(); openModal(config.id); };
     });
 
-    // MacOS Close Logic
     const closeIds = ['update', 'vault', 'cashflow', 'admin', 'history', 'analytics', 'override'];
     closeIds.forEach(id => {
         const btn = document.getElementById(`close-${id}`);
@@ -168,8 +166,35 @@ function setupListeners() {
     };
 }
 
-function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); updateApp(); }
+function openModal(id) { 
+    const el = document.getElementById(id);
+    if(el) { 
+        el.classList.remove('hidden'); el.classList.add('flex'); 
+        if(navigator.vibrate) navigator.vibrate(10);
+        if(window.lucide) lucide.createIcons(); // RE-RENDER ICONS FOR MODAL
+    }
+}
+
+function closeModal(id) { const el = document.getElementById(id); if(el) { el.classList.add('hidden'); el.classList.remove('flex'); } updateApp(); }
+
+function createAccount() {
+    const type = document.getElementById('admin-type').value;
+    const name = document.getElementById('admin-name').value;
+    const domain = document.getElementById('admin-domain').value;
+    const sec = parseFloat(document.getElementById('admin-secondary').value) || 0;
+    if(!name) return alert("Enter account name");
+    const colorThemes = ['#8B5CF6', '#F59E0B', '#EC4899', '#3B82F6', '#10B981', '#EF4444'];
+    const newObj = { id: Date.now(), name, domain, balance: 0, color: colorThemes[Math.floor(Math.random() * colorThemes.length)] };
+    if(type === 'bank') newObj.overdraft = sec; else if(type === 'debt') newObj.limit = sec;
+    if(type === 'bank') accounts.push(newObj); else if(type === 'debt') debts.push(newObj); else pots.push(newObj);
+    
+    // --- CLEAR ADMIN FORM ---
+    document.getElementById('admin-name').value = '';
+    document.getElementById('admin-domain').value = '';
+    document.getElementById('admin-secondary').value = '';
+
+    saveData(); renderAdminList(); updateApp();
+}
 
 function addCashflow() {
     const type = document.getElementById('cf-type').value;
@@ -179,31 +204,15 @@ function addCashflow() {
     const name = document.getElementById('cf-name').value;
     const amount = parseFloat(document.getElementById('cf-amount').value);
     const manual = document.getElementById('cf-manual').checked;
-
-    if(!day || !name || !amount) return alert("Fill all fields");
-
+    if(!day || !name || !amount) return alert("Missing info");
     cashflowData.push({ id: Date.now(), type, frequency: freq, day, month, name, amount, manual });
     
-    // --- CLEAR CONTENTS (Mobile Fix) ---
+    // --- CLEAR BILLS FORM ---
     document.getElementById('cf-name').value = '';
     document.getElementById('cf-amount').value = '';
     document.getElementById('cf-manual').checked = false;
 
-    saveData();
-    closeModal('cashflow-modal');
-}
-
-function createAccount() {
-    const type = document.getElementById('admin-type').value;
-    const name = document.getElementById('admin-name').value;
-    const domain = document.getElementById('admin-domain').value;
-    const sec = parseFloat(document.getElementById('admin-secondary').value) || 0;
-    if(!name) return alert("Name required");
-    const colorThemes = ['#8B5CF6', '#F59E0B', '#EC4899', '#3B82F6', '#10B981', '#EF4444'];
-    const newObj = { id: Date.now(), name, domain, balance: 0, color: colorThemes[Math.floor(Math.random() * colorThemes.length)] };
-    if(type === 'bank') newObj.overdraft = sec; else if(type === 'debt') newObj.limit = sec;
-    if(type === 'bank') accounts.push(newObj); else if(type === 'debt') debts.push(newObj); else pots.push(newObj);
-    saveData(); renderAdminList(); updateApp();
+    saveData(); closeModal('cashflow-modal');
 }
 
 function renderAdminList() {
@@ -211,7 +220,7 @@ function renderAdminList() {
     const all = [...accounts.map(a=>({...a, t:'bank'})), ...debts.map(d=>({...d, t:'debt'})), ...pots.map(p=>({...p, t:'pot'}))];
     all.forEach(item => {
         list.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl flex justify-between items-center mb-2 shadow-sm">
-            <p class="text-sm font-black text-slate-800 dark:text-white">${item.name} <span class="text-[9px] opacity-50 uppercase">${item.t}</span></p>
+            <p class="text-sm font-black">${item.name} <span class="text-[9px] opacity-40 uppercase ml-2">${item.t}</span></p>
             <button onclick="deleteAccount('${item.t}', ${item.id})" class="text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`;
     });
     lucide.createIcons();
@@ -226,10 +235,10 @@ window.deleteAccount = function(type, id) {
 function renderLedger() {
     const ledger = document.getElementById('full-ledger'); ledger.innerHTML = '';
     cashflowData.forEach(item => {
-        ledger.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl flex justify-between items-center mb-2 shadow-sm">
-            <div><p class="text-sm font-black">${item.name}</p><p class="text-[10px] text-slate-400 font-bold uppercase">Day ${item.day}</p></div>
+        ledger.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl flex justify-between items-center mb-2 shadow-sm border border-slate-50 dark:border-transparent">
+            <div><p class="text-sm font-black">${item.name}</p><p class="text-[10px] text-slate-400 font-bold">Day ${item.day}</p></div>
             <div class="flex items-center gap-2"><p class="font-black">£${item.amount.toFixed(2)}</p>
-            <button onclick="deleteCf(${item.id})" class="text-red-500"><i data-lucide="x-circle" class="w-4 h-4"></i></button></div></div>`;
+            <button onclick="deleteCf(${item.id})" class="text-red-400"><i data-lucide="x-circle" class="w-4 h-4"></i></button></div></div>`;
     });
     lucide.createIcons();
 }
@@ -238,8 +247,8 @@ window.deleteCf = function(id) { cashflowData = cashflowData.filter(c=>c.id!==id
 function renderVault() {
     const pList = document.getElementById('pots-dashboard-list'); pList.innerHTML = '';
     pots.forEach(p => {
-        pList.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-3xl mb-3 shadow-sm flex justify-between items-center border dark:border-transparent">
-            <div><p class="text-xs font-black uppercase text-slate-400 tracking-widest">${p.name}</p><p class="text-2xl font-black text-yellow-500">£${(parseFloat(p.balance)||0).toFixed(2)}</p></div>
+        pList.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-3xl mb-3 shadow-sm flex justify-between items-center">
+            <div><p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">${p.name}</p><p class="text-2xl font-black text-yellow-500">£${(parseFloat(p.balance)||0).toFixed(2)}</p></div>
             <button onclick="withdrawFromPot(${p.id})" class="bg-slate-100 dark:bg-gray-700 px-4 py-2 rounded-xl font-black text-xs">Withdraw</button></div>`;
     });
     const dList = document.getElementById('debt-dashboard-list'); dList.innerHTML = '';
@@ -291,16 +300,16 @@ function executeTransfer() {
 
 function recordTx(title, amt, desc, color='text-slate-800 dark:text-white') {
     const ts = new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-    historyLog.unshift({ id: Date.now(), title, amount:amt, desc, timestamp: ts, color });
+    historyLog.unshift({ id: Date.now(), title, amount:amt, desc: desc||'', timestamp: ts, color });
     if(historyLog.length > 100) historyLog.pop(); localStorage.setItem('myHistory', JSON.stringify(historyLog));
 }
 
 function renderHistory() {
     const list = document.getElementById('history-list'); list.innerHTML = '';
-    if(historyLog.length===0) list.innerHTML = '<p class="text-center p-8 opacity-50 font-bold uppercase tracking-widest text-[10px]">No history</p>';
+    if(historyLog.length===0) list.innerHTML = '<p class="text-center p-8 opacity-50 font-bold text-[10px]">No History</p>';
     historyLog.forEach(tx => {
         list.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl mb-2 flex justify-between shadow-sm">
-            <div><p class="text-sm font-black">${tx.title}</p><p class="text-[10px] text-slate-400 font-bold uppercase">${tx.timestamp} • ${tx.desc}</p></div>
+            <div><p class="text-sm font-black">${tx.title}</p><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${tx.timestamp} • ${tx.desc}</p></div>
             <p class="font-black ${tx.color}">${tx.amount}</p></div>`;
     });
 }
@@ -333,7 +342,7 @@ function renderOverrideModal() {
             h += `<div class="mb-3"><label class="text-[9px] uppercase font-black text-slate-400 mb-1 block">${item.name}</label>
                   <input type="number" id="${s.i}${item.id}" value="${item.balance}" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl font-black"></div>`;
         });
-        cont.innerHTML += `<div class="bg-white dark:bg-darkbg p-5 rounded-3xl mb-4 border dark:border-gray-700">${h}</div>`;
+        cont.innerHTML += `<div class="bg-white dark:bg-darkbg p-5 rounded-3xl mb-4 border dark:border-gray-700 shadow-sm">${h}</div>`;
     });
 }
 
@@ -355,7 +364,7 @@ function exportData() {
     const data = JSON.stringify({accounts, debts, pots, cashflowData, historyLog});
     const blob = new Blob([data], {type: 'application/json'});
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `CC_Backup_${new Date().toISOString().split('T')[0]}.json`; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = `CC_Backup.json`; a.click();
 }
 
 function importData(e) {
