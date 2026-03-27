@@ -5,13 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Command Center</title>
   
+  <link rel="stylesheet" href="./style.css">
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#0F172A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1378/1378598.png">
   
-  <link rel="stylesheet" href="./style.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -24,12 +23,17 @@
 
 <body class="p-4 relative min-h-screen bg-lightbg dark:bg-darkbg text-slate-900 dark:text-white transition-colors duration-300">
 
+  <div id="loading-shield" class="fixed inset-0 z-[100] bg-darkbg flex flex-col items-center justify-center transition-opacity duration-500">
+    <div class="w-12 h-12 border-4 border-starling border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p class="text-starling font-black tracking-widest text-xs uppercase">Initializing Brain...</p>
+  </div>
+
   <header class="flex justify-between items-center mb-4 pt-4">
     <div>
       <h1 class="text-2xl font-black tracking-tight flex items-center gap-2">
         Command <span class="text-starling">Center</span>
       </h1>
-      <p class="text-slate-500 dark:text-gray-400 text-sm font-medium" id="date-display">Loading...</p>
+      <p class="text-slate-500 dark:text-gray-400 text-sm font-medium" id="date-display">---</p>
     </div>
   </header>
   
@@ -51,27 +55,24 @@
       <span>Available: <span id="total-cash" class="font-bold text-slate-800 dark:text-white">£0.00</span></span>
       <span>Bills Left: <span id="display-bills" class="font-bold text-red-500">£0.00</span></span>
     </p>
-    <p class="text-[10px] text-slate-500 dark:text-gray-400 pt-2 relative z-10 font-bold uppercase tracking-widest text-center">
-      Projected Month End: <span id="projected-balance" class="text-starling">£0.00</span>
-    </p>
   </div>
 
   <div class="flex justify-between items-center mb-3">
     <h3 class="text-lg font-black tracking-tight">Accounts</h3>
-    <button id="view-history-btn" class="text-xs bg-slate-200 dark:bg-gray-800 text-slate-700 dark:text-starling px-3 py-1.5 rounded-full font-bold flex items-center gap-1 active:scale-95 transition-transform">
+    <button id="view-history-btn" class="text-xs bg-slate-200 dark:bg-gray-800 text-slate-700 dark:text-starling px-3 py-1.5 rounded-full font-bold flex items-center gap-1 active:scale-95">
       <i data-lucide="history" class="w-3 h-3"></i> History
     </button>
   </div>
   <div class="space-y-3 mb-6" id="accounts-list"></div>
 
   <h3 class="text-lg font-black tracking-tight mb-3">Calendar</h3>
-  <div class="bg-lightcard dark:bg-cardbg rounded-3xl p-5 border border-slate-200 dark:border-gray-800 shadow-lg">
+  <div class="bg-lightcard dark:bg-cardbg rounded-3xl p-5 border border-slate-200 dark:border-gray-800 shadow-lg mb-12">
     <div id="upcoming-list" class="space-y-3"></div>
     <p id="no-upcoming" class="text-sm text-slate-400 dark:text-gray-500 text-center py-2 hidden font-medium">Clear for now!</p>
   </div>
 
   <nav class="fixed bottom-0 left-0 w-full bg-white/90 dark:bg-cardbg/90 backdrop-blur-xl border-t border-slate-200 dark:border-gray-800 p-4 flex justify-between px-8 items-center rounded-t-3xl z-40 pb-6 transition-colors duration-300">
-    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center text-slate-400 dark:text-gray-500 hover:text-starling transition-colors">
+    <button id="nav-home" class="flex flex-col items-center text-slate-400 dark:text-gray-500 hover:text-starling transition-colors">
       <i data-lucide="home" class="w-6 h-6"></i><span class="text-[8px] mt-1 font-black tracking-widest">HOME</span>
     </button>
     <button id="nav-cashflow" class="flex flex-col items-center text-slate-400 dark:text-gray-500 hover:text-starling transition-colors">
@@ -105,7 +106,7 @@
           <button id="quick-spend-btn" class="w-full bg-starling text-slate-900 font-black p-4 rounded-xl active:scale-95">Record Purchase</button>
         </div>
         <div class="bg-white dark:bg-darkbg p-5 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-sm">
-          <h3 class="text-xs font-black text-blue-500 mb-4 uppercase tracking-wider">🔄 Transfer Funds</h3>
+          <h3 class="text-xs font-black text-blue-500 mb-4 uppercase tracking-wider">🔄 Internal Transfer</h3>
           <div class="space-y-3 mb-4">
             <select id="transfer-from" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm"></select>
             <select id="transfer-to" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl text-sm"></select>
@@ -171,14 +172,14 @@
       </div>
       <div class="overflow-y-auto flex-1 pr-2 space-y-6">
         <div class="bg-white dark:bg-darkbg p-5 rounded-3xl flex justify-between items-center border border-slate-100 dark:border-gray-700 shadow-sm">
-          <div><h3 class="text-sm font-black text-slate-800 dark:text-white">Theme</h3><p class="text-[10px] text-slate-400">Toggle Light / Dark Mode</p></div>
+          <div><h3 class="text-sm font-black text-slate-800 dark:text-white">Theme</h3><p class="text-[10px] text-slate-500">Toggle Light / Dark Mode</p></div>
           <button id="theme-toggle-btn" class="bg-slate-100 dark:bg-gray-800 p-3 rounded-full border border-slate-200 dark:border-gray-600 text-xl">🌙</button>
         </div>
 
         <div class="bg-white dark:bg-darkbg p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-700">
           <h3 class="text-sm font-black text-starling mb-4 uppercase">Create New</h3>
           <div class="space-y-3 mb-4">
-            <select id="admin-type" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none">
+            <select id="admin-type" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium">
               <option value="bank">🏦 Bank Account</option><option value="debt">💳 Credit Card / Loan</option><option value="pot">🍯 Savings Pot</option>
             </select>
             <input type="text" id="admin-name" placeholder="Name (e.g. Halifax Joint)" class="w-full bg-slate-50 dark:bg-gray-800 p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium">
@@ -201,18 +202,29 @@
     </div>
   </div>
 
+  <div id="history-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end backdrop-blur-sm">
+    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
+      <div class="flex justify-between items-center mb-6 shrink-0">
+        <h2 class="text-2xl font-black">History</h2>
+        <button id="close-history" class="text-slate-400 text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
+      </div>
+      <div class="overflow-y-auto flex-1 pr-2 space-y-3" id="history-list"></div>
+      <button onclick="clearHistory()" class="mt-5 w-full bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400 font-black p-4 rounded-xl text-sm border border-red-200 dark:border-red-500/30">Wipe Log</button>
+    </div>
+  </div>
+
   <div id="override-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-60 hidden flex-col justify-end backdrop-blur-sm">
     <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
       <div class="flex justify-between items-center mb-6 shrink-0">
-        <h2 class="text-2xl font-black">Force Overrides</h2>
-        <button id="close-override" class="text-slate-400 text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800">✕</button>
+        <h2 class="text-2xl font-black text-slate-900 dark:text-white text-center w-full">Master Override</h2>
+        <button id="close-override" class="text-slate-400 text-xl">✕</button>
       </div>
       <div class="overflow-y-auto flex-1 pr-2 space-y-6">
         <div id="update-banks-container" class="space-y-3"></div>
         <div id="update-pots-container" class="space-y-3"></div>
         <div id="update-debts-container" class="space-y-3"></div>
       </div>
-      <button id="save-override-btn" class="w-full bg-starling text-slate-900 font-black text-lg p-4 rounded-xl shadow-lg mt-4 shrink-0 active:scale-95">Force Save Overrides</button>
+      <button id="save-override-btn" class="w-full bg-starling text-slate-900 font-black text-lg p-4 rounded-xl shadow-lg mt-4 shrink-0 active:scale-95">Save All</button>
     </div>
   </div>
 
@@ -220,7 +232,7 @@
     <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-black">Analytics</h2>
-        <button id="close-analytics" class="text-slate-400 text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800">✕</button>
+        <button id="close-analytics" class="text-slate-400 text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
       </div>
       <div class="overflow-y-auto flex-1 pr-2 space-y-6 text-center">
         <div class="bg-white dark:bg-darkbg p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800 flex flex-col items-center">
@@ -244,29 +256,6 @@
     </div>
   </div>
 
-  <div id="history-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6 shrink-0">
-        <h2 class="text-2xl font-black">History</h2>
-        <button id="close-history" class="text-slate-400 text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
-      </div>
-      <div class="overflow-y-auto flex-1 pr-2 space-y-3" id="history-list"></div>
-      <button onclick="clearHistory()" class="mt-5 w-full bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400 font-black p-4 rounded-xl text-sm active:scale-95 transition-transform border border-red-100 dark:border-red-900/50">Wipe Log</button>
-    </div>
-  </div>
-
   <script src="./app.js"></script>
-  <script>
-    // Initialize Lucide Icons
-    lucide.createIcons();
-
-    // Register Service Worker for PWA (Offline Mode)
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(err => console.log("SW Reg Error: ", err));
-      });
-    }
-  </script>
-
 </body>
 </html>
