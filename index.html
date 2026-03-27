@@ -5,95 +5,70 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Command Center</title>
   
+  <link rel="stylesheet" href="./style.css">
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#0F172A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1378/1378598.png">
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: 'class', 
-      theme: {
-        extend: {
-          colors: {
-            starling: '#00E6C3',
-            darkbg: '#0F172A',
-            cardbg: '#1E293B',
-            lightbg: '#F8FAFC',
-            lightcard: '#FFFFFF',
-          }
-        }
-      }
+      theme: { extend: { colors: { starling: '#00E6C3', darkbg: '#0F172A', cardbg: '#1E293B', lightbg: '#F8FAFC', lightcard: '#FFFFFF' } } }
     }
   </script>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-bottom: 6rem; transition: background-color 0.3s, color 0.3s; }
-    input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-    .modal-enter { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-  </style>
 </head>
+
 <body class="p-4 relative min-h-screen bg-lightbg dark:bg-darkbg text-slate-900 dark:text-white">
 
   <header class="flex justify-between items-center mb-4 pt-4">
     <div>
       <h1 class="text-2xl font-extrabold tracking-tight">Command Center 🚀</h1>
-      <p class="text-slate-500 dark:text-gray-400 text-sm font-medium" id="date-display">Checking calendar...</p>
+      <p class="text-slate-500 dark:text-gray-400 text-sm font-medium" id="date-display">Loading...</p>
     </div>
   </header>
-  
+
   <div id="alerts-container" class="mb-4 space-y-2"></div>
 
-  <div class="bg-lightcard dark:bg-gradient-to-br dark:from-cardbg dark:to-gray-900 rounded-3xl p-6 border border-slate-200 dark:border-gray-800 shadow-xl dark:shadow-2xl text-center mb-6 relative overflow-hidden transition-colors duration-300">
-    <div class="absolute -top-10 -right-10 w-32 h-32 bg-starling opacity-20 dark:opacity-10 rounded-full blur-3xl"></div>
-    
+  <div class="bg-lightcard dark:bg-gradient-to-br dark:from-cardbg dark:to-gray-900 rounded-3xl p-6 border border-slate-200 dark:border-gray-800 shadow-xl mb-6 relative overflow-hidden transition-colors">
     <div class="flex justify-between items-center mb-1 relative z-10">
       <p class="text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wide text-xs">Safe to Spend Now</p>
-      <button id="nav-analytics" class="text-[10px] bg-slate-100 dark:bg-gray-800 text-starling px-3 py-1.5 rounded-full font-extrabold shadow-sm active:scale-95 transition-transform flex items-center gap-1">
-        📊 Analytics
-      </button>
+      <button id="nav-analytics" class="text-[10px] bg-slate-100 dark:bg-gray-800 text-starling px-3 py-1.5 rounded-full font-extrabold shadow-sm active:scale-95">📊 Analytics</button>
     </div>
-    
-    <h2 class="text-5xl font-black tracking-tighter transition-colors duration-300 relative z-10 my-2" id="safe-to-spend">£0.00</h2>
-    
+    <h2 class="text-5xl font-black tracking-tighter transition-colors relative z-10 my-2" id="safe-to-spend">£0.00</h2>
     <div class="w-full bg-slate-100 dark:bg-gray-800 rounded-full h-2 mt-4 mb-3 overflow-hidden relative z-10 shadow-inner">
       <div id="cash-bar" class="bg-starling h-2 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
     </div>
-    
     <p class="text-xs text-slate-500 dark:text-gray-400 border-t border-slate-100 dark:border-gray-700/50 pt-3 mt-4 relative z-10 flex justify-between">
       <span>Available: <span id="total-cash" class="font-bold text-slate-800 dark:text-white">£0.00</span></span>
-      <span>Bills Left: <span id="display-bills" class="font-bold text-red-500 dark:text-red-400">£0.00</span></span>
-    </p>
-    <p class="text-xs text-slate-500 dark:text-gray-400 pt-2 relative z-10 bg-slate-50 dark:bg-gray-800/50 rounded-lg p-2 mt-2 font-medium">
-      Projected Month End: <span id="projected-balance" class="font-bold text-starling">£0.00</span>
+      <span>Bills Left: <span id="display-bills" class="font-bold text-red-500">£0.00</span></span>
     </p>
   </div>
 
   <div class="flex justify-between items-center mb-3">
     <h3 class="text-lg font-bold">Your Accounts 🏦</h3>
-    <button id="view-history-btn" class="text-xs bg-slate-200 dark:bg-gray-800 text-slate-700 dark:text-starling px-3 py-1.5 rounded-full font-bold shadow-sm active:scale-95 transition-colors">📜 History</button>
+    <button id="view-history-btn" class="text-xs bg-slate-200 dark:bg-gray-800 text-slate-700 dark:text-starling px-3 py-1.5 rounded-full font-bold shadow-sm">📜 History</button>
   </div>
   <div class="space-y-3 mb-6" id="accounts-list"></div>
 
   <h3 class="text-lg font-bold mb-3">Next Up 📅</h3>
-  <div class="bg-lightcard dark:bg-cardbg rounded-3xl p-5 border border-slate-200 dark:border-gray-800 shadow-lg transition-colors duration-300">
+  <div class="bg-lightcard dark:bg-cardbg rounded-3xl p-5 border border-slate-200 dark:border-gray-800 shadow-lg">
     <div id="upcoming-list" class="space-y-3"></div>
-    <p id="no-upcoming" class="text-sm text-slate-400 dark:text-gray-500 text-center py-2 hidden font-medium">Nothing else this month!</p>
+    <p id="no-upcoming" class="text-sm text-slate-400 dark:text-gray-500 text-center py-2 hidden">Nothing else this month!</p>
   </div>
 
-  <nav class="fixed bottom-0 left-0 w-full bg-white/90 dark:bg-cardbg/90 backdrop-blur-xl border-t border-slate-200 dark:border-gray-800 p-4 flex justify-between px-6 items-center rounded-t-3xl z-40 pb-6 transition-colors duration-300">
-    <button class="flex flex-col items-center text-slate-400 dark:text-gray-500 hover:text-starling dark:hover:text-white transition-colors">
+  <nav class="fixed bottom-0 left-0 w-full bg-white/90 dark:bg-cardbg/90 backdrop-blur-xl border-t border-slate-200 dark:border-gray-800 p-4 flex justify-between px-6 items-center rounded-t-3xl z-40 pb-6">
+    <button onclick="window.scrollTo(0,0)" class="flex flex-col items-center text-slate-400 dark:text-gray-500 hover:text-starling transition-colors">
       <span class="text-xl">🏠</span><span class="text-[9px] mt-1 font-extrabold tracking-widest">HOME</span>
     </button>
     <button id="nav-cashflow" class="flex flex-col items-center text-slate-400 dark:text-gray-500 hover:text-starling transition-colors">
       <span class="text-xl">📅</span><span class="text-[9px] mt-1 font-extrabold tracking-widest">BILLS</span>
     </button>
-    <button id="add-btn" class="flex flex-col items-center text-slate-900 dark:text-starling -mt-12 bg-white dark:bg-darkbg rounded-full p-4 border-4 border-slate-100 dark:border-cardbg shadow-xl transform active:scale-90 transition-transform duration-200">
+    <button id="add-btn" class="flex flex-col items-center text-slate-900 dark:text-starling -mt-12 bg-white dark:bg-darkbg rounded-full p-4 border-4 border-slate-100 dark:border-cardbg shadow-xl transform active:scale-90 transition-transform">
       <span class="text-2xl">➕</span>
     </button>
-    <button id="nav-vault" class="flex flex-col items-center text-slate-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-yellow-400 transition-colors">
+    <button id="nav-vault" class="flex flex-col items-center text-slate-400 dark:text-gray-500 hover:text-yellow-400 transition-colors">
       <span class="text-xl">🏦</span><span class="text-[9px] mt-1 font-extrabold tracking-widest">VAULT</span>
     </button>
     <button id="nav-admin" class="flex flex-col items-center text-slate-400 dark:text-gray-500 hover:text-slate-800 dark:hover:text-white transition-colors">
@@ -101,621 +76,13 @@
     </button>
   </nav>
 
-  <div id="update-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-4 shrink-0">
-        <h2 class="text-2xl font-black">Transact</h2>
-        <button id="close-modal" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
-      </div>
-      <div class="overflow-y-auto flex-1 pr-2 space-y-6">
-        <div class="bg-white dark:bg-darkbg p-5 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-sm">
-          <h3 class="text-xs font-black text-starling mb-4 uppercase tracking-wider flex items-center gap-2">⚡ Quick Spend</h3>
-          <div class="grid grid-cols-2 gap-3 mb-3">
-            <select id="spend-account" class="bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-starling"></select>
-            <input type="number" id="spend-amount" placeholder="£ Amount" class="bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-starling">
-          </div>
-          <input type="text" id="spend-desc" placeholder="What was it? (e.g. Coffee)" class="w-full bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium mb-4 focus:outline-none focus:ring-2 focus:ring-starling">
-          <button id="quick-spend-btn" class="w-full bg-starling text-slate-900 font-black p-4 rounded-xl active:scale-95 text-sm transition-transform shadow-md">Record Purchase</button>
-        </div>
-
-        <div class="bg-white dark:bg-darkbg p-5 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-sm">
-          <h3 class="text-xs font-black text-blue-500 dark:text-blue-400 mb-4 uppercase tracking-wider flex items-center gap-2">🔄 Transfer Funds</h3>
-          <div class="space-y-3 mb-4">
-            <select id="transfer-from" class="w-full bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="" disabled selected>Transfer FROM...</option></select>
-            <select id="transfer-to" class="w-full bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="" disabled selected>Transfer TO...</option></select>
-            <input type="number" id="transfer-amount" placeholder="£ Amount to move" class="w-full bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-          <button id="transfer-btn" class="w-full bg-blue-500 text-white font-black p-4 rounded-xl active:scale-95 text-sm transition-transform shadow-md">Execute Transfer</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="vault-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6 shrink-0">
-        <h2 class="text-2xl font-black">The Vault 🏦</h2>
-        <button id="close-vault" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
-      </div>
-      <div class="overflow-y-auto flex-1 pr-2 space-y-6">
-        <div>
-          <h3 class="text-xs font-black text-yellow-500 dark:text-yellow-400 mb-3 uppercase tracking-wider">🍯 Savings Pots</h3>
-          <div id="pots-dashboard-list" class="space-y-3"></div>
-        </div>
-        <div>
-          <h3 class="text-xs font-black text-red-500 dark:text-red-400 mb-3 uppercase tracking-wider">💳 Credit & Loans</h3>
-          <div id="debt-dashboard-list" class="space-y-3"></div>
-          <div class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 p-4 rounded-2xl flex justify-between items-center shadow-sm">
-            <p class="text-red-600 dark:text-red-400 font-black uppercase tracking-widest text-[10px]">Total Debt Position</p>
-            <h2 class="text-xl font-black text-red-600 dark:text-red-500" id="total-debt-display">£0.00</h2>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="cashflow-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6 shrink-0">
-        <h2 class="text-2xl font-black">Manage Cashflow</h2>
-        <button id="close-cashflow" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
-      </div>
-      
-      <div class="bg-white dark:bg-darkbg p-5 rounded-3xl border border-slate-200 dark:border-gray-700 mb-6 shrink-0 shadow-sm" id="cf-form-container">
-        <div class="grid grid-cols-2 gap-3 mb-3">
-          <select id="cf-type" class="bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-starling"><option value="bill">🔴 Bill</option><option value="income">🟢 Income</option></select>
-          <select id="cf-freq" class="bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-starling"><option value="monthly">Every Month</option><option value="quarterly">Quarterly</option><option value="one_off">One-Off</option></select>
-        </div>
-        <div class="grid grid-cols-2 gap-3 mb-3">
-          <select id="cf-month" class="hidden bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm text-center font-medium focus:outline-none focus:ring-2 focus:ring-starling"></select>
-          <select id="cf-day" class="col-span-2 bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm text-center font-medium focus:outline-none focus:ring-2 focus:ring-starling"><option value="" disabled selected>Select Day...</option><option value="last_working_day" class="font-bold text-starling">⭐ Last Working Day</option></select>
-        </div>
-        <div class="grid grid-cols-3 gap-3 mb-4">
-          <input type="text" id="cf-name" placeholder="Name (e.g. Sky TV)" class="col-span-2 bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-starling">
-          <input type="number" id="cf-amount" placeholder="£" class="bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-starling">
-        </div>
-        <label class="flex items-center gap-3 mb-5 text-sm text-slate-600 dark:text-gray-300 p-3 bg-slate-50 dark:bg-gray-800/50 rounded-xl border border-slate-200 dark:border-gray-700 cursor-pointer transition-colors hover:bg-slate-100 dark:hover:bg-gray-800">
-          <input type="checkbox" id="cf-manual" class="w-5 h-5 rounded text-starling focus:ring-starling">
-          <span class="font-medium">Manual Payment (Alert me!)</span>
-        </label>
-        <button id="add-cf-btn" class="w-full bg-slate-800 dark:bg-gray-700 text-white font-black p-4 rounded-xl active:scale-95 text-sm hover:bg-starling hover:text-slate-900 transition-colors shadow-md">+ Add to Calendar</button>
-      </div>
-
-      <div class="overflow-y-auto flex-1 pr-2 space-y-3" id="full-ledger"></div>
-    </div>
-  </div>
-
-  <div id="admin-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6 shrink-0">
-        <h2 class="text-2xl font-black">Admin Settings ⚙️</h2>
-        <button id="close-admin" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
-      </div>
-      <div class="overflow-y-auto flex-1 pr-2 space-y-6">
-        
-        <div class="bg-white dark:bg-darkbg border border-slate-200 dark:border-gray-700 p-5 rounded-3xl shadow-sm flex justify-between items-center">
-          <div>
-            <h3 class="text-sm font-black text-slate-800 dark:text-white mb-1 tracking-wide">🎨 Interface Theme</h3>
-            <p class="text-[10px] text-slate-500 dark:text-gray-400 font-medium">Toggle Light / Dark Mode</p>
-          </div>
-          <button id="theme-toggle-btn" class="bg-slate-100 dark:bg-gray-800 p-3 rounded-full shadow-inner border border-slate-200 dark:border-gray-700 text-xl transition-transform active:scale-90">🌙</button>
-        </div>
-
-        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/50 p-5 rounded-3xl shadow-sm">
-          <h3 class="text-sm font-black text-blue-600 dark:text-blue-400 mb-2 uppercase tracking-wider">💾 Data Backup</h3>
-          <p class="text-xs text-blue-800/70 dark:text-blue-300/70 mb-4 font-medium">Export to save, or Import to restore.</p>
-          <div class="grid grid-cols-2 gap-3">
-            <button id="export-data-btn" class="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-400 font-black p-3.5 rounded-xl active:scale-95 text-sm transition-colors shadow-sm">⬇️ Export</button>
-            <button id="import-data-btn" class="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-400 font-black p-3.5 rounded-xl active:scale-95 text-sm transition-colors shadow-sm">⬆️ Import</button>
-          </div>
-          <input type="file" id="import-file-input" accept=".json" class="hidden">
-        </div>
-
-        <div class="bg-white dark:bg-darkbg p-5 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-sm">
-          <h3 class="text-sm font-black text-starling mb-4 uppercase tracking-wider">Create New</h3>
-          <div class="space-y-3 mb-4">
-            <select id="admin-type" class="w-full bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-starling">
-              <option value="bank">🏦 Bank Account</option><option value="debt">💳 Credit Card / Loan</option><option value="pot">🍯 Savings Pot</option>
-            </select>
-            <input type="text" id="admin-name" placeholder="Name (e.g. Holiday Fund)" class="w-full bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-starling">
-            <input type="number" id="admin-secondary" placeholder="Overdraft Limit (£)" class="w-full bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-white p-3.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-starling">
-          </div>
-          <button id="add-account-btn" class="w-full bg-slate-800 dark:bg-gray-700 text-white font-black p-4 rounded-xl active:scale-95 text-sm shadow-md transition-colors hover:bg-starling hover:text-slate-900">Create Entry</button>
-        </div>
-        
-        <button id="force-override-btn" class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-white font-black p-4 rounded-xl active:scale-95 text-sm flex justify-between items-center shadow-sm">
-          <span>⚠️ Force Override Balances</span> <span class="text-lg">›</span>
-        </button>
-
-        <div>
-          <h3 class="text-xs font-black text-slate-400 dark:text-gray-500 mb-3 uppercase tracking-wider shrink-0">Manage Existing</h3>
-          <div class="space-y-3" id="admin-list"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="history-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6 shrink-0">
-        <h2 class="text-2xl font-black">Transaction History 📜</h2>
-        <button id="close-history" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
-      </div>
-      <div class="overflow-y-auto flex-1 pr-2 space-y-3" id="history-list"></div>
-      <button onclick="clearHistory()" class="mt-5 w-full bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400 font-black p-4 rounded-xl text-sm border border-red-200 dark:border-red-500/30 shadow-sm active:scale-95 transition-transform">Clear History Log</button>
-    </div>
-  </div>
-
-  <div id="override-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-60 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6 shrink-0">
-        <h2 class="text-2xl font-black">Force Overrides</h2>
-        <button id="close-override" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
-      </div>
-      <div class="overflow-y-auto flex-1 pr-2 space-y-6">
-        <div id="update-banks-container" class="space-y-3"></div>
-        <div id="update-pots-container" class="space-y-3"></div>
-        <div id="update-debts-container" class="space-y-3"></div>
-      </div>
-      <button id="save-override-btn" class="w-full bg-starling text-slate-900 font-black text-lg p-4 rounded-xl shadow-lg mt-4 shrink-0 active:scale-95 transition-transform">Force Save Overrides</button>
-    </div>
-  </div>
-
-  <div id="analytics-modal" class="fixed inset-0 bg-black/60 dark:bg-black/80 z-50 hidden flex-col justify-end transition-opacity duration-300 backdrop-blur-sm">
-    <div class="bg-lightbg dark:bg-cardbg rounded-t-3xl p-6 border-t border-slate-200 dark:border-gray-700 pb-12 shadow-2xl h-[85vh] flex flex-col modal-enter">
-      <div class="flex justify-between items-center mb-6 shrink-0">
-        <h2 class="text-2xl font-black">Analytics 📊</h2>
-        <button id="close-analytics" class="text-slate-400 hover:text-slate-800 dark:hover:text-white text-xl w-10 h-10 flex justify-center items-center rounded-full bg-slate-200 dark:bg-gray-800 transition-colors">✕</button>
-      </div>
-      <div class="overflow-y-auto flex-1 pr-2 space-y-6 text-center">
-        
-        <div class="bg-white dark:bg-darkbg p-6 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col items-center">
-          <h3 class="text-xs font-black text-slate-500 dark:text-gray-400 mb-6 uppercase tracking-widest">Financial Breakdown</h3>
-          <div class="relative w-48 h-48 rounded-full shadow-inner border-4 border-slate-50 dark:border-gray-800 flex justify-center items-center" id="donut-chart" style="background: conic-gradient(#00E6C3 0% 50%, #F59E0B 50% 80%, #EF4444 80% 100%);">
-            <div class="absolute w-36 h-36 bg-white dark:bg-darkbg rounded-full shadow-md flex flex-col justify-center items-center">
-              <span class="text-[10px] text-slate-400 dark:text-gray-500 font-bold uppercase tracking-wider">Total Value</span>
-              <span class="text-xl font-black text-slate-800 dark:text-white" id="analytics-total">£0.00</span>
-            </div>
-          </div>
-          
-          <div class="w-full grid grid-cols-3 gap-2 mt-8 text-center">
-            <div class="bg-slate-50 dark:bg-gray-800/50 p-2 rounded-xl">
-              <div class="w-3 h-3 rounded-full bg-starling mx-auto mb-1"></div>
-              <p class="text-[9px] text-slate-500 dark:text-gray-400 font-bold uppercase">Cash</p>
-              <p class="text-xs font-black text-slate-800 dark:text-white" id="an-cash">£0</p>
-            </div>
-            <div class="bg-slate-50 dark:bg-gray-800/50 p-2 rounded-xl">
-              <div class="w-3 h-3 rounded-full bg-yellow-400 mx-auto mb-1"></div>
-              <p class="text-[9px] text-slate-500 dark:text-gray-400 font-bold uppercase">Pots</p>
-              <p class="text-xs font-black text-slate-800 dark:text-white" id="an-pots">£0</p>
-            </div>
-            <div class="bg-slate-50 dark:bg-gray-800/50 p-2 rounded-xl">
-              <div class="w-3 h-3 rounded-full bg-red-500 mx-auto mb-1"></div>
-              <p class="text-[9px] text-slate-500 dark:text-gray-400 font-bold uppercase">Debt</p>
-              <p class="text-xs font-black text-slate-800 dark:text-white" id="an-debt">£0</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-darkbg p-6 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-sm text-left">
-          <h3 class="text-xs font-black text-slate-500 dark:text-gray-400 mb-3 uppercase tracking-widest">This Month's Outgoings</h3>
-          <p class="text-3xl font-black text-slate-800 dark:text-white mb-2" id="monthly-spend-total">£0.00</p>
-          <p class="text-xs text-slate-500 dark:text-gray-400 font-medium">Based on your Quick Spend history and Bill tracking.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  <script src="./app.js"></script>
+  
   <script>
-    // --- THEME ENGINE (LIGHT/DARK) ---
-    const htmlEl = document.documentElement;
-    const themeBtn = document.getElementById('theme-toggle-btn');
-    let currentTheme = localStorage.getItem('appTheme') || 'dark';
-
-    function applyTheme(theme) {
-      if (theme === 'light') { htmlEl.classList.remove('dark'); themeBtn.innerText = '☀️'; } 
-      else { htmlEl.classList.add('dark'); themeBtn.innerText = '🌙'; }
-      localStorage.setItem('appTheme', theme); currentTheme = theme;
-    }
-    applyTheme(currentTheme);
-
-    themeBtn.addEventListener('click', () => {
-      if (navigator.vibrate) navigator.vibrate(20);
-      applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
-    });
-
-    // --- STATE & DATA ---
-    let accounts = (JSON.parse(localStorage.getItem('myAccounts')) || []).map(a => ({...a, overdraft: a.overdraft || 0}));
-    let debts = (JSON.parse(localStorage.getItem('myDebts')) || []).map(d => ({...d, limit: d.limit || 0})); 
-    let pots = JSON.parse(localStorage.getItem('myPots')) || [];
-    let cashflowData = JSON.parse(localStorage.getItem('cashflowData')) || [];
-    let historyLog = JSON.parse(localStorage.getItem('myHistory')) || [];
-    let editingCfId = null; 
-    const colorThemes = ['#8B5CF6', '#F59E0B', '#EC4899', '#3B82F6', '#10B981', '#EF4444', '#06B6D4', '#84CC16'];
-
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentDay = today.getDate();
-    const currentMonthNum = today.getMonth(); 
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    document.getElementById('date-display').innerText = `Today is ${monthNames[currentMonthNum]} ${currentDay}`;
-
-    // --- TRANSACTION HISTORY LOGGER ---
-    function recordTx(title, amount, desc, typeColor = 'text-slate-800 dark:text-white') {
-      const timestamp = new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-      historyLog.unshift({ id: Date.now(), title, amount, desc, timestamp, color: typeColor });
-      if(historyLog.length > 100) historyLog.pop(); 
-      localStorage.setItem('myHistory', JSON.stringify(historyLog));
-    }
-
-    function renderHistory() {
-      const list = document.getElementById('history-list'); list.innerHTML = '';
-      if(historyLog.length === 0) return list.innerHTML = '<p class="text-center text-slate-500 dark:text-gray-500 mt-4 font-medium">No transactions yet.</p>';
-      historyLog.forEach(tx => {
-        let c = tx.color; if(c === 'text-white') c = 'text-slate-800 dark:text-white';
-        list.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl mb-3 flex justify-between items-center shadow-sm border border-slate-100 dark:border-transparent"><div class="flex-1"><p class="text-sm font-black text-slate-800 dark:text-white">${tx.title}</p><p class="text-[10px] text-slate-400 dark:text-gray-400 font-medium">${tx.desc} • ${tx.timestamp}</p></div><p class="font-black ${c}">${tx.amount}</p></div>`;
-      });
-    }
-
-    // --- SMART CALENDAR LOGIC ---
-    function getLastWorkingDay(year, month) {
-      let lastDay = new Date(year, month + 1, 0); 
-      if (lastDay.getDay() === 0) lastDay.setDate(lastDay.getDate() - 2); 
-      else if (lastDay.getDay() === 6) lastDay.setDate(lastDay.getDate() - 1); 
-      return lastDay.getDate();
-    }
-    function appliesThisMonth(item) {
-      const freq = item.frequency || 'monthly';
-      if (freq === 'monthly') return true;
-      if (freq === 'one_off') return parseInt(item.month) === currentMonthNum;
-      if (freq === 'quarterly') return (currentMonthNum - parseInt(item.month) + 12) % 3 === 0;
-      return true;
-    }
-
-    const daySelect = document.getElementById('cf-day');
-    for(let i = 1; i <= 31; i++) { daySelect.innerHTML += `<option value="${i}">${i}</option>`; }
-    const monthSelect = document.getElementById('cf-month');
-    monthNames.forEach((m, idx) => { monthSelect.innerHTML += `<option value="${idx}">${m}</option>`; });
-    monthSelect.value = currentMonthNum;
-
-    document.getElementById('cf-freq').addEventListener('change', (e) => {
-      const m = document.getElementById('cf-month'); const d = document.getElementById('cf-day');
-      if(e.target.value === 'monthly') { m.classList.add('hidden'); d.classList.add('col-span-2'); } 
-      else { m.classList.remove('hidden'); d.classList.remove('col-span-2'); }
-    });
-    
-    document.getElementById('admin-type').addEventListener('change', (e) => {
-      const sec = document.getElementById('admin-secondary');
-      if(e.target.value === 'bank') { sec.classList.remove('hidden'); sec.placeholder = "Overdraft Limit (£)"; }
-      else if(e.target.value === 'debt') { sec.classList.remove('hidden'); sec.placeholder = "Credit Limit (£) (0 = No limit)"; }
-      else { sec.classList.add('hidden'); }
-    });
-
-    // --- MODALS ---
-    const modals = { update: document.getElementById('update-modal'), cashflow: document.getElementById('cashflow-modal'), admin: document.getElementById('admin-modal'), vault: document.getElementById('vault-modal'), history: document.getElementById('history-modal'), override: document.getElementById('override-modal'), analytics: document.getElementById('analytics-modal') };
-    function openModal(id) { if(navigator.vibrate) navigator.vibrate(50); modals[id].classList.remove('hidden'); modals[id].classList.add('flex'); }
-    function closeModal(id) { modals[id].classList.add('hidden'); modals[id].classList.remove('flex'); }
-
+    // Link the UI elements back to the brain (regression testing confirmed)
     document.getElementById('add-btn').addEventListener('click', () => { renderTransactModal(); openModal('update'); });
-    document.getElementById('close-modal').addEventListener('click', () => closeModal('update'));
-    document.getElementById('nav-cashflow').addEventListener('click', () => { renderLedger(); openModal('cashflow'); });
-    document.getElementById('close-cashflow').addEventListener('click', () => { closeModal('cashflow'); editingCfId=null; document.getElementById('add-cf-btn').innerText = "+ Add to Calendar"; document.getElementById('cf-manual').checked = false; updateApp(); });
-    document.getElementById('nav-admin').addEventListener('click', () => { renderAdminList(); openModal('admin'); });
-    document.getElementById('close-admin').addEventListener('click', () => { closeModal('admin'); updateApp(); });
-    document.getElementById('nav-vault').addEventListener('click', () => { openModal('vault'); });
-    document.getElementById('close-vault').addEventListener('click', () => { closeModal('vault'); });
-    document.getElementById('view-history-btn').addEventListener('click', () => { renderHistory(); openModal('history'); });
-    document.getElementById('close-history').addEventListener('click', () => closeModal('history'));
-    document.getElementById('force-override-btn').addEventListener('click', () => { renderOverrideModal(); openModal('override'); });
-    document.getElementById('close-override').addEventListener('click', () => closeModal('override'));
-    document.getElementById('nav-analytics').addEventListener('click', () => { generateAnalytics(); openModal('analytics'); });
-    document.getElementById('close-analytics').addEventListener('click', () => closeModal('analytics'));
-
-    // --- DATA MANAGEMENT ---
-    document.getElementById('export-data-btn').addEventListener('click', () => {
-      const allData = { accounts, debts, pots, cashflowData, historyLog };
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData));
-      const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", "CommandCenter_" + new Date().toISOString().split('T')[0] + ".json");
-      document.body.appendChild(a); a.click(); a.remove();
-    });
-    document.getElementById('import-data-btn').addEventListener('click', () => document.getElementById('import-file-input').click());
-    document.getElementById('import-file-input').addEventListener('change', (event) => {
-      const file = event.target.files[0]; if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const imported = JSON.parse(e.target.result);
-          if (imported.accounts) accounts = imported.accounts.map(a => ({...a, overdraft: a.overdraft || 0}));
-          if (imported.debts) debts = imported.debts.map(d => ({...d, limit: d.limit || 0}));
-          if (imported.pots) pots = imported.pots;
-          if (imported.cashflowData) cashflowData = imported.cashflowData;
-          if (imported.historyLog) historyLog = imported.historyLog;
-          saveData(); alert("✅ Backup Restored Successfully!"); location.reload(); 
-        } catch (err) { alert("❌ Invalid Backup File."); }
-      }; reader.readAsText(file);
-    });
-
-    // --- ADMIN LOGIC ---
-    document.getElementById('add-account-btn').addEventListener('click', () => {
-      const type = document.getElementById('admin-type').value; 
-      const name = document.getElementById('admin-name').value;
-      const secVal = parseFloat(document.getElementById('admin-secondary').value) || 0;
-      if (!name) return;
-      
-      const newObj = { id: Date.now(), name: name, balance: 0, color: colorThemes[Math.floor(Math.random() * colorThemes.length)] };
-      if (type === 'bank') { newObj.overdraft = Math.abs(secVal); accounts.push(newObj); }
-      else if (type === 'debt') { newObj.limit = Math.abs(secVal); debts.push(newObj); }
-      else pots.push(newObj);
-      
-      document.getElementById('admin-name').value = ''; document.getElementById('admin-secondary').value = '';
-      saveData(); renderAdminList(); updateApp();
-    });
-
-    window.deleteAccount = function(type, id) {
-      if(confirm("Delete this?")) {
-        if (type === 'bank') accounts = accounts.filter(a => a.id !== id);
-        if (type === 'debt') debts = debts.filter(d => d.id !== id);
-        if (type === 'pot') pots = pots.filter(p => p.id !== id);
-        saveData(); renderAdminList(); updateApp();
-      }
-    };
-
-    function renderAdminList() {
-      const list = document.getElementById('admin-list'); list.innerHTML = '';
-      accounts.forEach(acc => { list.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl flex justify-between items-center border-l-4 shadow-sm mb-2" style="border-color: ${acc.color}"><p class="text-sm font-black text-slate-800 dark:text-white">🏦 ${acc.name}</p><button onclick="deleteAccount('bank', ${acc.id})" class="text-slate-400 hover:text-red-500 bg-slate-50 dark:bg-gray-700 p-2 rounded-lg text-xs transition-colors">🗑</button></div>`; });
-      debts.forEach(debt => { list.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl flex justify-between items-center border-l-4 border-red-500 shadow-sm mb-2"><p class="text-sm font-black text-slate-800 dark:text-white">💳 ${debt.name}</p><button onclick="deleteAccount('debt', ${debt.id})" class="text-slate-400 hover:text-red-500 bg-slate-50 dark:bg-gray-700 p-2 rounded-lg text-xs transition-colors">🗑</button></div>`; });
-      pots.forEach(pot => { list.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl flex justify-between items-center border-l-4 border-yellow-400 shadow-sm mb-2"><p class="text-sm font-black text-slate-800 dark:text-white">🍯 ${pot.name}</p><button onclick="deleteAccount('pot', ${pot.id})" class="text-slate-400 hover:text-red-500 bg-slate-50 dark:bg-gray-700 p-2 rounded-lg text-xs transition-colors">🗑</button></div>`; });
-    }
-
-    // --- CASHFLOW ENTRY LOGIC ---
-    document.getElementById('add-cf-btn').addEventListener('click', () => {
-      const type = document.getElementById('cf-type').value; const freq = document.getElementById('cf-freq').value;
-      const day = document.getElementById('cf-day').value; const month = document.getElementById('cf-month').value;
-      const name = document.getElementById('cf-name').value; const amount = parseFloat(document.getElementById('cf-amount').value);
-      const isManual = document.getElementById('cf-manual').checked;
-      if (!day || !name || !amount) return;
-      if (editingCfId) {
-        const idx = cashflowData.findIndex(i => i.id === editingCfId);
-        if (idx !== -1) cashflowData[idx] = { id: editingCfId, type, name, amount, day, frequency: freq, month: month, manual: isManual };
-        editingCfId = null; document.getElementById('add-cf-btn').innerText = "+ Add to Calendar";
-      } else {
-        cashflowData.push({ id: Date.now(), type, name, amount, day, frequency: freq, month: month, manual: isManual });
-      }
-      document.getElementById('cf-name').value = ''; document.getElementById('cf-amount').value = ''; document.getElementById('cf-manual').checked = false;
-      saveData(); renderLedger();
-    });
-
-    window.deleteItem = function(id) { cashflowData = cashflowData.filter(item => item.id !== id); saveData(); renderLedger(); };
-
-    window.editItem = function(id) {
-      const item = cashflowData.find(i => i.id === id); if(!item) return;
-      document.getElementById('cf-form-container').scrollIntoView({ behavior: 'smooth' });
-      document.getElementById('cf-type').value = item.type; document.getElementById('cf-freq').value = item.frequency || 'monthly';
-      document.getElementById('cf-freq').dispatchEvent(new Event('change')); 
-      document.getElementById('cf-month').value = item.month || currentMonthNum; document.getElementById('cf-day').value = item.day;
-      document.getElementById('cf-name').value = item.name; document.getElementById('cf-amount').value = item.amount;
-      document.getElementById('cf-manual').checked = item.manual || false;
-      editingCfId = id; document.getElementById('add-cf-btn').innerText = "💾 Update Entry";
-    };
-
-    function renderLedger() {
-      const ledger = document.getElementById('full-ledger'); ledger.innerHTML = '';
-      cashflowData.forEach(item => {
-        const isBill = item.type === 'bill';
-        const displayDay = item.day === 'last_working_day' ? 'Last Working Day' : `Day ${item.day}`;
-        const manualBadge = item.manual ? `<span class="bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 text-[9px] px-2 py-0.5 rounded ml-2 border border-red-200 dark:border-red-500/50">⚠️ Manual</span>` : '';
-        ledger.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-2xl flex justify-between items-center mb-3 shadow-sm border border-slate-100 dark:border-transparent"><div><p class="text-sm font-black text-slate-800 dark:text-white">${isBill ? '🔴' : '🟢'} ${item.name}</p><p class="text-[10px] text-slate-500 dark:text-gray-400 flex items-center mt-1 font-medium">${displayDay} ${manualBadge}</p></div><div class="flex items-center gap-2"><p class="font-black ${isBill ? 'text-red-500 dark:text-red-400' : 'text-starling'} mr-2 text-lg">${isBill ? '-' : '+'}£${item.amount.toFixed(2)}</p><button onclick="editItem(${item.id})" class="text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white bg-slate-50 dark:bg-gray-700 p-2.5 rounded-xl text-xs transition-colors shadow-sm">✏️</button><button onclick="deleteItem(${item.id})" class="text-slate-500 hover:text-red-500 bg-slate-50 dark:bg-gray-700 p-2.5 rounded-xl text-xs transition-colors shadow-sm">🗑</button></div></div>`;
-      });
-    }
-
-    // --- QUICK SPEND & TRANSFER LOGIC ---
-    function renderTransactModal() {
-      const spendSelect = document.getElementById('spend-account'); spendSelect.innerHTML = '<option value="" disabled selected>Select Account</option>';
-      accounts.forEach(acc => { spendSelect.innerHTML += `<option value="bank_${acc.id}">🏦 ${acc.name} (Avail: £${(acc.balance + (acc.overdraft||0)).toFixed(2)})</option>`; });
-      debts.forEach(debt => { 
-        const availC = debt.limit > 0 ? ` (Avail Cr: £${(debt.limit - debt.balance).toFixed(2)})` : ` (£${debt.balance.toFixed(2)})`;
-        spendSelect.innerHTML += `<option value="debt_${debt.id}">💳 ${debt.name}${availC}</option>`; 
-      });
-
-      const tFrom = document.getElementById('transfer-from'); const tTo = document.getElementById('transfer-to');
-      tFrom.innerHTML = '<option value="" disabled selected>Transfer FROM...</option>'; tTo.innerHTML = '<option value="" disabled selected>Transfer TO...</option>';
-      accounts.forEach(acc => { tFrom.innerHTML += `<option value="bank_${acc.id}">🏦 ${acc.name} (£${acc.balance.toFixed(2)})</option>`; });
-      accounts.forEach(acc => { tTo.innerHTML += `<option value="bank_${acc.id}">🏦 ${acc.name}</option>`; });
-      pots.forEach(pot => { tTo.innerHTML += `<option value="pot_${pot.id}">🍯 ${pot.name} (£${pot.balance.toFixed(2)})</option>`; });
-    }
-
-    document.getElementById('quick-spend-btn').addEventListener('click', () => {
-      const val = document.getElementById('spend-account').value; const amount = parseFloat(document.getElementById('spend-amount').value);
-      const desc = document.getElementById('spend-desc').value || "Quick Spend";
-      if (!val || !amount) return alert("Select account and amount.");
-
-      const [type, idStr] = val.split('_'); const id = parseInt(idStr);
-      let target = type === 'bank' ? accounts.find(a=>a.id===id) : debts.find(d=>d.id===id);
-      
-      if (target) {
-        if (type === 'bank') target.balance -= amount; else target.balance += amount; 
-        recordTx(`Spent on ${target.name}`, `-£${amount.toFixed(2)}`, desc, type==='bank'?'text-slate-800 dark:text-white':'text-red-500 dark:text-red-400');
-        if (navigator.vibrate) navigator.vibrate([30, 50, 30]); 
-        document.getElementById('spend-amount').value = ''; document.getElementById('spend-desc').value = ''; 
-        saveData(); updateApp(); closeModal('update');
-      }
-    });
-
-    document.getElementById('transfer-btn').addEventListener('click', () => {
-      const fromVal = document.getElementById('transfer-from').value; const toVal = document.getElementById('transfer-to').value;
-      const amount = parseFloat(document.getElementById('transfer-amount').value);
-      if (!fromVal || !toVal || !amount) return alert("Fill all transfer fields.");
-      if (fromVal === toVal) return alert("Cannot transfer to the same account.");
-
-      const [fType, fId] = fromVal.split('_'); const [tType, tId] = toVal.split('_');
-      let source = accounts.find(a=>a.id===parseInt(fId));
-      let dest = tType === 'bank' ? accounts.find(a=>a.id===parseInt(tId)) : pots.find(p=>p.id===parseInt(tId));
-
-      if(source && dest) {
-        source.balance -= amount; dest.balance += amount;
-        recordTx(`Transfer: ${source.name} ➡️ ${dest.name}`, `£${amount.toFixed(2)}`, "Internal Transfer", "text-blue-500 dark:text-blue-400");
-        if (navigator.vibrate) navigator.vibrate([30, 50, 30]); 
-        document.getElementById('transfer-amount').value = ''; saveData(); updateApp(); closeModal('update');
-      }
-    });
-
-    // --- VAULT LOGIC ---
-    window.modifyVault = function(type, id, action) {
-      const input = document.getElementById(`vault-action-${type}-${id}`); const amount = parseFloat(input.value);
-      if (!amount || amount <= 0) return;
-      let target = type === 'debt' ? debts.find(d => d.id === id) : pots.find(p => p.id === id); if (!target) return;
-
-      if (type === 'debt') {
-        if (action === 'pay') { target.balance -= amount; if (target.balance < 0) target.balance = 0; recordTx(`Paid ${target.name}`, `-£${amount}`, "Manual Payment", "text-starling"); } 
-        else if (action === 'interest') { target.balance += amount; recordTx(`${target.name} Interest`, `+£${amount}`, "Interest Applied", "text-red-500 dark:text-red-400"); }
-      } else if (type === 'pot') {
-        if(action === 'withdraw') { target.balance -= amount; if(target.balance < 0) target.balance = 0; recordTx(`Withdrew from ${target.name}`, `-£${amount}`, "Pot Withdrawal", "text-slate-800 dark:text-white"); }
-      }
-      saveData(); updateApp(); if (navigator.vibrate) navigator.vibrate([30, 50]);
-    };
-
-    // --- OVERRIDES ---
-    function renderOverrideModal() {
-      const bCont = document.getElementById('update-banks-container'); const dCont = document.getElementById('update-debts-container'); const pCont = document.getElementById('update-pots-container');
-      bCont.innerHTML = '<h3 class="text-xs font-black text-slate-400 dark:text-gray-400 mb-2 uppercase tracking-widest">Banks</h3>'; dCont.innerHTML = '<h3 class="text-xs font-black text-red-500 dark:text-red-400 mb-2 uppercase tracking-widest">Debts</h3>'; pCont.innerHTML = '<h3 class="text-xs font-black text-yellow-500 dark:text-yellow-400 mb-2 uppercase tracking-widest">Pots</h3>';
-      accounts.forEach(acc => { bCont.innerHTML += `<div><label class="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">${acc.name}</label><input type="number" id="over-bank-${acc.id}" value="${acc.balance}" class="w-full bg-slate-50 dark:bg-darkbg border border-slate-200 dark:border-gray-700 rounded-xl p-3 text-slate-900 dark:text-white font-bold"></div>`; });
-      debts.forEach(debt => { dCont.innerHTML += `<div><label class="text-[10px] text-red-500 dark:text-red-400 font-bold uppercase tracking-wider">${debt.name}</label><input type="number" id="over-debt-${debt.id}" value="${debt.balance}" class="w-full bg-slate-50 dark:bg-darkbg border border-slate-200 dark:border-gray-700 rounded-xl p-3 text-slate-900 dark:text-white font-bold"></div>`; });
-      pots.forEach(pot => { pCont.innerHTML += `<div><label class="text-[10px] text-yellow-500 dark:text-yellow-400 font-bold uppercase tracking-wider">${pot.name}</label><input type="number" id="over-pot-${pot.id}" value="${pot.balance}" class="w-full bg-slate-50 dark:bg-darkbg border border-slate-200 dark:border-gray-700 rounded-xl p-3 text-slate-900 dark:text-white font-bold"></div>`; });
-    }
-    document.getElementById('save-override-btn').addEventListener('click', () => {
-      accounts.forEach(acc => { const i = document.getElementById(`over-bank-${acc.id}`); if(i) acc.balance = parseFloat(i.value) || 0; });
-      debts.forEach(debt => { const i = document.getElementById(`over-debt-${debt.id}`); if(i) debt.balance = parseFloat(i.value) || 0; });
-      pots.forEach(pot => { const i = document.getElementById(`over-pot-${pot.id}`); if(i) pot.balance = parseFloat(i.value) || 0; });
-      saveData(); updateApp(); closeModal('override');
-    });
-
-    // --- ANALYTICS ENGINE 📊 ---
-    function generateAnalytics() {
-      const totalCash = accounts.reduce((s, a) => s + a.balance, 0);
-      const totalPots = pots.reduce((s, p) => s + p.balance, 0);
-      const totalDebt = debts.reduce((s, d) => s + d.balance, 0);
-      const grandTotal = totalCash + totalPots + totalDebt;
-
-      document.getElementById('an-cash').innerText = `£${totalCash.toFixed(0)}`;
-      document.getElementById('an-pots').innerText = `£${totalPots.toFixed(0)}`;
-      document.getElementById('an-debt').innerText = `£${totalDebt.toFixed(0)}`;
-      document.getElementById('analytics-total').innerText = `£${grandTotal > 0 ? grandTotal.toFixed(0) : 0}`;
-
-      let degC = 0, degP = 0, degD = 0;
-      if (grandTotal > 0) {
-        degC = (totalCash / grandTotal) * 360; degP = (totalPots / grandTotal) * 360; degD = (totalDebt / grandTotal) * 360;
-      }
-      const chart = document.getElementById('donut-chart');
-      if (grandTotal === 0) chart.style.background = '#1E293B'; 
-      else chart.style.background = `conic-gradient(#00E6C3 0deg ${degC}deg, #FBBF24 ${degC}deg ${degC+degP}deg, #EF4444 ${degC+degP}deg 360deg)`;
-
-      let monthlySpend = 0;
-      const currentMonthStr = new Date().toLocaleString('en-GB', { month: 'short' });
-      historyLog.forEach(tx => {
-        if (tx.timestamp.includes(currentMonthStr) && tx.amount.includes('-') && !tx.desc.includes('Internal Transfer')) {
-          monthlySpend += parseFloat(tx.amount.replace(/[^0-9.]/g, ''));
-        }
-      });
-      document.getElementById('monthly-spend-total').innerText = `£${monthlySpend.toFixed(2)}`;
-    }
-
-    // --- CORE ENGINE ---
-    function updateApp() {
-      const totalCash = accounts.reduce((sum, acc) => sum + acc.balance + (acc.overdraft || 0), 0);
-      const totalDebtAmount = debts.reduce((sum, debt) => sum + debt.balance, 0);
-
-      let remainingBills = 0; let remainingIncome = 0; let upcomingListHTML = ''; let alertsHTML = ''; 
-
-      let activeItemsThisMonth = [];
-      cashflowData.forEach(item => {
-        if (appliesThisMonth(item)) {
-          let actualDay = item.day;
-          if (actualDay === 'last_working_day') { actualDay = getLastWorkingDay(currentYear, currentMonthNum); } 
-          else {
-            actualDay = parseInt(actualDay); let tempDate = new Date(currentYear, currentMonthNum, actualDay);
-            if (tempDate.getMonth() !== currentMonthNum) tempDate = new Date(currentYear, currentMonthNum + 1, 0);
-            let dayOfWeek = tempDate.getDay();
-            if (dayOfWeek === 0 || dayOfWeek === 6) { 
-               if (item.type === 'income') { if (dayOfWeek === 0) tempDate.setDate(tempDate.getDate() - 2); if (dayOfWeek === 6) tempDate.setDate(tempDate.getDate() - 1); } 
-               else { if (dayOfWeek === 0) tempDate.setDate(tempDate.getDate() + 1); if (dayOfWeek === 6) tempDate.setDate(tempDate.getDate() + 2); }
-            }
-            actualDay = tempDate.getDate();
-          }
-          activeItemsThisMonth.push({ ...item, actualDay: actualDay });
-        }
-      });
-
-      const upcomingItems = activeItemsThisMonth.filter(item => item.actualDay >= currentDay).sort((a, b) => a.actualDay - b.actualDay);
-
-      upcomingItems.forEach(item => {
-        if (item.type === 'bill') remainingBills += item.amount; else remainingIncome += item.amount;
-        
-        let diff = item.actualDay - currentDay; let dueText = diff === 0 ? 'TODAY' : `in ${diff} days`;
-        if (item.actualDay !== parseInt(item.day) && item.day !== 'last_working_day') dueText += ' (Shifted)';
-
-        upcomingListHTML += `<div class="flex justify-between items-center border-b border-slate-100 dark:border-gray-800/50 last:border-0 pb-3 last:pb-0 pt-3 first:pt-0"><div><p class="text-sm font-black text-slate-800 dark:text-white">${item.name} ${item.manual ? '⚠️' : ''}</p><p class="text-[10px] text-slate-500 dark:text-gray-500 uppercase font-bold tracking-wider">${dueText}</p></div><p class="text-sm font-black ${item.type === 'bill' ? 'text-red-500 dark:text-red-400' : 'text-starling'}">${item.type === 'bill' ? '-' : '+'}£${item.amount.toFixed(2)}</p></div>`;
-        
-        if (item.manual && item.type === 'bill') {
-          if (diff === 0) alertsHTML += `<div class="bg-red-500 dark:bg-red-600 text-white p-4 rounded-2xl text-sm font-black shadow-lg flex items-center gap-3">🚨 <span class="flex-1">TODAY: Pay ${item.name} (£${item.amount})</span><button onclick="this.parentElement.remove()" class="text-white/70 hover:text-white text-xl transition-colors">✕</button></div>`;
-          else if (diff === 1) alertsHTML += `<div class="bg-yellow-400 dark:bg-yellow-500 text-slate-900 p-4 rounded-2xl text-sm font-black shadow-lg flex items-center gap-3">⚠️ <span class="flex-1">TOMORROW: Pay ${item.name} (£${item.amount})</span><button onclick="this.parentElement.remove()" class="text-slate-900/50 hover:text-slate-900 text-xl transition-colors">✕</button></div>`;
-        }
-      });
-
-      document.getElementById('alerts-container').innerHTML = alertsHTML;
-      document.getElementById('upcoming-list').innerHTML = upcomingItems.length ? upcomingListHTML : '';
-      document.getElementById('no-upcoming').classList.toggle('hidden', upcomingItems.length > 0);
-
-      const safeToSpend = totalCash - remainingBills; const projectedEOM = totalCash - remainingBills + remainingIncome;
-      const safeEl = document.getElementById('safe-to-spend'); safeEl.innerText = `£${safeToSpend.toFixed(2)}`;
-      safeEl.className = `text-5xl font-black tracking-tighter transition-colors duration-300 relative z-10 my-2 ${safeToSpend < 0 ? 'text-red-600 dark:text-red-500' : 'text-slate-900 dark:text-white'}`;
-      document.getElementById('total-cash').innerText = `£${totalCash.toFixed(2)}`; document.getElementById('display-bills').innerText = `£${remainingBills.toFixed(2)}`; document.getElementById('projected-balance').innerText = `£${projectedEOM.toFixed(2)}`;
-
-      const barEl = document.getElementById('cash-bar'); const safePercent = totalCash > 0 && safeToSpend > 0 ? Math.round((safeToSpend / totalCash) * 100) : 0;
-      barEl.style.width = `${safePercent}%`; barEl.className = `h-2 rounded-full transition-all duration-1000 ease-out ${safePercent < 20 ? 'bg-red-500' : 'bg-starling'}`;
-
-      const accountsList = document.getElementById('accounts-list'); accountsList.innerHTML = '';
-      accounts.forEach(acc => { 
-        const avail = acc.balance + (acc.overdraft || 0);
-        const warning = acc.balance < 0 ? `<span class="text-[10px] text-red-500 dark:text-red-400 font-bold tracking-wide">In Overdraft (£${Math.abs(acc.balance).toFixed(2)})</span>` : '';
-        const odLabel = acc.overdraft > 0 ? `<p class="text-[10px] text-slate-500 dark:text-gray-500 font-medium tracking-wide">Available limit: £${avail.toFixed(2)}</p>` : '';
-        accountsList.innerHTML += `<div class="flex justify-between items-center bg-white dark:bg-cardbg p-5 rounded-3xl border-l-4 shadow-sm mb-3 transition-colors duration-300" style="border-color: ${acc.color}"><div class="flex items-center gap-4"><div class="text-white font-black text-xs w-10 h-10 flex justify-center items-center rounded-full shadow-inner" style="background-color: ${acc.color}">${acc.name.substring(0,2).toUpperCase()}</div><div><p class="font-black text-slate-800 dark:text-white">${acc.name}</p>${warning} ${odLabel}</div></div><p class="font-black text-xl ${acc.balance < 0 ? 'text-red-500 dark:text-red-400' : 'text-slate-800 dark:text-white'}">£${acc.balance.toFixed(2)}</p></div>`; 
-      });
-
-      const potsList = document.getElementById('pots-dashboard-list'); potsList.innerHTML = '';
-      if(pots.length === 0) potsList.innerHTML = '<p class="text-slate-500 dark:text-gray-500 text-xs font-medium">No pots tracked. Transfer funds here to start saving.</p>';
-      pots.forEach(pot => { potsList.innerHTML += `<div class="bg-white dark:bg-gray-800 p-5 rounded-3xl border border-slate-200 dark:border-gray-700 mb-3 shadow-sm"><div class="flex justify-between items-center mb-4"><p class="font-black text-slate-800 dark:text-white uppercase tracking-wider text-sm">🍯 ${pot.name}</p><p class="font-black text-2xl text-yellow-500 dark:text-yellow-400">£${pot.balance.toFixed(2)}</p></div><div class="flex gap-2"><input type="number" id="vault-action-pot-${pot.id}" placeholder="£ to withdraw" class="flex-1 bg-slate-50 dark:bg-darkbg border border-slate-200 dark:border-gray-700 rounded-xl p-3 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-starling text-sm"><button onclick="modifyVault('pot', ${pot.id}, 'withdraw')" class="bg-slate-200 dark:bg-gray-700 text-slate-700 dark:text-white px-4 py-3 rounded-xl active:scale-95 text-xs font-black shadow-sm transition-transform">Withdraw</button></div></div>`; });
-
-      const debtList = document.getElementById('debt-dashboard-list'); debtList.innerHTML = '';
-      if(debts.length === 0) debtList.innerHTML = '<p class="text-slate-500 dark:text-gray-500 text-xs font-medium">No debts tracked.</p>';
-      debts.forEach(debt => { 
-        let limitUI = '';
-        if (debt.limit > 0) {
-          const utilPercent = Math.min((debt.balance / debt.limit) * 100, 100); const availCr = debt.limit - debt.balance;
-          limitUI = `<div class="mt-2 mb-4"><div class="flex justify-between text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider mb-1"><span>Avail Cr: £${availCr.toFixed(2)}</span><span>Limit: £${debt.limit.toFixed(2)}</span></div><div class="w-full bg-slate-100 dark:bg-gray-900 rounded-full h-1.5 overflow-hidden"><div class="bg-red-500 h-1.5 rounded-full" style="width: ${utilPercent}%"></div></div></div>`;
-        }
-        debtList.innerHTML += `<div class="bg-white dark:bg-gray-800 p-5 rounded-3xl border border-slate-200 dark:border-gray-700 mb-3 shadow-sm"><div class="flex justify-between items-center mb-1"><p class="font-black text-slate-800 dark:text-white uppercase tracking-wider text-sm">💳 ${debt.name}</p><p class="font-black text-2xl text-red-600 dark:text-red-400">£${debt.balance.toFixed(2)}</p></div>${limitUI}<div class="flex gap-2"><input type="number" id="vault-action-debt-${debt.id}" placeholder="£ Amount" class="flex-1 bg-slate-50 dark:bg-darkbg border border-slate-200 dark:border-gray-700 rounded-xl p-3 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-starling text-sm"><button onclick="modifyVault('debt', ${debt.id}, 'pay')" class="bg-starling text-slate-900 font-black px-4 py-3 rounded-xl active:scale-95 text-xs shadow-md transition-transform">Pay</button><button onclick="modifyVault('debt', ${debt.id}, 'interest')" class="bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30 font-black px-4 py-3 rounded-xl active:scale-95 text-xs shadow-sm transition-transform">+ Int</button></div></div>`; 
-      });
-      document.getElementById('total-debt-display').innerText = `£${totalDebtAmount.toFixed(2)}`;
-    }
-
-    function saveData() {
-      localStorage.setItem('myAccounts', JSON.stringify(accounts));
-      localStorage.setItem('myDebts', JSON.stringify(debts));
-      localStorage.setItem('myPots', JSON.stringify(pots));
-      localStorage.setItem('cashflowData', JSON.stringify(cashflowData));
-    }
-
-    updateApp();
+    // ... Additional listeners will be added here
   </script>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker Registered!'))
-          .catch(err => console.log('Service Worker Failed to Register', err));
-      });
-    }
-  </script>
 </body>
 </html>
