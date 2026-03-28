@@ -3,10 +3,8 @@ let data = JSON.parse(localStorage.getItem('financeApp')) || {
     account: [], debt: [], savings: [], bills: []
 };
 
-// Retrofit older accounts to ensure they have an overdraft property
 data.account.forEach(acc => { if (acc.overdraft === undefined) acc.overdraft = 0; });
 
-// 2. AUTO-RESET MONTHLY BILLS
 const currentMonthKey = new Date().getFullYear() + '-' + new Date().getMonth();
 if (localStorage.getItem('lastOpenedMonth') !== currentMonthKey) {
     data.bills.forEach(b => b.paid = false);
@@ -16,9 +14,9 @@ if (localStorage.getItem('lastOpenedMonth') !== currentMonthKey) {
 
 let currentMode = '';
 let currentAccountIndex = null;
+let editingIndex = null; // NEW: Tracks if we are editing an existing item
 let bankHolidays = JSON.parse(localStorage.getItem('ukBankHolidays')) || [];
 
-// Populate the 3-24 months duration dropdown dynamically
 window.onload = () => {
     const durationSelect = document.getElementById('item-duration');
     for(let i = 3; i <= 24; i++) {
@@ -29,7 +27,6 @@ window.onload = () => {
     }
 };
 
-// 3. FETCH HOLIDAYS
 async function loadHolidays() {
     if (bankHolidays.length === 0) {
         try {
@@ -43,26 +40,35 @@ async function loadHolidays() {
 }
 loadHolidays();
 
-// 4. SMART DATE CALCULATOR
 function getNextWorkingDay(year, month, targetDay) {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     let date = new Date(year, month, Math.min(targetDay, daysInMonth));
-
     while (date.getDay() === 0 || date.getDay() === 6 || bankHolidays.includes(date.toISOString().split('T')[0])) {
         date.setDate(date.getDate() + 1);
     }
     return date;
 }
 
-// 5. EMOJI ENGINE
-const emojis = { bank: "🏦", savings: "💰", card: "💳", holiday: "✈️", klarna: "🛍️", loan: "📉", gas: "🔥", electric: "⚡", water: "💧", mobile: "📱", internet: "🌐", default: "✨" };
+// 2. SUPERCHARGED EMOJI ENGINE
+const emojis = { 
+    // Banks
+    barclays: "🦅", lloyds: "🐎", halifax: "✖️", monzo: "🔥", starling: "⭐", santander: "🔴", bank: "🏦",
+    // Debt & Credit
+    credit: "💳", card: "💳", loan: "🤝", mortgage: "🏠", klarna: "🛍️", clearpay: "🛒", paypal: "🅿️",
+    // Savings
+    save: "🐷", savings: "🍯", pot: "🍯", emergency: "🚨", holiday: "✈️", car: "🚗", wedding: "💍", invest: "📈",
+    // Bills & Life
+    gas: "🔥", electric: "⚡", water: "💧", mobile: "📱", phone: "📞", internet: "🌐", wifi: "📡", 
+    netflix: "🍿", gym: "🏋️", council: "🏛️", rent: "🔑", default: "✨" 
+};
+
 function getEmoji(name) {
     let n = name.toLowerCase();
     for (let k in emojis) { if (n.includes(k)) return emojis[k]; }
     return emojis.default;
 }
 
-// 6. UI ACTIONS
+// 3. UI ACTIONS
 function switchTab(id, btn) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
@@ -72,12 +78,11 @@ function switchTab(id, btn) {
 
 function openModal(mode) {
     currentMode = mode;
+    editingIndex = null; // Ensure we are adding a NEW item, not editing
     document.getElementById('modal-title').innerText = "Add " + mode;
     
-    // Reset inputs safely
     document.querySelectorAll('.modal-content input, .modal-content select').forEach(el => el.value = "");
     
-    // Toggle dropdowns
     document.getElementById('item-date').style.display = (mode === 'bill') ? 'block' : 'none';
     document.getElementById('item-overdraft').style.display = (mode === 'account') ? 'block' : 'none';
     document.getElementById('debt-type').style.display = (mode === 'debt') ? 'block' : 'none';
@@ -99,6 +104,30 @@ function checkDuration(type) {
 
 function closeModal(id) {
     document.getElementById(id).style.display = 'none';
+    editingIndex = null; // Reset edit state on close
+}
+
+// NEW: EDITING LOGIC
+function editCurrentAccount() {
+    closeModal('account-modal');
+    currentMode = 'account';
+    editingIndex = currentAccountIndex; // Remember which account we are editing
+    
+    const acc = data.account[currentAccountIndex];
+    
+    document.getElementById('modal-title').innerText = "Edit Account";
+    document.getElementById('item-name').value = acc.name;
+    document.getElementById('item-amount').value = acc.amount;
+    document.getElementById('item-overdraft').value = acc.overdraft || 0;
+    
+    // Hide irrelevant fields, show overdraft
+    document.getElementById('item-date').style.display = 'none';
+    document.getElementById('debt-type').style.display = 'none';
+    document.getElementById('bill-type').style.display = 'none';
+    document.getElementById('item-duration').style.display = 'none';
+    document.getElementById('item-overdraft').style.display = 'block';
+
+    document.getElementById('input-modal').style.display = 'flex';
 }
 
 function saveItem() {
@@ -119,11 +148,20 @@ function saveItem() {
     }
 
     if (name) {
-        if (currentMode === 'account') data.account.push({ name, amount, overdraft, transactions: [] });
-        else if (currentMode === 'bill') data.bills.push({ name, amount, date, paid: false, subType, duration });
-        else if (currentMode === 'debt') data.debt.push({ name, amount, subType, duration });
-        else data.savings.push({ name, amount });
+        if (editingIndex !== null && currentMode === 'account') {
+            // WE ARE EDITING AN EXISTING ACCOUNT
+            data.account[editingIndex].name = name;
+            data.account[editingIndex].amount = amount;
+            data.account[editingIndex].overdraft = overdraft;
+        } else {
+            // WE ARE ADDING A NEW ITEM
+            if (currentMode === 'account') data.account.push({ name, amount, overdraft, transactions: [] });
+            else if (currentMode === 'bill') data.bills.push({ name, amount, date, paid: false, subType, duration });
+            else if (currentMode === 'debt') data.debt.push({ name, amount, subType, duration });
+            else data.savings.push({ name, amount });
+        }
         
+        editingIndex = null; // Clear edit state
         render();
         closeModal('input-modal');
     }
@@ -135,8 +173,7 @@ function openAccountDetails(idx) {
     
     document.getElementById('acc-modal-title').innerText = `${getEmoji(acc.name)} ${acc.name}`;
     
-    // Format negative balances correctly
-    let balanceDisplay = acc.amount >= 0 ? `£${acc.amount.toLocaleString()}` : `-£${Math.abs(acc.amount).toLocaleString()}`;
+    let balanceDisplay = acc.amount >= 0 ? `£${acc.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}` : `-£${Math.abs(acc.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
     const balElement = document.getElementById('acc-modal-balance');
     balElement.innerText = balanceDisplay;
     balElement.style.color = acc.amount >= 0 ? 'var(--success)' : 'var(--danger)';
@@ -145,7 +182,7 @@ function openAccountDetails(idx) {
     txList.innerHTML = acc.transactions.length ? acc.transactions.map(tx => `
         <div class="tx-item">
             <span style="color:#64748b">${tx.date}</span>
-            <span class="${tx.type === 'in' ? 'tx-in' : ''}">${tx.type === 'in' ? '+' : '-'}£${tx.amount.toLocaleString()}</span>
+            <span class="${tx.type === 'in' ? 'tx-in' : ''}">${tx.type === 'in' ? '+' : '-'}£${tx.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
         </div>`).join('') : '<p style="color:#64748b">No transactions.</p>';
     document.getElementById('account-modal').style.display = 'flex';
 }
@@ -168,20 +205,18 @@ function toggleBill(idx) {
     render();
 }
 
-// 7. RENDER
+// 4. RENDER
 function render() {
     localStorage.setItem('financeApp', JSON.stringify(data));
     const now = new Date();
     
-    // Accounts (With Overdraft Logic)
     document.getElementById('accounts-list').innerHTML = data.account.map((a, i) => {
-        let balanceDisplay = a.amount >= 0 ? `£${a.amount.toLocaleString()}` : `-£${Math.abs(a.amount).toLocaleString()}`;
+        let balanceDisplay = a.amount >= 0 ? `£${a.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}` : `-£${Math.abs(a.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
         let balanceColor = a.amount >= 0 ? 'var(--text)' : 'var(--danger)';
         
         let odText = '';
         if (a.overdraft > 0) {
             if (a.amount < 0) {
-                // E.g., OD is 500, amount is -100. Available = 500 + (-100) = 400.
                 let available = a.overdraft + a.amount; 
                 odText = `<div class="tile-sub">OD: £${a.overdraft.toLocaleString()} | Avail: £${available.toLocaleString()}</div>`;
             } else {
@@ -198,7 +233,6 @@ function render() {
         </div>`;
     }).join('');
 
-    // Debts
     document.getElementById('debts-list').innerHTML = data.debt.map(item => {
         let subText = item.subType || "";
         if (item.duration) subText += ` (${item.duration}m remaining)`;
@@ -206,20 +240,18 @@ function render() {
         <div class="tile">
             <span class="tile-emoji">${getEmoji(item.name)}</span>
             <h4>${item.name}</h4>
-            <p>£${item.amount.toLocaleString()}</p>
+            <p>£${item.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
             ${subText ? `<div class="tile-sub">${subText}</div>` : ''}
         </div>`;
     }).join('');
 
-    // Savings
     document.getElementById('savings-list').innerHTML = data.savings.map(item => `
         <div class="tile">
             <span class="tile-emoji">${getEmoji(item.name)}</span>
             <h4>${item.name}</h4>
-            <p>£${item.amount.toLocaleString()}</p>
+            <p>£${item.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
         </div>`).join('');
 
-    // Smart Bills
     const billsList = document.getElementById('bills-list');
     billsList.innerHTML = '';
     data.bills.map((b, i) => {
@@ -241,7 +273,7 @@ function render() {
                     <div style="margin-bottom:8px">${dateStr}</div>
                     <strong>${getEmoji(b.name)} ${b.name}</strong>
                     <div style="color:#94a3b8; font-size:0.8rem; margin-top:4px">${billSub}</div>
-                    <div style="color:#e2e8f0; font-size:0.95rem; margin-top:2px">£${b.amount.toLocaleString()}</div>
+                    <div style="color:#e2e8f0; font-size:0.95rem; margin-top:2px">£${b.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
                 </div>
                 <button class="${b.paid ? 'badge-paid' : 'badge-unpaid'}" onclick="toggleBill(${b.idx})">${b.paid ? 'Paid ✓' : 'Mark Paid'}</button>
             </div>`;
