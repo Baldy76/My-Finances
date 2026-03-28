@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Glow Finance</title>
+    <title>Glow Finance PWA</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
@@ -11,7 +11,7 @@
 
     <main id="app-content">
         <section id="home-page" class="page active">
-            <div class="section-title" style="margin-top: 20px;">
+            <div class="section-title">
                 <h3>Bank Accounts</h3>
                 <button class="add-btn" onclick="openModal('account')">+</button>
             </div>
@@ -19,15 +19,15 @@
         </section>
 
         <section id="debt-page" class="page">
-            <div class="section-title" style="margin-top: 20px;">
+            <div class="section-title">
                 <h3>Liabilities</h3>
                 <button class="add-btn" onclick="openModal('debt')">+</button>
             </div>
-            <div id="debts-list"></div>
+            <div id="debts-list" class="grid"></div>
         </section>
 
         <section id="savings-page" class="page">
-            <div class="section-title" style="margin-top: 20px;">
+            <div class="section-title">
                 <h3>Saving Pots</h3>
                 <button class="add-btn" onclick="openModal('savings')">+</button>
             </div>
@@ -35,7 +35,7 @@
         </section>
 
         <section id="bills-page" class="page">
-            <div class="section-title" style="margin-top: 20px;">
+            <div class="section-title">
                 <h3>Monthly Bills</h3>
                 <button class="add-btn" onclick="openModal('bill')">+</button>
             </div>
@@ -43,10 +43,13 @@
         </section>
 
         <section id="admin-page" class="page">
-            <div class="section-title" style="margin-top: 20px;">
+            <div class="section-title">
                 <h3>Settings</h3>
             </div>
-            <button class="danger-btn" onclick="clearAllData()">Reset All Data</button>
+            <div style="padding: 20px;">
+                <p style="color: #94a3b8; margin-bottom: 20px;">Manage your data and app preferences here.</p>
+                <button class="danger-btn" onclick="clearAllData()">Reset All Data</button>
+            </div>
         </section>
     </main>
 
@@ -60,9 +63,9 @@
 
     <div id="input-modal" class="modal">
         <div class="modal-content">
-            <h2 id="modal-title">Add</h2>
-            <input type="text" id="item-name" placeholder="Name (e.g. Monzo, Gas)">
-            <input type="number" id="item-amount" placeholder="Amount (£)">
+            <h2 id="modal-title" style="margin-bottom: 10px;">Add Item</h2>
+            <input type="text" id="item-name" placeholder="Name (e.g. Barclays, Gas)">
+            <input type="number" id="item-amount" placeholder="Current Balance / Amount (£)">
             <input type="number" id="item-date" placeholder="Day of Month (1-31)" style="display:none" min="1" max="31">
             <button class="btn-save" onclick="saveItem()">Save 🚀</button>
             <button onclick="closeModal('input-modal')" class="btn-cancel">Cancel</button>
@@ -76,11 +79,11 @@
             
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                 <input type="number" id="tx-amount" placeholder="Amount (£)" style="margin:0;">
-                <button class="btn-save" style="margin:0; width: 60px;" onclick="addTransaction('in')">+ In</button>
-                <button class="danger-btn" style="margin:0; width: 60px; padding: 15px;" onclick="addTransaction('out')">- Out</button>
+                <button class="btn-save" style="margin:0; width: 70px;" onclick="addTransaction('in')">In</button>
+                <button class="danger-btn" style="margin:0; width: 70px; padding: 0;" onclick="addTransaction('out')">Out</button>
             </div>
 
-            <h3 style="margin-bottom: 15px; color: #94a3b8;">Recent Transactions</h3>
+            <h3 style="margin-bottom: 15px; color: #94a3b8;">Last 20 Transactions</h3>
             <div id="transactions-list"></div>
             
             <button onclick="closeModal('account-modal')" class="btn-cancel" style="margin-top: 20px;">Close</button>
