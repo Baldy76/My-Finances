@@ -64,6 +64,8 @@
             <input type="text" id="item-name" placeholder="Name (e.g. Barclays, Gas)">
             <input type="number" id="item-amount" placeholder="Current Balance / Amount (£)">
             
+            <input type="number" id="item-overdraft" placeholder="Overdraft Limit (£) - Optional" style="display:none" min="0">
+
             <input type="number" id="item-date" placeholder="Day of Month (1-31)" style="display:none" min="1" max="31">
             
             <select id="debt-type" style="display:none" onchange="checkDuration('debt')">
@@ -82,7 +84,7 @@
 
             <select id="item-duration" style="display:none">
                 <option value="" disabled selected>Select Duration</option>
-                </select>
+            </select>
 
             <button class="btn-save" style="margin-top: 15px;" onclick="saveItem()">Save 🚀</button>
             <button onclick="closeModal('input-modal')" class="btn-cancel">Cancel</button>
@@ -95,7 +97,7 @@
             <h1 id="acc-modal-balance" style="margin: 10px 0; color: var(--success);">£0.00</h1>
             
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <input type="number" id="tx-amount" placeholder="Amount (£)" style="margin:0;">
+                <input type="number" id="tx-amount" placeholder="Amount (£)" style="margin:0;" min="0.01">
                 <button class="btn-save" style="margin:0; width: 70px;" onclick="addTransaction('in')">In</button>
                 <button class="danger-btn" style="margin:0; width: 70px; padding: 0;" onclick="addTransaction('out')">Out</button>
             </div>
