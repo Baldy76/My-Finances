@@ -1,11 +1,16 @@
-// 1. DATA STATE
+// 1. DATA STATE & THEME
 let data = JSON.parse(localStorage.getItem('financeApp')) || {
     account: [], debt: [], savings: [], bills: [], salaries: []
 };
 
+// Retrofit safety checks for older data
 data.account.forEach(acc => { if (acc.overdraft === undefined) acc.overdraft = 0; });
 if (!data.salaries) data.salaries = [];
 data.salaries.forEach(s => { if (s.lastPaidMonth === undefined) s.lastPaidMonth = null; });
+data.bills.forEach(b => { if (b.isSub === undefined) b.isSub = false; }); // Subs check
+
+// NEW 5: Initialize Theme
+if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
 
 const now = new Date();
 const currentMonthKey = now.getFullYear() + '-' + now.getMonth();
@@ -44,6 +49,12 @@ async function loadHolidays() {
     render();
 }
 loadHolidays();
+
+// --- THEME TOGGLE ---
+function toggleTheme() {
+    document.body.classList.toggle('light-mode');
+    localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+}
 
 // --- SMART DATES & AUTO DEPOSIT ---
 function getNextWorkingDay(year, month, targetDay) {
@@ -103,7 +114,7 @@ const emojis = {
     credit: "💳", card: "💳", loan: "🤝", mortgage: "🏠", klarna: "🛍️", clearpay: "🛒", paypal: "🅿️",
     save: "🐷", savings: "🍯", pot: "🍯", emergency: "🚨", holiday: "✈️", car: "🚗", wedding: "💍", invest: "📈",
     gas: "🔥", electric: "⚡", water: "💧", mobile: "📱", phone: "📞", internet: "🌐", wifi: "📡", 
-    netflix: "🍿", gym: "🏋️", council: "🏛️", rent: "🔑", default: "✨" 
+    netflix: "🍿", gym: "🏋️", council: "🏛️", rent: "🔑", spotify: "🎧", prime: "📦", default: "✨" 
 };
 function getEmoji(name) {
     let n = name.toLowerCase();
@@ -123,9 +134,11 @@ function openModal(mode) {
     currentMode = mode;
     editingIndex = null; 
     document.getElementById('modal-title').innerText = "Add " + mode;
-    document.querySelectorAll('.modal-content input, .modal-content select').forEach(el => el.value = "");
+    document.querySelectorAll('.modal-content input[type="text"], .modal-content input[type="number"], .modal-content select').forEach(el => el.value = "");
+    document.getElementById('item-is-sub').checked = false; // Reset checkbox
     
     document.getElementById('item-date').style.display = (mode === 'bill') ? 'block' : 'none';
+    document.getElementById('bill-sub-wrapper').style.display = (mode === 'bill') ? 'flex' : 'none';
     document.getElementById('item-overdraft').style.display = (mode === 'account') ? 'block' : 'none';
     document.getElementById('debt-type').style.display = (mode === 'debt') ? 'block' : 'none';
     document.getElementById('bill-type').style.display = (mode === 'bill') ? 'block' : 'none';
@@ -159,6 +172,8 @@ function saveItem() {
     const amount = parseFloat(document.getElementById('item-amount').value) || 0;
     const date = parseInt(document.getElementById('item-date').value) || 1;
     const overdraft = parseFloat(document.getElementById('item-overdraft').value) || 0;
+    const isSub = document.getElementById('item-is-sub').checked; // Capture Sub
+    
     let subType = "", duration = null, salaryAcc = null, salaryDateType = null;
 
     if (currentMode === 'debt') {
@@ -179,7 +194,7 @@ function saveItem() {
             data.account[editingIndex].overdraft = overdraft;
         } else {
             if (currentMode === 'account') data.account.push({ name, amount, overdraft, transactions: [] });
-            else if (currentMode === 'bill') data.bills.push({ name, amount, date, paid: false, subType, duration });
+            else if (currentMode === 'bill') data.bills.push({ name, amount, date, paid: false, subType, duration, isSub });
             else if (currentMode === 'debt') data.debt.push({ name, amount, subType, duration });
             else if (currentMode === 'salary') data.salaries.push({ name, amount, accountIndex: salaryAcc, dateType: salaryDateType, date: (salaryDateType === 'specific' ? date : null), lastPaidMonth: null });
             else data.savings.push({ name, amount });
@@ -206,61 +221,41 @@ function checkMerchant() {
 function openAccountDetails(idx) {
     currentAccountIndex = idx;
     const acc = data.account[idx];
-    
-    // Setup Modal Info
     document.getElementById('acc-modal-title').innerText = `${getEmoji(acc.name)} ${acc.name}`;
     let balanceDisplay = acc.amount >= 0 ? `£${acc.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}` : `-£${Math.abs(acc.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
     const balElement = document.getElementById('acc-modal-balance');
     balElement.innerText = balanceDisplay;
     balElement.style.color = acc.amount >= 0 ? 'var(--success)' : 'var(--danger)';
     
-    // Reset Transaction Fields
     document.getElementById('tx-amount').value = '';
     document.getElementById('tx-type').value = 'purchase';
     document.getElementById('tx-merchant').value = '';
     document.getElementById('tx-desc-other').value = '';
     document.getElementById('tx-credit-desc').value = '';
     
-    // Build Transfer Dropdown dynamically
     const transferSelect = document.getElementById('tx-transfer-to');
     transferSelect.innerHTML = '<option value="" disabled selected>Select Destination...</option>';
-    
     let accGrp = '<optgroup label="Bank Accounts">';
     data.account.forEach((a, i) => { if (i !== idx) accGrp += `<option value="acc_${i}">${a.name}</option>`; });
-    accGrp += '</optgroup>';
-    
-    let savGrp = '<optgroup label="Savings Pots">';
+    accGrp += '</optgroup><optgroup label="Savings Pots">';
     data.savings.forEach((s, i) => { savGrp += `<option value="sav_${i}">${s.name}</option>`; });
-    savGrp += '</optgroup>';
-    
-    let debtGrp = '<optgroup label="Debts & Loans">';
+    savGrp += '</optgroup><optgroup label="Debts & Loans">';
     data.debt.forEach((d, i) => { debtGrp += `<option value="debt_${i}">${d.name}</option>`; });
     debtGrp += '</optgroup>';
-    
     transferSelect.innerHTML += accGrp + savGrp + debtGrp;
     toggleTxFields();
 
-    // Render Recent Activity (Now shows Descriptions!)
     const txList = document.getElementById('transactions-list');
     txList.innerHTML = acc.transactions.length ? acc.transactions.map(tx => {
         const descText = tx.desc || (tx.type === 'in' ? 'Deposit' : 'Purchase');
-        return `
-        <div class="tx-item" style="align-items: center;">
-            <div>
-                <div style="color:#e2e8f0; font-size: 0.95rem; font-weight: bold;">${descText}</div>
-                <div style="color:#64748b; font-size: 0.75rem;">${tx.date}</div>
-            </div>
-            <span class="${tx.type === 'in' ? 'tx-in' : ''}">${tx.type === 'in' ? '+' : '-'}£${tx.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
-        </div>`;
+        return `<div class="tx-item" style="align-items: center;"><div><div style="color:var(--text); font-size: 0.95rem; font-weight: bold;">${descText}</div><div style="color:#64748b; font-size: 0.75rem;">${tx.date}</div></div><span class="${tx.type === 'in' ? 'tx-in' : ''}">${tx.type === 'in' ? '+' : '-'}£${tx.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>`;
     }).join('') : '<p style="color:#64748b">No recent activity.</p>';
-    
     document.getElementById('account-modal').style.display = 'flex';
 }
 
 function processTransaction() {
     const amt = parseFloat(document.getElementById('tx-amount').value);
     if (!amt || amt <= 0 || currentAccountIndex === null) return;
-    
     const acc = data.account[currentAccountIndex];
     const type = document.getElementById('tx-type').value;
     const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
@@ -269,24 +264,19 @@ function processTransaction() {
         let merchant = document.getElementById('tx-merchant').value;
         if (!merchant) return alert('Please select a category.');
         if (merchant === 'Other') merchant = document.getElementById('tx-desc-other').value || 'Purchase';
-        
         acc.amount -= amt;
         logTx(acc, amt, 'out', merchant, dateStr);
-        
     } else if (type === 'credit') {
         let desc = document.getElementById('tx-credit-desc').value || 'Credit / Refund';
         acc.amount += amt;
         logTx(acc, amt, 'in', desc, dateStr);
-        
     } else if (type === 'transfer') {
         const target = document.getElementById('tx-transfer-to').value;
         if (!target) return alert('Please select a destination.');
-        
         const [targetType, targetIdx] = target.split('_');
         const idx = parseInt(targetIdx);
         let targetName = "";
-        
-        acc.amount -= amt; // Deduct from current
+        acc.amount -= amt; 
         
         if (targetType === 'acc') {
             const tAcc = data.account[idx];
@@ -299,15 +289,12 @@ function processTransaction() {
             targetName = tSav.name;
         } else if (targetType === 'debt') {
             const tDebt = data.debt[idx];
-            tDebt.amount -= amt; // Paying debt REDUCES the owed amount!
+            tDebt.amount -= amt; 
             targetName = tDebt.name;
         }
-        
         logTx(acc, amt, 'out', `Transfer to ${targetName}`, dateStr);
     }
-    
-    render();
-    openAccountDetails(currentAccountIndex);
+    render(); openAccountDetails(currentAccountIndex);
 }
 
 function editCurrentAccount() {
@@ -315,38 +302,83 @@ function editCurrentAccount() {
     currentMode = 'account';
     editingIndex = currentAccountIndex; 
     const acc = data.account[currentAccountIndex];
-    
     document.getElementById('modal-title').innerText = "Edit Account";
     document.getElementById('item-name').value = acc.name;
     document.getElementById('item-amount').value = acc.amount;
     document.getElementById('item-overdraft').value = acc.overdraft || 0;
     
     document.getElementById('item-date').style.display = 'none';
+    document.getElementById('bill-sub-wrapper').style.display = 'none';
     document.getElementById('debt-type').style.display = 'none';
     document.getElementById('bill-type').style.display = 'none';
     document.getElementById('item-duration').style.display = 'none';
     document.getElementById('salary-account').style.display = 'none';
     document.getElementById('salary-date-type').style.display = 'none';
     document.getElementById('item-overdraft').style.display = 'block';
-
     document.getElementById('input-modal').style.display = 'flex';
 }
 
 function toggleBill(idx) { data.bills[idx].paid = !data.bills[idx].paid; render(); }
 
-// 4. RENDER
+// 4. RENDER (With Safe to Spend & Subscription Assassin Logic)
 function render() {
     localStorage.setItem('financeApp', JSON.stringify(data));
-    const now = new Date();
+    const today = new Date();
+    today.setHours(0,0,0,0); // Midnight for accurate comparisons
     
-    // --- SALARIES ---
+    // --- 1. SAFE TO SPEND CALCULATION ---
+    let totalCash = data.account.reduce((sum, a) => sum + a.amount, 0);
+    
+    // Find the NEXT upcoming payday
+    let nextPaydayObj = null;
+    let upcomingPaydays = [];
+
+    data.salaries.forEach(s => {
+        let actualPayday = s.dateType === 'last' ? getLastWorkingDayOfMonth(today.getFullYear(), today.getMonth()) : getPreviousWorkingDay(today.getFullYear(), today.getMonth(), s.date);
+        let paydayMidnight = new Date(actualPayday.getFullYear(), actualPayday.getMonth(), actualPayday.getDate());
+        
+        // If payday has already passed this month, the *next* payday is next month
+        if (paydayMidnight < today) {
+            actualPayday = s.dateType === 'last' ? getLastWorkingDayOfMonth(today.getFullYear(), today.getMonth() + 1) : getPreviousWorkingDay(today.getFullYear(), today.getMonth() + 1, s.date);
+            paydayMidnight = new Date(actualPayday.getFullYear(), actualPayday.getMonth(), actualPayday.getDate());
+        }
+        upcomingPaydays.push(paydayMidnight);
+    });
+
+    // Get the earliest future payday. If none, assume end of current month.
+    if (upcomingPaydays.length > 0) {
+        upcomingPaydays.sort((a,b) => a - b);
+        nextPaydayObj = upcomingPaydays[0];
+    } else {
+        nextPaydayObj = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Last day of month
+    }
+
+    // Sum all unpaid bills that are due ON or BEFORE the next payday
+    let pendingBillsTotal = 0;
+    data.bills.forEach(b => {
+        if (!b.paid) {
+            let actualBillDate = getNextWorkingDay(today.getFullYear(), today.getMonth(), b.date);
+            let billMidnight = new Date(actualBillDate.getFullYear(), actualBillDate.getMonth(), actualBillDate.getDate());
+            
+            if (billMidnight <= nextPaydayObj) {
+                pendingBillsTotal += b.amount;
+            }
+        }
+    });
+
+    let safeToSpend = totalCash - pendingBillsTotal;
+    document.getElementById('safe-to-spend-amount').innerText = `£${safeToSpend.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+    document.getElementById('safe-spend-subtext').innerText = `Until ${nextPaydayObj.toLocaleDateString('en-GB', {day: 'numeric', month: 'short'})} (Subtracts £${pendingBillsTotal.toLocaleString()} in upcoming bills)`;
+
+
+    // --- 2. SALARIES ---
     const salariesList = document.getElementById('salaries-list');
     salariesList.innerHTML = '';
     if (data.salaries.length === 0) {
         salariesList.innerHTML = '<p style="color:#64748b; font-size: 0.9rem;">No upcoming income added.</p>';
     } else {
         data.salaries.map((s, i) => {
-            let actualPayday = s.dateType === 'last' ? getLastWorkingDayOfMonth(now.getFullYear(), now.getMonth()) : getPreviousWorkingDay(now.getFullYear(), now.getMonth(), s.date);
+            let actualPayday = s.dateType === 'last' ? getLastWorkingDayOfMonth(today.getFullYear(), today.getMonth()) : getPreviousWorkingDay(today.getFullYear(), today.getMonth(), s.date);
             return { ...s, idx: i, actualPayday };
         }).sort((a,b) => a.actualPayday - b.actualPayday).forEach(s => {
             const isPaid = (s.lastPaidMonth === currentMonthKey);
@@ -366,7 +398,7 @@ function render() {
         });
     }
 
-    // --- ACCOUNTS ---
+    // --- 3. ACCOUNTS ---
     document.getElementById('accounts-list').innerHTML = data.account.map((a, i) => {
         let balanceDisplay = a.amount >= 0 ? `£${a.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}` : `-£${Math.abs(a.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
         let balanceColor = a.amount >= 0 ? 'var(--text)' : 'var(--danger)';
@@ -380,21 +412,26 @@ function render() {
         return `<div class="tile" onclick="openAccountDetails(${i})"><span class="tile-emoji">${getEmoji(a.name)}</span><h4>${a.name}</h4><p style="color: ${balanceColor}">${balanceDisplay}</p>${odText}</div>`;
     }).join('');
 
-    // --- DEBTS ---
+    // --- 4. DEBTS ---
     document.getElementById('debts-list').innerHTML = data.debt.map(item => {
         let subText = item.subType || "";
         if (item.duration) subText += ` (${item.duration}m remaining)`;
         return `<div class="tile"><span class="tile-emoji">${getEmoji(item.name)}</span><h4>${item.name}</h4><p>£${item.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>${subText ? `<div class="tile-sub">${subText}</div>` : ''}</div>`;
     }).join('');
 
-    // --- SAVINGS ---
+    // --- 5. SAVINGS ---
     document.getElementById('savings-list').innerHTML = data.savings.map(item => `<div class="tile"><span class="tile-emoji">${getEmoji(item.name)}</span><h4>${item.name}</h4><p>£${item.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</p></div>`).join('');
 
-    // --- BILLS ---
-    const billsList = document.getElementById('bills-list');
-    billsList.innerHTML = '';
+    // --- 6. BILLS (Subscription Assassin) ---
+    const fixedList = document.getElementById('fixed-bills-list');
+    const subList = document.getElementById('sub-bills-list');
+    fixedList.innerHTML = '';
+    subList.innerHTML = '';
+    
+    let subTotalAmount = 0;
+
     data.bills.map((b, i) => {
-        const actual = getNextWorkingDay(now.getFullYear(), now.getMonth(), b.date);
+        const actual = getNextWorkingDay(today.getFullYear(), today.getMonth(), b.date);
         return { ...b, idx: i, actual };
     }).sort((a,b) => a.actual - b.actual).forEach(b => {
         const isMoved = b.date !== b.actual.getDate();
@@ -402,17 +439,28 @@ function render() {
         let billSub = b.subType || "";
         if (b.duration) billSub += ` (${b.duration}m)`;
 
-        billsList.innerHTML += `
+        let html = `
             <div class="list-item ${b.paid ? 'bill-paid' : ''}">
                 <div>
                     <div style="margin-bottom:8px">${dateStr}</div>
                     <strong>${getEmoji(b.name)} ${b.name}</strong>
                     <div style="color:#94a3b8; font-size:0.8rem; margin-top:4px">${billSub}</div>
-                    <div style="color:#e2e8f0; font-size:0.95rem; margin-top:2px">£${b.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                    <div style="color:var(--text); font-size:0.95rem; margin-top:2px">£${b.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
                 </div>
                 <button class="${b.paid ? 'badge-paid' : 'badge-unpaid'}" onclick="toggleBill(${b.idx})">${b.paid ? 'Paid ✓' : 'Mark Paid'}</button>
             </div>`;
+
+        if (b.isSub) {
+            subTotalAmount += b.amount;
+            subList.innerHTML += html;
+        } else {
+            fixedList.innerHTML += html;
+        }
     });
+
+    document.getElementById('sub-total-drain').innerText = `£${subTotalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+    if (subList.innerHTML === '') subList.innerHTML = '<p style="color:#64748b; font-size: 0.9rem;">No subscriptions. Nice!</p>';
+    if (fixedList.innerHTML === '') fixedList.innerHTML = '<p style="color:#64748b; font-size: 0.9rem;">No fixed bills added.</p>';
 }
 
 function clearAllData() { if(confirm("Are you sure? This will delete EVERYTHING.")) { localStorage.clear(); location.reload(); } }
