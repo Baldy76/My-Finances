@@ -11,7 +11,11 @@
 
     <main id="app-content">
         <section id="home-page" class="page active">
-            <div id="accounts-list" class="grid" style="padding-top: 20px;"></div>
+            <div class="section-title" style="padding-top: 20px;"><h3>Expected Income</h3></div>
+            <div id="salaries-list" style="padding: 0 20px 20px 20px;"></div>
+
+            <div class="section-title"><h3>Bank Accounts</h3></div>
+            <div id="accounts-list" class="grid"></div>
         </section>
 
         <section id="debt-page" class="page">
@@ -36,6 +40,7 @@
                 
                 <div class="grid" style="margin-bottom: 30px;">
                     <button class="admin-btn" onclick="openModal('account')"><span>🏦</span> Account</button>
+                    <button class="admin-btn" onclick="openModal('salary')"><span>💸</span> Salary</button>
                     <button class="admin-btn" onclick="openModal('debt')"><span>📉</span> Debt</button>
                     <button class="admin-btn" onclick="openModal('savings')"><span>💎</span> Savings</button>
                     <button class="admin-btn" onclick="openModal('bill')"><span>📅</span> Bill</button>
@@ -60,12 +65,22 @@
         <div class="modal-content">
             <h2 id="modal-title" style="margin-bottom: 15px;">Add Item</h2>
             
-            <input type="text" id="item-name" placeholder="Name (e.g. Barclays, Gas)">
+            <input type="text" id="item-name" placeholder="Name (e.g. Barclays, Gas, Salary)">
             <input type="number" id="item-amount" placeholder="Current Balance / Amount (£)" step="0.01">
             
             <input type="number" id="item-overdraft" placeholder="Overdraft Limit (£) - Optional" style="display:none" min="0">
             <input type="number" id="item-date" placeholder="Day of Month (1-31)" style="display:none" min="1" max="31">
             
+            <select id="salary-account" style="display:none">
+                <option value="" disabled selected>Select Destination Account</option>
+            </select>
+            
+            <select id="salary-date-type" style="display:none" onchange="toggleSalaryDate()">
+                <option value="" disabled selected>When do you get paid?</option>
+                <option value="last">Last Working Day of the Month</option>
+                <option value="specific">On a Specific Date</option>
+            </select>
+
             <select id="debt-type" style="display:none" onchange="checkDuration('debt')">
                 <option value="" disabled selected>Select Debt Type</option>
                 <option value="Credit Card">Credit Card</option>
@@ -91,7 +106,6 @@
 
     <div id="account-modal" class="modal">
         <div class="modal-content" style="height: 80vh; overflow-y: auto;">
-            
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h2 id="acc-modal-title">Account</h2>
                 <button onclick="editCurrentAccount()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;">✏️ Edit</button>
