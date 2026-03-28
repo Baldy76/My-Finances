@@ -14,7 +14,7 @@ if (localStorage.getItem('lastOpenedMonth') !== currentMonthKey) {
 
 let currentMode = '';
 let currentAccountIndex = null;
-let editingIndex = null; // NEW: Tracks if we are editing an existing item
+let editingIndex = null; 
 let bankHolidays = JSON.parse(localStorage.getItem('ukBankHolidays')) || [];
 
 window.onload = () => {
@@ -49,15 +49,11 @@ function getNextWorkingDay(year, month, targetDay) {
     return date;
 }
 
-// 2. SUPERCHARGED EMOJI ENGINE
+// 2. EMOJI ENGINE
 const emojis = { 
-    // Banks
     barclays: "🦅", lloyds: "🐎", halifax: "✖️", monzo: "🔥", starling: "⭐", santander: "🔴", bank: "🏦",
-    // Debt & Credit
     credit: "💳", card: "💳", loan: "🤝", mortgage: "🏠", klarna: "🛍️", clearpay: "🛒", paypal: "🅿️",
-    // Savings
     save: "🐷", savings: "🍯", pot: "🍯", emergency: "🚨", holiday: "✈️", car: "🚗", wedding: "💍", invest: "📈",
-    // Bills & Life
     gas: "🔥", electric: "⚡", water: "💧", mobile: "📱", phone: "📞", internet: "🌐", wifi: "📡", 
     netflix: "🍿", gym: "🏋️", council: "🏛️", rent: "🔑", default: "✨" 
 };
@@ -78,7 +74,7 @@ function switchTab(id, btn) {
 
 function openModal(mode) {
     currentMode = mode;
-    editingIndex = null; // Ensure we are adding a NEW item, not editing
+    editingIndex = null; 
     document.getElementById('modal-title').innerText = "Add " + mode;
     
     document.querySelectorAll('.modal-content input, .modal-content select').forEach(el => el.value = "");
@@ -104,14 +100,13 @@ function checkDuration(type) {
 
 function closeModal(id) {
     document.getElementById(id).style.display = 'none';
-    editingIndex = null; // Reset edit state on close
+    editingIndex = null; 
 }
 
-// NEW: EDITING LOGIC
 function editCurrentAccount() {
     closeModal('account-modal');
     currentMode = 'account';
-    editingIndex = currentAccountIndex; // Remember which account we are editing
+    editingIndex = currentAccountIndex; 
     
     const acc = data.account[currentAccountIndex];
     
@@ -120,7 +115,6 @@ function editCurrentAccount() {
     document.getElementById('item-amount').value = acc.amount;
     document.getElementById('item-overdraft').value = acc.overdraft || 0;
     
-    // Hide irrelevant fields, show overdraft
     document.getElementById('item-date').style.display = 'none';
     document.getElementById('debt-type').style.display = 'none';
     document.getElementById('bill-type').style.display = 'none';
@@ -149,19 +143,17 @@ function saveItem() {
 
     if (name) {
         if (editingIndex !== null && currentMode === 'account') {
-            // WE ARE EDITING AN EXISTING ACCOUNT
             data.account[editingIndex].name = name;
             data.account[editingIndex].amount = amount;
             data.account[editingIndex].overdraft = overdraft;
         } else {
-            // WE ARE ADDING A NEW ITEM
             if (currentMode === 'account') data.account.push({ name, amount, overdraft, transactions: [] });
             else if (currentMode === 'bill') data.bills.push({ name, amount, date, paid: false, subType, duration });
             else if (currentMode === 'debt') data.debt.push({ name, amount, subType, duration });
             else data.savings.push({ name, amount });
         }
         
-        editingIndex = null; // Clear edit state
+        editingIndex = null; 
         render();
         closeModal('input-modal');
     }
