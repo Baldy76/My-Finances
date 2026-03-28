@@ -3,39 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Finance Dashboard</title>
+    <title>Finance PWA</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
     <main id="app-content">
-        
+        <section id="home-page" class="page active">
+            <div class="header">
+                <h1>Dashboard</h1>
+                <p id="net-worth">Net Worth: £0.00</p>
+            </div>
+            
+            <div class="section-title">
+                <h3>Bank Accounts</h3>
+                <button class="add-btn" onclick="openModal('account')">+</button>
+            </div>
+            <div id="accounts-list" class="grid-container">
+                </div>
+        </section>
+
         <section id="debt-page" class="page">
-            <h2>Debt Management</h2>
-            <p>Track your credit cards, loans, and Klarna here.</p>
+            <div class="header">
+                <h1>Debts</h1>
+                <p id="total-debt">Total Owed: £0.00</p>
+            </div>
+            <div class="section-title">
+                <h3>Loans & Credits</h3>
+                <button class="add-btn" onclick="openModal('debt')">+</button>
+            </div>
+            <div id="debts-list">
+                </div>
         </section>
 
         <section id="savings-page" class="page">
-            <h2>Savings Pots</h2>
-            <p>Your saving goals and emergency funds.</p>
-        </section>
-
-        <section id="home-page" class="page active">
-            <h2>Dashboard</h2>
-            <div class="card">
-                <h3>Total Balance</h3>
-                <h2>£0.00</h2>
+            <div class="header">
+                <h1>Savings</h1>
+                <p id="total-savings">Total Saved: £0.00</p>
             </div>
-            <p>Your bank accounts will go here.</p>
+            <div class="section-title">
+                <h3>Saving Pots</h3>
+                <button class="add-btn" onclick="openModal('savings')">+</button>
+            </div>
+            <div id="savings-list" class="grid-container">
+                </div>
         </section>
 
         <section id="admin-page" class="page">
-            <h2>Admin Hub</h2>
-            <p>Settings, profile, and account connections.</p>
+            <h2>Admin</h2>
+            <button class="danger-btn" onclick="clearAllData()">Reset All Data</button>
         </section>
-
     </main>
+
+    <div id="input-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title">Add Item</h3>
+            <input type="text" id="item-name" placeholder="Name (e.g. Monzo)">
+            <input type="number" id="item-amount" placeholder="Amount (£)">
+            <div class="modal-actions">
+                <button onclick="closeModal()">Cancel</button>
+                <button class="save-btn" onclick="saveItem()">Save</button>
+            </div>
+        </div>
+    </div>
 
     <nav class="bottom-nav">
         <button class="nav-btn" onclick="switchTab('debt-page', this)">Debt</button>
