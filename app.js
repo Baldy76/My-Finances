@@ -3,6 +3,9 @@ let data = JSON.parse(localStorage.getItem('financeApp')) || {
     account: [], debt: [], savings: [], bills: []
 };
 
+// Retrofit older accounts to ensure they have an overdraft property
+data.account.forEach(acc => { if (acc.overdraft === undefined) acc.overdraft = 0; });
+
 // 2. AUTO-RESET MONTHLY BILLS
 const currentMonthKey = new Date().getFullYear() + '-' + new Date().getMonth();
 if (localStorage.getItem('lastOpenedMonth') !== currentMonthKey) {
@@ -71,26 +74,26 @@ function openModal(mode) {
     currentMode = mode;
     document.getElementById('modal-title').innerText = "Add " + mode;
     
-    // Reset all inputs safely
+    // Reset inputs safely
     document.querySelectorAll('.modal-content input, .modal-content select').forEach(el => el.value = "");
     
-    // Toggle relevant dropdowns based on mode
+    // Toggle dropdowns
     document.getElementById('item-date').style.display = (mode === 'bill') ? 'block' : 'none';
+    document.getElementById('item-overdraft').style.display = (mode === 'account') ? 'block' : 'none';
     document.getElementById('debt-type').style.display = (mode === 'debt') ? 'block' : 'none';
     document.getElementById('bill-type').style.display = (mode === 'bill') ? 'block' : 'none';
-    document.getElementById('item-duration').style.display = 'none'; // Hide duration initially
+    document.getElementById('item-duration').style.display = 'none'; 
 
     document.getElementById('input-modal').style.display = 'flex';
 }
 
 function checkDuration(type) {
-    // If the user selects "Short Term Debt" or "Short Term" Bill, show duration
     const val = document.getElementById(type + '-type').value;
     if (val === 'Short Term Debt' || val === 'Short Term') {
         document.getElementById('item-duration').style.display = 'block';
     } else {
         document.getElementById('item-duration').style.display = 'none';
-        document.getElementById('item-duration').value = ""; // Clear if they switch away
+        document.getElementById('item-duration').value = ""; 
     }
 }
 
@@ -102,11 +105,11 @@ function saveItem() {
     const name = document.getElementById('item-name').value;
     const amount = parseFloat(document.getElementById('item-amount').value) || 0;
     const date = parseInt(document.getElementById('item-date').value) || 1;
+    const overdraft = parseFloat(document.getElementById('item-overdraft').value) || 0;
     
     let subType = "";
     let duration = null;
 
-    // Capture the specialized data based on the mode
     if (currentMode === 'debt') {
         subType = document.getElementById('debt-type').value;
         if (subType === 'Short Term Debt') duration = document.getElementById('item-duration').value;
@@ -116,7 +119,7 @@ function saveItem() {
     }
 
     if (name) {
-        if (currentMode === 'account') data.account.push({ name, amount, transactions: [] });
+        if (currentMode === 'account') data.account.push({ name, amount, overdraft, transactions: [] });
         else if (currentMode === 'bill') data.bills.push({ name, amount, date, paid: false, subType, duration });
         else if (currentMode === 'debt') data.debt.push({ name, amount, subType, duration });
         else data.savings.push({ name, amount });
@@ -129,8 +132,15 @@ function saveItem() {
 function openAccountDetails(idx) {
     currentAccountIndex = idx;
     const acc = data.account[idx];
+    
     document.getElementById('acc-modal-title').innerText = `${getEmoji(acc.name)} ${acc.name}`;
-    document.getElementById('acc-modal-balance').innerText = `£${acc.amount.toLocaleString()}`;
+    
+    // Format negative balances correctly
+    let balanceDisplay = acc.amount >= 0 ? `£${acc.amount.toLocaleString()}` : `-£${Math.abs(acc.amount).toLocaleString()}`;
+    const balElement = document.getElementById('acc-modal-balance');
+    balElement.innerText = balanceDisplay;
+    balElement.style.color = acc.amount >= 0 ? 'var(--success)' : 'var(--danger)';
+    
     const txList = document.getElementById('transactions-list');
     txList.innerHTML = acc.transactions.length ? acc.transactions.map(tx => `
         <div class="tx-item">
@@ -163,20 +173,35 @@ function render() {
     localStorage.setItem('financeApp', JSON.stringify(data));
     const now = new Date();
     
-    // Accounts
-    document.getElementById('accounts-list').innerHTML = data.account.map((a, i) => `
+    // Accounts (With Overdraft Logic)
+    document.getElementById('accounts-list').innerHTML = data.account.map((a, i) => {
+        let balanceDisplay = a.amount >= 0 ? `£${a.amount.toLocaleString()}` : `-£${Math.abs(a.amount).toLocaleString()}`;
+        let balanceColor = a.amount >= 0 ? 'var(--text)' : 'var(--danger)';
+        
+        let odText = '';
+        if (a.overdraft > 0) {
+            if (a.amount < 0) {
+                // E.g., OD is 500, amount is -100. Available = 500 + (-100) = 400.
+                let available = a.overdraft + a.amount; 
+                odText = `<div class="tile-sub">OD: £${a.overdraft.toLocaleString()} | Avail: £${available.toLocaleString()}</div>`;
+            } else {
+                odText = `<div class="tile-sub">OD Facility: £${a.overdraft.toLocaleString()}</div>`;
+            }
+        }
+
+        return `
         <div class="tile" onclick="openAccountDetails(${i})">
             <span class="tile-emoji">${getEmoji(a.name)}</span>
             <h4>${a.name}</h4>
-            <p>£${a.amount.toLocaleString()}</p>
-        </div>`).join('');
+            <p style="color: ${balanceColor}">${balanceDisplay}</p>
+            ${odText}
+        </div>`;
+    }).join('');
 
     // Debts
     document.getElementById('debts-list').innerHTML = data.debt.map(item => {
-        // Build the sub-text if they added type/duration
         let subText = item.subType || "";
         if (item.duration) subText += ` (${item.duration}m remaining)`;
-
         return `
         <div class="tile">
             <span class="tile-emoji">${getEmoji(item.name)}</span>
@@ -207,7 +232,6 @@ function render() {
              <span class="bill-date" style="background:var(--success); color:#fff">Due: ${b.actual.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'})}</span>` : 
             `<span class="bill-date">${b.date}th</span>`;
 
-        // Build the sub-text for bills
         let billSub = b.subType || "";
         if (b.duration) billSub += ` (${b.duration}m)`;
 
