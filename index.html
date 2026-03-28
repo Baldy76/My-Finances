@@ -17,12 +17,23 @@
     <div id="root" class="w-full max-w-md"></div>
 
     <script type="text/babel">
-        const { useState } = React;
+        // 1. We added useEffect here to handle the saving
+        const { useState, useEffect } = React;
 
         function CommandCentre() {
             const [selectedAccount, setSelectedAccount] = useState('');
             const [chargeAmount, setChargeAmount] = useState('');
-            const [transactions, setTransactions] = useState([]);
+            
+            // 2. Upgraded state: Check browser memory on load
+            const [transactions, setTransactions] = useState(() => {
+                const savedData = localStorage.getItem('commandCentreData');
+                return savedData ? JSON.parse(savedData) : [];
+            });
+
+            // 3. The magic hook: Save to browser memory every time transactions change
+            useEffect(() => {
+                localStorage.setItem('commandCentreData', JSON.stringify(transactions));
+            }, [transactions]);
 
             const handleAccountChange = (e) => setSelectedAccount(e.target.value);
             const handleAmountChange = (e) => setChargeAmount(e.target.value);
@@ -49,8 +60,10 @@
             };
 
             const handleClearSession = () => {
-                if(window.confirm("Are you sure you want to clear all logged charges?")) {
+                if(window.confirm("Are you sure you want to clear all logged charges? This cannot be undone.")) {
                     setTransactions([]);
+                    // Also clears the browser memory
+                    localStorage.removeItem('commandCentreData');
                 }
             };
 
