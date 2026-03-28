@@ -1,0 +1,22 @@
+{
+  "accounts": [
+    {
+      "id": "1",
+      "name": "Barclays",
+      "balance": 100,
+      "overdraftLimit": 500
+    },
+    {
+      "id": "2",
+      "name": "Monzo",
+      "balance": -100,
+      "overdraftLimit": 1000
+    },
+    {
+      "id": "3",
+      "name": "Savings",
+      "balance": 2500,
+      "overdraftLimit": 0
+    }
+  ]
+}
