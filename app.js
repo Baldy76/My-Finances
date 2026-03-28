@@ -15,6 +15,17 @@ let currentMode = '';
 let currentAccountIndex = null;
 let bankHolidays = JSON.parse(localStorage.getItem('ukBankHolidays')) || [];
 
+// Populate the 3-24 months duration dropdown dynamically
+window.onload = () => {
+    const durationSelect = document.getElementById('item-duration');
+    for(let i = 3; i <= 24; i++) {
+        let opt = document.createElement('option');
+        opt.value = i;
+        opt.innerHTML = i + " Months";
+        durationSelect.appendChild(opt);
+    }
+};
+
 // 3. FETCH HOLIDAYS
 async function loadHolidays() {
     if (bankHolidays.length === 0) {
@@ -59,24 +70,57 @@ function switchTab(id, btn) {
 function openModal(mode) {
     currentMode = mode;
     document.getElementById('modal-title').innerText = "Add " + mode;
+    
+    // Reset all inputs safely
+    document.querySelectorAll('.modal-content input, .modal-content select').forEach(el => el.value = "");
+    
+    // Toggle relevant dropdowns based on mode
     document.getElementById('item-date').style.display = (mode === 'bill') ? 'block' : 'none';
+    document.getElementById('debt-type').style.display = (mode === 'debt') ? 'block' : 'none';
+    document.getElementById('bill-type').style.display = (mode === 'bill') ? 'block' : 'none';
+    document.getElementById('item-duration').style.display = 'none'; // Hide duration initially
+
     document.getElementById('input-modal').style.display = 'flex';
+}
+
+function checkDuration(type) {
+    // If the user selects "Short Term Debt" or "Short Term" Bill, show duration
+    const val = document.getElementById(type + '-type').value;
+    if (val === 'Short Term Debt' || val === 'Short Term') {
+        document.getElementById('item-duration').style.display = 'block';
+    } else {
+        document.getElementById('item-duration').style.display = 'none';
+        document.getElementById('item-duration').value = ""; // Clear if they switch away
+    }
 }
 
 function closeModal(id) {
     document.getElementById(id).style.display = 'none';
-    document.querySelectorAll('input').forEach(i => i.value = '');
 }
 
 function saveItem() {
     const name = document.getElementById('item-name').value;
     const amount = parseFloat(document.getElementById('item-amount').value) || 0;
     const date = parseInt(document.getElementById('item-date').value) || 1;
+    
+    let subType = "";
+    let duration = null;
+
+    // Capture the specialized data based on the mode
+    if (currentMode === 'debt') {
+        subType = document.getElementById('debt-type').value;
+        if (subType === 'Short Term Debt') duration = document.getElementById('item-duration').value;
+    } else if (currentMode === 'bill') {
+        subType = document.getElementById('bill-type').value;
+        if (subType === 'Short Term') duration = document.getElementById('item-duration').value;
+    }
 
     if (name) {
         if (currentMode === 'account') data.account.push({ name, amount, transactions: [] });
-        else if (currentMode === 'bill') data.bills.push({ name, amount, date, paid: false });
-        else data[currentMode].push({ name, amount });
+        else if (currentMode === 'bill') data.bills.push({ name, amount, date, paid: false, subType, duration });
+        else if (currentMode === 'debt') data.debt.push({ name, amount, subType, duration });
+        else data.savings.push({ name, amount });
+        
         render();
         closeModal('input-modal');
     }
@@ -127,16 +171,28 @@ function render() {
             <p>£${a.amount.toLocaleString()}</p>
         </div>`).join('');
 
-    // Debts & Savings (Tiles)
-    ['debts', 'savings'].forEach(key => {
-        const list = key === 'debts' ? data.debt : data.savings;
-        document.getElementById(key + '-list').innerHTML = list.map(item => `
-            <div class="tile">
-                <span class="tile-emoji">${getEmoji(item.name)}</span>
-                <h4>${item.name}</h4>
-                <p>£${item.amount.toLocaleString()}</p>
-            </div>`).join('');
-    });
+    // Debts
+    document.getElementById('debts-list').innerHTML = data.debt.map(item => {
+        // Build the sub-text if they added type/duration
+        let subText = item.subType || "";
+        if (item.duration) subText += ` (${item.duration}m remaining)`;
+
+        return `
+        <div class="tile">
+            <span class="tile-emoji">${getEmoji(item.name)}</span>
+            <h4>${item.name}</h4>
+            <p>£${item.amount.toLocaleString()}</p>
+            ${subText ? `<div class="tile-sub">${subText}</div>` : ''}
+        </div>`;
+    }).join('');
+
+    // Savings
+    document.getElementById('savings-list').innerHTML = data.savings.map(item => `
+        <div class="tile">
+            <span class="tile-emoji">${getEmoji(item.name)}</span>
+            <h4>${item.name}</h4>
+            <p>£${item.amount.toLocaleString()}</p>
+        </div>`).join('');
 
     // Smart Bills
     const billsList = document.getElementById('bills-list');
@@ -151,17 +207,22 @@ function render() {
              <span class="bill-date" style="background:var(--success); color:#fff">Due: ${b.actual.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'})}</span>` : 
             `<span class="bill-date">${b.date}th</span>`;
 
+        // Build the sub-text for bills
+        let billSub = b.subType || "";
+        if (b.duration) billSub += ` (${b.duration}m)`;
+
         billsList.innerHTML += `
             <div class="list-item ${b.paid ? 'bill-paid' : ''}">
                 <div>
                     <div style="margin-bottom:8px">${dateStr}</div>
                     <strong>${getEmoji(b.name)} ${b.name}</strong>
-                    <div style="color:#94a3b8; font-size:0.9rem; margin-top:4px">£${b.amount.toLocaleString()}</div>
+                    <div style="color:#94a3b8; font-size:0.8rem; margin-top:4px">${billSub}</div>
+                    <div style="color:#e2e8f0; font-size:0.95rem; margin-top:2px">£${b.amount.toLocaleString()}</div>
                 </div>
                 <button class="${b.paid ? 'badge-paid' : 'badge-unpaid'}" onclick="toggleBill(${b.idx})">${b.paid ? 'Paid ✓' : 'Mark Paid'}</button>
             </div>`;
     });
 }
 
-function clearAllData() { if(confirm("Delete everything?")) { localStorage.clear(); location.reload(); } }
+function clearAllData() { if(confirm("Are you sure? This will delete EVERYTHING.")) { localStorage.clear(); location.reload(); } }
 render();
