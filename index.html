@@ -3,77 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Finance PWA</title>
+    <title>Glow Finance</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
     <main id="app-content">
-        <section id="home-page" class="page active">
+        <section id="home-page" class="page">
             <div class="header">
-                <h1>Dashboard</h1>
-                <p id="net-worth">Net Worth: £0.00</p>
+                <h1>My Wealth</h1>
+                <h2 id="net-worth-val">£0.00</h2>
             </div>
-            
             <div class="section-title">
-                <h3>Bank Accounts</h3>
+                <h3>Accounts</h3>
                 <button class="add-btn" onclick="openModal('account')">+</button>
             </div>
-            <div id="accounts-list" class="grid-container">
-                </div>
+            <div id="accounts-list" class="grid"></div>
         </section>
 
-        <section id="debt-page" class="page">
-            <div class="header">
-                <h1>Debts</h1>
-                <p id="total-debt">Total Owed: £0.00</p>
+        <section id="debt-page" class="page" style="display:none">
+            <div class="header" style="background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);">
+                <h1>Total Debt</h1>
+                <h2>Keep Going!</h2>
             </div>
             <div class="section-title">
-                <h3>Loans & Credits</h3>
+                <h3>Liabilities</h3>
                 <button class="add-btn" onclick="openModal('debt')">+</button>
             </div>
-            <div id="debts-list">
-                </div>
+            <div id="debts-list"></div>
         </section>
 
-        <section id="savings-page" class="page">
-            <div class="header">
-                <h1>Savings</h1>
-                <p id="total-savings">Total Saved: £0.00</p>
+        <section id="savings-page" class="page" style="display:none">
+            <div class="header" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%);">
+                <h1>Goal Progress</h1>
+                <h2>Keep Saving!</h2>
             </div>
             <div class="section-title">
                 <h3>Saving Pots</h3>
                 <button class="add-btn" onclick="openModal('savings')">+</button>
             </div>
-            <div id="savings-list" class="grid-container">
-                </div>
-        </section>
-
-        <section id="admin-page" class="page">
-            <h2>Admin</h2>
-            <button class="danger-btn" onclick="clearAllData()">Reset All Data</button>
+            <div id="savings-list" class="grid"></div>
         </section>
     </main>
 
+    <nav class="bottom-nav">
+        <button class="nav-btn" onclick="switchTab('debt-page', this)"><span>📉</span>Debt</button>
+        <button class="nav-btn" onclick="switchTab('savings-page', this)"><span>💎</span>Savings</button>
+        <button class="nav-btn active-btn" onclick="switchTab('home-page', this)"><span>🏠</span>Home</button>
+        <button class="nav-btn" onclick="switchTab('admin-page', this)"><span>⚙️</span>Admin</button>
+    </nav>
+
     <div id="input-modal" class="modal">
         <div class="modal-content">
-            <h3 id="modal-title">Add Item</h3>
-            <input type="text" id="item-name" placeholder="Name (e.g. Monzo)">
-            <input type="number" id="item-amount" placeholder="Amount (£)">
-            <div class="modal-actions">
-                <button onclick="closeModal()">Cancel</button>
-                <button class="save-btn" onclick="saveItem()">Save</button>
-            </div>
+            <h2 id="modal-title">Add</h2>
+            <input type="text" id="item-name" placeholder="Name (e.g. Monzo, Holiday)">
+            <input type="number" id="item-amount" placeholder="Current Amount (£)">
+            <input type="number" id="item-goal" placeholder="Goal Amount (£) - Optional" style="display:none">
+            <button class="btn-save" onclick="saveItem()">Save & Let's Go! 🚀</button>
+            <button onclick="closeModal()" style="background:none; border:none; color:white; width:100%; margin-top:10px;">Cancel</button>
         </div>
     </div>
-
-    <nav class="bottom-nav">
-        <button class="nav-btn" onclick="switchTab('debt-page', this)">Debt</button>
-        <button class="nav-btn" onclick="switchTab('savings-page', this)">Savings</button>
-        <button class="nav-btn active-btn" onclick="switchTab('home-page', this)">Home</button>
-        <button class="nav-btn" onclick="switchTab('admin-page', this)">Admin</button>
-    </nav>
 
     <script src="app.js"></script>
 </body>
