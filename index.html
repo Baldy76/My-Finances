@@ -13,7 +13,6 @@
         <section id="home-page" class="page active">
             <div class="section-title" style="padding-top: 20px;"><h3>Expected Income</h3></div>
             <div id="salaries-list" style="padding: 0 20px 20px 20px;"></div>
-
             <div class="section-title"><h3>Bank Accounts</h3></div>
             <div id="accounts-list" class="grid"></div>
         </section>
@@ -37,7 +36,6 @@
             <div class="section-title"><h3>Admin Hub</h3></div>
             <div style="padding: 0 20px 20px 20px;">
                 <p style="color: #94a3b8; margin-bottom: 20px; font-size: 0.9rem;">Add new items to your dashboard:</p>
-                
                 <div class="grid" style="margin-bottom: 30px;">
                     <button class="admin-btn" onclick="openModal('account')"><span>🏦</span> Account</button>
                     <button class="admin-btn" onclick="openModal('salary')"><span>💸</span> Salary</button>
@@ -45,7 +43,6 @@
                     <button class="admin-btn" onclick="openModal('savings')"><span>💎</span> Savings</button>
                     <button class="admin-btn" onclick="openModal('bill')"><span>📅</span> Bill</button>
                 </div>
-
                 <hr style="border-top: 1px solid rgba(255,255,255,0.1); border-bottom: none; margin-bottom: 20px;">
                 <p style="color: #94a3b8; margin-bottom: 15px; font-size: 0.9rem;">Danger Zone:</p>
                 <button class="danger-btn" onclick="clearAllData()">Reset All Data</button>
@@ -64,23 +61,17 @@
     <div id="input-modal" class="modal">
         <div class="modal-content">
             <h2 id="modal-title" style="margin-bottom: 15px;">Add Item</h2>
-            
             <input type="text" id="item-name" placeholder="Name (e.g. Barclays, Gas, Salary)">
             <input type="number" id="item-amount" placeholder="Current Balance / Amount (£)" step="0.01">
-            
             <input type="number" id="item-overdraft" placeholder="Overdraft Limit (£) - Optional" style="display:none" min="0">
             <input type="number" id="item-date" placeholder="Day of Month (1-31)" style="display:none" min="1" max="31">
             
-            <select id="salary-account" style="display:none">
-                <option value="" disabled selected>Select Destination Account</option>
-            </select>
-            
+            <select id="salary-account" style="display:none"><option value="" disabled selected>Select Destination Account</option></select>
             <select id="salary-date-type" style="display:none" onchange="toggleSalaryDate()">
                 <option value="" disabled selected>When do you get paid?</option>
                 <option value="last">Last Working Day of the Month</option>
                 <option value="specific">On a Specific Date</option>
             </select>
-
             <select id="debt-type" style="display:none" onchange="checkDuration('debt')">
                 <option value="" disabled selected>Select Debt Type</option>
                 <option value="Credit Card">Credit Card</option>
@@ -88,16 +79,12 @@
                 <option value="PayPal">PayPal</option>
                 <option value="Short Term Debt">Short Term Debt</option>
             </select>
-
             <select id="bill-type" style="display:none" onchange="checkDuration('bill')">
                 <option value="" disabled selected>Select Bill Type</option>
                 <option value="Long Term">Long Term</option>
                 <option value="Short Term">Short Term</option>
             </select>
-
-            <select id="item-duration" style="display:none">
-                <option value="" disabled selected>Select Duration</option>
-            </select>
+            <select id="item-duration" style="display:none"><option value="" disabled selected>Select Duration</option></select>
 
             <button class="btn-save" style="margin-top: 15px;" onclick="saveItem()">Save 🚀</button>
             <button onclick="closeModal('input-modal')" class="btn-cancel">Cancel</button>
@@ -105,21 +92,46 @@
     </div>
 
     <div id="account-modal" class="modal">
-        <div class="modal-content" style="height: 80vh; overflow-y: auto;">
+        <div class="modal-content" style="height: 85vh; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h2 id="acc-modal-title">Account</h2>
                 <button onclick="editCurrentAccount()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;">✏️ Edit</button>
             </div>
-            
             <h1 id="acc-modal-balance" style="margin: 10px 0; color: var(--success);">£0.00</h1>
             
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <input type="number" id="tx-amount" placeholder="Amount (£)" style="margin:0;" min="0.01" step="0.01">
-                <button class="btn-save" style="margin:0; width: 70px;" onclick="addTransaction('in')">In</button>
-                <button class="danger-btn" style="margin:0; width: 70px; padding: 0;" onclick="addTransaction('out')">Out</button>
+            <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 16px; margin-bottom: 25px;">
+                <h3 style="font-size: 0.9rem; margin-bottom: 10px; color: #94a3b8;">New Transaction</h3>
+                
+                <input type="number" id="tx-amount" placeholder="Amount (£)" min="0.01" step="0.01">
+                
+                <select id="tx-type" onchange="toggleTxFields()">
+                    <option value="purchase" selected>🛒 Purchase</option>
+                    <option value="transfer">🔄 Transfer / Pay Debt</option>
+                    <option value="credit">➕ Credit / Income</option>
+                </select>
+
+                <select id="tx-merchant" onchange="checkMerchant()">
+                    <option value="" disabled selected>Select Category...</option>
+                    <option value="Coffee">Coffee</option>
+                    <option value="Amazon">Amazon</option>
+                    <option value="Fuel">Fuel</option>
+                    <option value="Take-Away">Take-Away</option>
+                    <option value="Tesco">Tesco</option>
+                    <option value="Asda">Asda</option>
+                    <option value="Aldi">Aldi</option>
+                    <option value="Lidl">Lidl</option>
+                    <option value="Other">Other (Custom)</option>
+                </select>
+                <input type="text" id="tx-desc-other" placeholder="Description" style="display:none;">
+
+                <select id="tx-transfer-to" style="display:none;"></select>
+
+                <input type="text" id="tx-credit-desc" placeholder="Source (e.g. Refund, Cash)" style="display:none;">
+
+                <button class="btn-save" style="margin-top: 10px; padding: 12px;" onclick="processTransaction()">Add Transaction</button>
             </div>
 
-            <h3 style="margin-bottom: 15px; color: #94a3b8;">Last 20 Transactions</h3>
+            <h3 style="margin-bottom: 15px; color: #94a3b8;">Recent Activity</h3>
             <div id="transactions-list"></div>
             
             <button onclick="closeModal('account-modal')" class="btn-cancel" style="margin-top: 20px;">Close</button>
