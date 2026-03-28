@@ -1,4 +1,5 @@
-let data = JSON.parse(localStorage.getItem('financeData')) || {
+// 1. DATA ENGINE (With Goals)
+let data = JSON.parse(localStorage.getItem('financeApp')) || {
     account: [],
     debt: [],
     savings: []
@@ -6,77 +7,124 @@ let data = JSON.parse(localStorage.getItem('financeData')) || {
 
 let currentMode = '';
 
-function switchTab(pageId, clickedButton) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
-    document.getElementById(pageId).classList.add('active');
-    clickedButton.classList.add('active-btn');
+// 2. EMOJI ENGINE
+const emojis = {
+    bank: "🏦", savings: "💰", card: "💳", car: "🚗", 
+    holiday: "✈️", house: "🏠", food: "🍔", klarna: "🛍️",
+    paypal: "🅿️", loan: "📉", gift: "🎁", default: "✨"
+};
+
+function getEmoji(name) {
+    name = name.toLowerCase();
+    for (let key in emojis) {
+        if (name.includes(key)) return emojis[key];
+    }
+    return emojis.default;
 }
 
+// 3. TAB SWITCHING
+function switchTab(pageId, btn) {
+    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
+    document.getElementById(pageId).style.display = 'block';
+    btn.classList.add('active-btn');
+}
+
+// 4. MODAL LOGIC
 function openModal(mode) {
     currentMode = mode;
-    document.getElementById('modal-title').innerText = "Add " + mode.charAt(0).toUpperCase() + mode.slice(1);
+    document.getElementById('modal-title').innerText = "New " + mode;
+    // Show/Hide Goal input based on if it's Savings
+    document.getElementById('item-goal').style.display = (mode === 'savings') ? 'block' : 'none';
     document.getElementById('input-modal').style.display = 'flex';
 }
 
 function closeModal() {
     document.getElementById('input-modal').style.display = 'none';
-    document.getElementById('item-name').value = '';
-    document.getElementById('item-amount').value = '';
+    document.querySelectorAll('input').forEach(i => i.value = '');
 }
 
+// 5. SAVE & CELEBRATE
 function saveItem() {
     const name = document.getElementById('item-name').value;
-    const amount = parseFloat(document.getElementById('item-amount').value);
+    const amount = parseFloat(document.getElementById('item-amount').value) || 0;
+    const goal = parseFloat(document.getElementById('item-goal').value) || 0;
 
-    if (name && amount) {
-        data[currentMode].push({ name, amount });
-        localStorage.setItem('financeData', JSON.stringify(data));
-        renderAll();
+    if (name) {
+        data[currentMode].push({ name, amount, goal });
+        localStorage.setItem('financeApp', JSON.stringify(data));
+        
+        if (currentMode === 'savings') triggerConfetti();
+        
+        render();
         closeModal();
     }
 }
 
-function renderAll() {
-    // Render Accounts (Home)
-    const accList = document.getElementById('accounts-list');
-    accList.innerHTML = '';
-    let totalAcc = 0;
+// 6. RENDER EVERYTHING
+function render() {
+    const lists = {
+        account: document.getElementById('accounts-list'),
+        debt: document.getElementById('debts-list'),
+        savings: document.getElementById('savings-list')
+    };
+
+    // Reset lists
+    Object.values(lists).forEach(l => l.innerHTML = '');
+
+    let totalAcc = 0, totalDebt = 0, totalSave = 0;
+
+    // Accounts
     data.account.forEach(item => {
         totalAcc += item.amount;
-        accList.innerHTML += `<div class="tile"><h4>${item.name}</h4><p>£${item.amount.toLocaleString()}</p></div>`;
+        lists.account.innerHTML += `
+            <div class="tile animate-pop">
+                <span class="tile-emoji">${getEmoji(item.name)}</span>
+                <h4>${item.name}</h4>
+                <p>£${item.amount.toLocaleString()}</p>
+            </div>`;
     });
 
-    // Render Debts
-    const debtList = document.getElementById('debts-list');
-    debtList.innerHTML = '';
-    let totalDebt = 0;
+    // Debts
     data.debt.forEach(item => {
         totalDebt += item.amount;
-        debtList.innerHTML += `<div class="debt-row"><span>${item.name}</span><strong>£${item.amount.toLocaleString()}</strong></div>`;
+        lists.debt.innerHTML += `
+            <div class="debt-item animate-pop">
+                <div>
+                    <span style="font-size:1.2rem">${getEmoji(item.name)}</span>
+                    <strong>${item.name}</strong>
+                </div>
+                <p>£${item.amount.toLocaleString()}</p>
+            </div>`;
     });
 
-    // Render Savings
-    const saveList = document.getElementById('savings-list');
-    saveList.innerHTML = '';
-    let totalSave = 0;
+    // Savings (with Progress Bars)
     data.savings.forEach(item => {
         totalSave += item.amount;
-        saveList.innerHTML += `<div class="tile"><h4>${item.name}</h4><p>£${item.amount.toLocaleString()}</p></div>`;
+        let percent = item.goal > 0 ? Math.min((item.amount / item.goal) * 100, 100) : 0;
+        lists.savings.innerHTML += `
+            <div class="tile animate-pop" style="grid-column: span 2;">
+                <div style="display:flex; justify-content:space-between">
+                    <span>${getEmoji(item.name)} <strong>${item.name}</strong></span>
+                    <span>£${item.amount} / £${item.goal}</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-fill" style="width: ${percent}%"></div>
+                </div>
+            </div>`;
     });
 
-    // Update Totals
-    document.getElementById('total-debt').innerText = `Total Owed: £${totalDebt.toLocaleString()}`;
-    document.getElementById('total-savings').innerText = `Total Saved: £${totalSave.toLocaleString()}`;
-    document.getElementById('net-worth').innerText = `Net Worth: £${(totalAcc + totalSave - totalDebt).toLocaleString()}`;
+    // Totals
+    document.getElementById('net-worth-val').innerText = `£${(totalAcc + totalSave - totalDebt).toLocaleString()}`;
 }
 
-function clearAllData() {
-    if(confirm("Are you sure you want to delete everything?")) {
-        localStorage.clear();
-        location.reload();
-    }
+// 7. FUN STUFF: CONFETTI
+function triggerConfetti() {
+    const end = Date.now() + 2 * 1000;
+    (function frame() {
+        console.log("🎉 CONFETTI! 🎉"); // Placeholder for actual effect
+        if (Date.now() < end) requestAnimationFrame(frame);
+    }());
 }
 
-// Initial Run
-renderAll();
+render();
