@@ -11,19 +11,11 @@
 
     <main id="app-content">
         <section id="home-page" class="page active">
-            
             <div class="section-title" style="margin-top: 20px;">
                 <h3>Bank Accounts</h3>
                 <button class="add-btn" onclick="openModal('account')">+</button>
             </div>
             <div id="accounts-list" class="grid"></div>
-
-            <div class="section-title" style="margin-top: 30px;">
-                <h3>Monthly Bills</h3>
-                <button class="add-btn" onclick="openModal('bill')">+</button>
-            </div>
-            <div id="bills-list" style="padding: 0 20px;"></div>
-
         </section>
 
         <section id="debt-page" class="page">
@@ -42,6 +34,14 @@
             <div id="savings-list" class="grid"></div>
         </section>
 
+        <section id="bills-page" class="page">
+            <div class="section-title" style="margin-top: 20px;">
+                <h3>Monthly Bills</h3>
+                <button class="add-btn" onclick="openModal('bill')">+</button>
+            </div>
+            <div id="bills-list" style="padding: 0 20px;"></div>
+        </section>
+
         <section id="admin-page" class="page">
             <div class="section-title" style="margin-top: 20px;">
                 <h3>Settings</h3>
@@ -54,6 +54,7 @@
         <button class="nav-btn" onclick="switchTab('debt-page', this)"><span>📉</span>Debt</button>
         <button class="nav-btn" onclick="switchTab('savings-page', this)"><span>💎</span>Savings</button>
         <button class="nav-btn active-btn" onclick="switchTab('home-page', this)"><span>🏠</span>Home</button>
+        <button class="nav-btn" onclick="switchTab('bills-page', this)"><span>📅</span>Bills</button>
         <button class="nav-btn" onclick="switchTab('admin-page', this)"><span>⚙️</span>Admin</button>
     </nav>
 
