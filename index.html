@@ -22,7 +22,6 @@
         function CommandCentre() {
             const [selectedAccount, setSelectedAccount] = useState('');
             const [chargeAmount, setChargeAmount] = useState('');
-            // New state to hold our list of transactions
             const [transactions, setTransactions] = useState([]);
 
             const handleAccountChange = (e) => {
@@ -42,7 +41,7 @@
                 
                 // Create a new transaction record
                 const newTransaction = {
-                    id: Date.now(), // Unique ID for React
+                    id: Date.now(),
                     account: selectedAccount,
                     amount: parseFloat(chargeAmount).toFixed(2),
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -54,6 +53,9 @@
                 // Clear the input
                 setChargeAmount('');
             };
+
+            // Calculate the running total of all transactions
+            const sessionTotal = transactions.reduce((sum, tx) => sum + parseFloat(tx.amount), 0).toFixed(2);
 
             return (
                 <div className="flex flex-col gap-6">
@@ -122,21 +124,29 @@
                         </div>
                     </div>
 
-                    {/* Session History Card (Only shows if there are transactions) */}
+                    {/* Session History Card */}
                     {transactions.length > 0 && (
                         <div className="p-6 bg-white rounded-2xl shadow-md border border-gray-100 transition-all duration-500 animate-fade-in-up">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Session History</h3>
-                            <ul className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                            
+                            {/* Scrollable List of Transactions */}
+                            <ul className="space-y-3 max-h-60 overflow-y-auto pr-2 mb-4">
                                 {transactions.map((tx) => (
                                     <li key={tx.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
                                         <div className="flex flex-col">
                                             <span className="text-sm font-medium text-gray-800">{tx.account}</span>
                                             <span className="text-xs text-gray-400">{tx.time}</span>
                                         </div>
-                                        <span className="text-base font-bold text-gray-900">£{tx.amount}</span>
+                                        <span className="text-base font-semibold text-gray-700">£{tx.amount}</span>
                                     </li>
                                 ))}
                             </ul>
+
+                            {/* Session Total Footer */}
+                            <div className="flex justify-between items-center pt-4 border-t border-gray-200 mt-2">
+                                <span className="text-sm font-bold text-gray-800 uppercase tracking-wide">Session Total</span>
+                                <span className="text-xl font-black text-blue-600">£{sessionTotal}</span>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -154,6 +164,21 @@
         }
         .animate-fade-in-up {
             animation: fadeInUp 0.4s ease-out forwards;
+        }
+        /* Custom scrollbar for the history list to keep it looking clean */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
     </style>
 </body>
