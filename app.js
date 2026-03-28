@@ -1,70 +1,82 @@
-/* General App Reset */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+let data = JSON.parse(localStorage.getItem('financeData')) || {
+    account: [],
+    debt: [],
+    savings: []
+};
+
+let currentMode = '';
+
+function switchTab(pageId, clickedButton) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
+    document.getElementById(pageId).classList.add('active');
+    clickedButton.classList.add('active-btn');
 }
 
-body {
-    background-color: #f4f4f9;
-    color: #333;
-    /* Prevents the page from bouncing on mobile */
-    overscroll-behavior-y: none; 
+function openModal(mode) {
+    currentMode = mode;
+    document.getElementById('modal-title').innerText = "Add " + mode.charAt(0).toUpperCase() + mode.slice(1);
+    document.getElementById('input-modal').style.display = 'flex';
 }
 
-/* Page Setup */
-.page {
-    display: none; /* Hides all pages by default */
-    padding: 20px;
-    padding-bottom: 80px; /* Leaves room for the nav bar */
+function closeModal() {
+    document.getElementById('input-modal').style.display = 'none';
+    document.getElementById('item-name').value = '';
+    document.getElementById('item-amount').value = '';
 }
 
-.page.active {
-    display: block; /* Only shows the active page */
-    animation: fadeIn 0.3s ease;
+function saveItem() {
+    const name = document.getElementById('item-name').value;
+    const amount = parseFloat(document.getElementById('item-amount').value);
+
+    if (name && amount) {
+        data[currentMode].push({ name, amount });
+        localStorage.setItem('financeData', JSON.stringify(data));
+        renderAll();
+        closeModal();
+    }
 }
 
-/* Simple Animation */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+function renderAll() {
+    // Render Accounts (Home)
+    const accList = document.getElementById('accounts-list');
+    accList.innerHTML = '';
+    let totalAcc = 0;
+    data.account.forEach(item => {
+        totalAcc += item.amount;
+        accList.innerHTML += `<div class="tile"><h4>${item.name}</h4><p>£${item.amount.toLocaleString()}</p></div>`;
+    });
+
+    // Render Debts
+    const debtList = document.getElementById('debts-list');
+    debtList.innerHTML = '';
+    let totalDebt = 0;
+    data.debt.forEach(item => {
+        totalDebt += item.amount;
+        debtList.innerHTML += `<div class="debt-row"><span>${item.name}</span><strong>£${item.amount.toLocaleString()}</strong></div>`;
+    });
+
+    // Render Savings
+    const saveList = document.getElementById('savings-list');
+    saveList.innerHTML = '';
+    let totalSave = 0;
+    data.savings.forEach(item => {
+        totalSave += item.amount;
+        saveList.innerHTML += `<div class="tile"><h4>${item.name}</h4><p>£${item.amount.toLocaleString()}</p></div>`;
+    });
+
+    // Update Totals
+    document.getElementById('total-debt').innerText = `Total Owed: £${totalDebt.toLocaleString()}`;
+    document.getElementById('total-savings').innerText = `Total Saved: £${totalSave.toLocaleString()}`;
+    document.getElementById('net-worth').innerText = `Net Worth: £${(totalAcc + totalSave - totalDebt).toLocaleString()}`;
 }
 
-/* Basic Card Style for Home */
-.card {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    margin-bottom: 15px;
-    text-align: center;
+function clearAllData() {
+    if(confirm("Are you sure you want to delete everything?")) {
+        localStorage.clear();
+        location.reload();
+    }
 }
 
-/* Bottom Navigation Bar */
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    background-color: #ffffff;
-    display: flex;
-    justify-content: space-around;
-    padding: 15px 0;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-}
-
-.nav-btn {
-    background: none;
-    border: none;
-    color: #888;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    flex: 1;
-}
-
-.nav-btn.active-btn {
-    color: #007bff; /* Blue for active tab */
-}
+// Initial Run
+renderAll();
