@@ -1,42 +1,163 @@
 :root {
-    --primary: #007bff;
-    --danger: #ff4757;
-    --success: #2ed573;
-    --bg: #f8f9fa;
-    --card-bg: #ffffff;
+    --bg: #0f172a;
+    --card: rgba(255, 255, 255, 0.1);
+    --primary: #8b5cf6; /* Vivid Purple */
+    --success: #10b981; /* Emerald Green */
+    --danger: #ef4444; /* Rose Red */
+    --text: #f8fafc;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; }
 
-body { background-color: var(--bg); color: #2f3542; padding-bottom: 80px; }
+body { 
+    background: var(--bg); 
+    color: var(--text); 
+    padding-bottom: 100px;
+    overflow-x: hidden;
+}
 
-.header { padding: 30px 20px; background: var(--primary); color: white; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; margin-bottom: 20px; }
+/* --- ANIMATIONS --- */
+@keyframes popIn {
+    0% { transform: scale(0.9); opacity: 0; }
+    70% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+}
 
-.section-title { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 15px; }
+@keyframes squish {
+    50% { transform: scale(0.95); }
+}
 
-.grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
+.animate-pop { animation: popIn 0.4s ease-out forwards; }
 
-/* Tile Styling */
-.tile { background: var(--card-bg); padding: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: left; position: relative; }
-.tile h4 { font-size: 14px; color: #747d8c; margin-bottom: 5px; }
-.tile p { font-size: 18px; font-weight: bold; }
+/* --- HEADER --- */
+.header {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    padding: 40px 20px;
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
 
-/* Debt Row Styling */
-.debt-row { background: white; margin: 10px 20px; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; border-left: 5px solid var(--danger); }
+.header h1 { font-size: 1.2rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+.header h2 { font-size: 2.5rem; margin-top: 5px; }
 
-/* Buttons */
-.add-btn { background: var(--primary); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 20px; cursor: pointer; }
-.danger-btn { background: var(--danger); color: white; border: none; padding: 15px; border-radius: 10px; margin: 20px; width: calc(100% - 40px); }
+/* --- TILES & CARDS --- */
+.section-title { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
 
-/* Navigation */
-.page { display: none; }
-.page.active { display: block; }
-.bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #ddd; }
-.nav-btn { background: none; border: none; color: #a4b0be; font-weight: bold; }
-.nav-btn.active-btn { color: var(--primary); }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
 
-/* Modal */
-.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
-.modal-content { background: white; padding: 25px; border-radius: 20px; width: 80%; max-width: 400px; }
-.modal-content input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+.tile {
+    background: var(--card);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 24px;
+    transition: transform 0.2s;
+}
+
+.tile:active { animation: squish 0.2s ease; }
+
+.tile-emoji { font-size: 2rem; margin-bottom: 10px; display: block; }
+
+/* --- PROGRESS BARS --- */
+.progress-container {
+    background: rgba(255,255,255,0.1);
+    height: 8px;
+    border-radius: 10px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    background: var(--success);
+    height: 100%;
+    width: 0%;
+    transition: width 1s ease-in-out;
+}
+
+/* --- DEBT ROWS --- */
+.debt-item {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    margin: 10px 20px;
+    padding: 20px;
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* --- NAV BAR (Glassmorphism) --- */
+.bottom-nav {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 35px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.7rem;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: 0.3s;
+}
+
+.nav-btn span { font-size: 1.4rem; margin-bottom: 4px; }
+
+.nav-btn.active-btn { color: #fff; transform: translateY(-5px); }
+
+/* --- MODAL --- */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(5px);
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background: #1e293b;
+    width: 90%;
+    padding: 30px;
+    border-radius: 30px;
+}
+
+input {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 12px;
+    border: none;
+    background: #334155;
+    color: white;
+    font-size: 1rem;
+}
+
+.btn-save {
+    background: var(--primary);
+    color: white;
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    font-weight: bold;
+    margin-top: 10px;
+}
