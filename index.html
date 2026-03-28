@@ -11,43 +11,39 @@
 
     <main id="app-content">
         <section id="home-page" class="page active">
-            <div class="section-title">
-                <h3>Bank Accounts</h3>
-                <button class="add-btn" onclick="openModal('account')">+</button>
-            </div>
+            <div class="section-title"><h3>Bank Accounts</h3></div>
             <div id="accounts-list" class="grid"></div>
         </section>
 
         <section id="debt-page" class="page">
-            <div class="section-title">
-                <h3>Liabilities</h3>
-                <button class="add-btn" onclick="openModal('debt')">+</button>
-            </div>
+            <div class="section-title"><h3>Debt</h3></div>
             <div id="debts-list" class="grid"></div>
         </section>
 
         <section id="savings-page" class="page">
-            <div class="section-title">
-                <h3>Saving Pots</h3>
-                <button class="add-btn" onclick="openModal('savings')">+</button>
-            </div>
+            <div class="section-title"><h3>Saving Pots</h3></div>
             <div id="savings-list" class="grid"></div>
         </section>
 
         <section id="bills-page" class="page">
-            <div class="section-title">
-                <h3>Monthly Bills</h3>
-                <button class="add-btn" onclick="openModal('bill')">+</button>
-            </div>
+            <div class="section-title"><h3>Monthly Bills</h3></div>
             <div id="bills-list" style="padding: 0 20px;"></div>
         </section>
 
         <section id="admin-page" class="page">
-            <div class="section-title">
-                <h3>Settings</h3>
-            </div>
-            <div style="padding: 20px;">
-                <p style="color: #94a3b8; margin-bottom: 20px;">Manage your data and app preferences here.</p>
+            <div class="section-title"><h3>Admin Hub</h3></div>
+            <div style="padding: 0 20px 20px 20px;">
+                <p style="color: #94a3b8; margin-bottom: 20px; font-size: 0.9rem;">Add new items to your dashboard:</p>
+                
+                <div class="grid" style="margin-bottom: 30px;">
+                    <button class="admin-btn" onclick="openModal('account')"><span>🏦</span> Account</button>
+                    <button class="admin-btn" onclick="openModal('debt')"><span>📉</span> Debt</button>
+                    <button class="admin-btn" onclick="openModal('savings')"><span>💎</span> Savings</button>
+                    <button class="admin-btn" onclick="openModal('bill')"><span>📅</span> Bill</button>
+                </div>
+
+                <hr style="border-top: 1px solid rgba(255,255,255,0.1); border-bottom: none; margin-bottom: 20px;">
+                <p style="color: #94a3b8; margin-bottom: 15px; font-size: 0.9rem;">Danger Zone:</p>
                 <button class="danger-btn" onclick="clearAllData()">Reset All Data</button>
             </div>
         </section>
@@ -63,11 +59,32 @@
 
     <div id="input-modal" class="modal">
         <div class="modal-content">
-            <h2 id="modal-title" style="margin-bottom: 10px;">Add Item</h2>
+            <h2 id="modal-title" style="margin-bottom: 15px;">Add Item</h2>
+            
             <input type="text" id="item-name" placeholder="Name (e.g. Barclays, Gas)">
             <input type="number" id="item-amount" placeholder="Current Balance / Amount (£)">
+            
             <input type="number" id="item-date" placeholder="Day of Month (1-31)" style="display:none" min="1" max="31">
-            <button class="btn-save" onclick="saveItem()">Save 🚀</button>
+            
+            <select id="debt-type" style="display:none" onchange="checkDuration('debt')">
+                <option value="" disabled selected>Select Debt Type</option>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Bank Loan">Bank Loan</option>
+                <option value="PayPal">PayPal</option>
+                <option value="Short Term Debt">Short Term Debt</option>
+            </select>
+
+            <select id="bill-type" style="display:none" onchange="checkDuration('bill')">
+                <option value="" disabled selected>Select Bill Type</option>
+                <option value="Long Term">Long Term</option>
+                <option value="Short Term">Short Term</option>
+            </select>
+
+            <select id="item-duration" style="display:none">
+                <option value="" disabled selected>Select Duration</option>
+                </select>
+
+            <button class="btn-save" style="margin-top: 15px;" onclick="saveItem()">Save 🚀</button>
             <button onclick="closeModal('input-modal')" class="btn-cancel">Cancel</button>
         </div>
     </div>
