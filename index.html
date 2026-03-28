@@ -21,7 +21,6 @@
             const [selectedAccount, setSelectedAccount] = useState('');
             const [chargeAmount, setChargeAmount] = useState('');
             
-            // Bulletproof Local Storage Check
             const [transactions, setTransactions] = useState(() => {
                 try {
                     const savedData = localStorage.getItem('commandCentreData');
@@ -96,39 +95,38 @@
                             </div>
                         </div>
 
-                        <div 
-                            className={`transition-all duration-500 ease-in-out overflow-hidden ${
-                                selectedAccount === 'Credit Card' ? 'max-h-48 opacity-100 mt-4' : 'max-h-0 opacity-0 mt-0'
-                            }`}
-                        >
-                            <div className="mb-5">
-                                <label htmlFor="charge-amount" className="block text-sm font-medium text-gray-500 mb-2">
-                                    Charge Amount
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <span className="text-gray-500 font-medium sm:text-sm">£</span>
+                        {/* THIS IS THE FIX: The section only renders if Credit Card is selected */}
+                        {selectedAccount === 'Credit Card' && (
+                            <div className="mt-4 animate-fade-in-up">
+                                <div className="mb-5">
+                                    <label htmlFor="charge-amount" className="block text-sm font-medium text-gray-500 mb-2">
+                                        Charge Amount
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <span className="text-gray-500 font-medium sm:text-sm">£</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            id="charge-amount"
+                                            value={chargeAmount}
+                                            onChange={handleAmountChange}
+                                            placeholder="0.00"
+                                            step="0.01"
+                                            min="0"
+                                            className="block w-full pl-8 pr-4 py-3 text-base border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent sm:text-sm rounded-xl bg-gray-50 transition shadow-sm hover:bg-gray-100"
+                                        />
                                     </div>
-                                    <input
-                                        type="number"
-                                        id="charge-amount"
-                                        value={chargeAmount}
-                                        onChange={handleAmountChange}
-                                        placeholder="0.00"
-                                        step="0.01"
-                                        min="0"
-                                        className="block w-full pl-8 pr-4 py-3 text-base border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent sm:text-sm rounded-xl bg-gray-50 transition shadow-sm hover:bg-gray-100"
-                                    />
                                 </div>
-                            </div>
 
-                            <button
-                                onClick={handleLogCharge}
-                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 transition-all duration-300 transform hover:-translate-y-0.5"
-                            >
-                                Log Credit Card Charge
-                            </button>
-                        </div>
+                                <button
+                                    onClick={handleLogCharge}
+                                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 transition-all duration-300 transform hover:-translate-y-0.5"
+                                >
+                                    Log Credit Card Charge
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {transactions.length > 0 && (
