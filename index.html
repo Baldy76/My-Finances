@@ -3,63 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Finances</title>
+    <title>Finance Dashboard</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <div class="app-container">
-        <header>
-            <h1>My Finances</h1>
-            <div class="balance-card">
+
+    <main id="app-content">
+        
+        <section id="debt-page" class="page">
+            <h2>Debt Management</h2>
+            <p>Track your credit cards, loans, and Klarna here.</p>
+        </section>
+
+        <section id="savings-page" class="page">
+            <h2>Savings Pots</h2>
+            <p>Your saving goals and emergency funds.</p>
+        </section>
+
+        <section id="home-page" class="page active">
+            <h2>Dashboard</h2>
+            <div class="card">
                 <h3>Total Balance</h3>
-                <h2 id="total-balance">£0.00</h2>
-                <div class="summary">
-                    <div class="income">
-                        <h4>Income</h4>
-                        <p id="total-income" class="money plus">+£0.00</p>
-                    </div>
-                    <div class="expense">
-                        <h4>Expenses</h4>
-                        <p id="total-expense" class="money minus">-£0.00</p>
-                    </div>
-                </div>
+                <h2>£0.00</h2>
             </div>
-        </header>
-
-        <section class="form-section">
-            <h3>Add New Entry</h3>
-            <form id="transaction-form">
-                <div class="form-control">
-                    <label for="type">Transaction Type</label>
-                    <select id="type" required>
-                        <option value="income">Income (Salary, Refunds)</option>
-                        <option value="expense">Expense (Purchases, Direct Debits)</option>
-                    </select>
-                </div>
-                
-                <div class="form-control">
-                    <label for="text">Description (e.g., Tesco, Salary, Netflix)</label>
-                    <input type="text" id="text" placeholder="Enter description..." required />
-                </div>
-
-                <div class="form-control">
-                    <label for="amount">Amount (£)</label>
-                    <input type="number" id="amount" placeholder="0.00" step="0.01" min="0.01" required />
-                </div>
-
-                <button type="submit" class="btn">Add Transaction</button>
-            </form>
+            <p>Your bank accounts will go here.</p>
         </section>
 
-        <section class="history-section">
-            <div class="history-header">
-                <h3>Recent Transactions</h3>
-                <button id="clear-all" class="btn-clear">Clear All</button>
-            </div>
-            <ul id="transaction-list" class="list">
-                </ul>
+        <section id="admin-page" class="page">
+            <h2>Admin Hub</h2>
+            <p>Settings, profile, and account connections.</p>
         </section>
-    </div>
+
+    </main>
+
+    <nav class="bottom-nav">
+        <button class="nav-btn" onclick="switchTab('debt-page', this)">Debt</button>
+        <button class="nav-btn" onclick="switchTab('savings-page', this)">Savings</button>
+        <button class="nav-btn active-btn" onclick="switchTab('home-page', this)">Home</button>
+        <button class="nav-btn" onclick="switchTab('admin-page', this)">Admin</button>
+    </nav>
 
     <script src="app.js"></script>
 </body>
