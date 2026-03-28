@@ -1,130 +1,70 @@
-// Connect to our HTML elements
-const balance = document.getElementById('total-balance');
-const money_plus = document.getElementById('total-income');
-const money_minus = document.getElementById('total-expense');
-const list = document.getElementById('transaction-list');
-const form = document.getElementById('transaction-form');
-const typeInput = document.getElementById('type');
-const textInput = document.getElementById('text');
-const amountInput = document.getElementById('amount');
-const clearBtn = document.getElementById('clear-all');
-
-// Pull saved transactions from Local Storage (Browser Memory)
-// It saves as a JSON string, so we parse it back into a JavaScript array
-const localStorageTransactions = JSON.parse(localStorage.getItem('transactions'));
-
-// If there's data, use it. If not, start with an empty array.
-let transactions = localStorage.getItem('transactions') !== null ? localStorageTransactions : [];
-
-// Add a new transaction
-function addTransaction(e) {
-    e.preventDefault();
-
-    const type = typeInput.value;
-    let amount = parseFloat(amountInput.value);
-
-    // If it's an expense, make the number negative for the math
-    if (type === 'expense') {
-        amount = -Math.abs(amount);
-    }
-
-    const transaction = {
-        id: generateID(),
-        text: textInput.value,
-        amount: amount,
-        date: new Date().toLocaleDateString()
-    };
-
-    transactions.push(transaction);
-
-    addTransactionDOM(transaction);
-    updateValues();
-    updateLocalStorage();
-
-    // Clear the form inputs
-    textInput.value = '';
-    amountInput.value = '';
+/* General App Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-// Generate random ID for each transaction
-function generateID() {
-    return Math.floor(Math.random() * 100000000);
+body {
+    background-color: #f4f4f9;
+    color: #333;
+    /* Prevents the page from bouncing on mobile */
+    overscroll-behavior-y: none; 
 }
 
-// Add transactions to DOM list
-function addTransactionDOM(transaction) {
-    // Determine if it's income or expense to assign the correct CSS class
-    const sign = transaction.amount < 0 ? '-' : '+';
-    const itemClass = transaction.amount < 0 ? 'minus' : 'plus';
-
-    const li = document.createElement('li');
-    li.classList.add(itemClass);
-
-    li.innerHTML = `
-        <div>
-            <strong>${transaction.text}</strong> <br>
-            <small style="color: #777; font-size: 11px;">${transaction.date}</small>
-        </div>
-        <div>
-            <span>${sign}£${Math.abs(transaction.amount).toFixed(2)}</span>
-            <button class="delete-btn" onclick="removeTransaction(${transaction.id})">X</button>
-        </div>
-    `;
-
-    // Add to the top of the list
-    list.prepend(li);
+/* Page Setup */
+.page {
+    display: none; /* Hides all pages by default */
+    padding: 20px;
+    padding-bottom: 80px; /* Leaves room for the nav bar */
 }
 
-// Update the balance, income, and expense numbers
-function updateValues() {
-    const amounts = transactions.map(transaction => transaction.amount);
-
-    const total = amounts.reduce((acc, item) => (acc += item), 0).toFixed(2);
-
-    const income = amounts
-        .filter(item => item > 0)
-        .reduce((acc, item) => (acc += item), 0)
-        .toFixed(2);
-
-    const expense = (
-        amounts.filter(item => item < 0).reduce((acc, item) => (acc += item), 0) * -1
-    ).toFixed(2);
-
-    balance.innerText = `£${total}`;
-    money_plus.innerText = `+£${income}`;
-    money_minus.innerText = `-£${expense}`;
+.page.active {
+    display: block; /* Only shows the active page */
+    animation: fadeIn 0.3s ease;
 }
 
-// Remove transaction by ID
-window.removeTransaction = function(id) {
-    transactions = transactions.filter(transaction => transaction.id !== id);
-    updateLocalStorage();
-    init();
+/* Simple Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-// Clear all transactions
-clearBtn.addEventListener('click', () => {
-    if(confirm("Are you sure you want to delete all history?")) {
-        transactions = [];
-        updateLocalStorage();
-        init();
-    }
-});
-
-// Save data to Local Storage as JSON
-function updateLocalStorage() {
-    localStorage.setItem('transactions', JSON.stringify(transactions));
+/* Basic Card Style for Home */
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 15px;
+    text-align: center;
 }
 
-// Start the app
-function init() {
-    list.innerHTML = '';
-    transactions.forEach(addTransactionDOM);
-    updateValues();
+/* Bottom Navigation Bar */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: space-around;
+    padding: 15px 0;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
 }
 
-// Listen for form submit
-form.addEventListener('submit', addTransaction);
+.nav-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    flex: 1;
+}
 
-// Run the app when the page loads
-init();
+.nav-btn.active-btn {
+    color: #007bff; /* Blue for active tab */
+}
