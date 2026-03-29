@@ -2,128 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Glow Finance PWA</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Finances</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="app-container">
+        <nav class="top-nav">
+            <button id="nav-home" class="active">Home</button>
+            <button id="nav-admin">Admin</button>
+        </nav>
 
-    <main id="app-content">
-        <section id="home-page" class="page active">
-            <div class="section-title" style="padding-top: 20px;"><h3>Expected Income</h3></div>
-            <div id="salaries-list" style="padding: 0 20px 20px 20px;"></div>
+        <main id="view-home" class="view active-view">
+            <header>
+                <h1>My Accounts</h1>
+                <p>Click an account to simulate a transaction.</p>
+            </header>
+            <div id="accounts-container" class="accounts-grid">
+                </div>
+        </main>
 
-            <div class="section-title"><h3>Bank Accounts</h3></div>
-            <div id="accounts-list" class="grid"></div>
-        </section>
-
-        <section id="debt-page" class="page">
-            <div class="section-title"><h3>Debt</h3></div>
-            <div id="debts-list" class="grid"></div>
-        </section>
-
-        <section id="savings-page" class="page">
-            <div class="section-title"><h3>Saving Pots</h3></div>
-            <div id="savings-list" class="grid"></div>
-        </section>
-
-        <section id="bills-page" class="page">
-            <div class="section-title"><h3>Monthly Bills</h3></div>
-            <div id="bills-list" style="padding: 0 20px;"></div>
-        </section>
-
-        <section id="admin-page" class="page">
-            <div class="section-title"><h3>Admin Hub</h3></div>
-            <div style="padding: 0 20px 20px 20px;">
-                <p style="color: #94a3b8; margin-bottom: 20px; font-size: 0.9rem;">Add new items to your dashboard:</p>
+        <main id="view-admin" class="view">
+            <header>
+                <h1>Admin Dashboard</h1>
+                <p>Add a new bank account to your portfolio.</p>
+            </header>
+            
+            <form id="add-account-form" class="admin-form">
+                <div class="form-group">
+                    <label for="bankName">Bank Name</label>
+                    <input type="text" id="bankName" required placeholder="e.g. Barclays">
+                </div>
                 
-                <div class="grid" style="margin-bottom: 30px;">
-                    <button class="admin-btn" onclick="openModal('account')"><span>🏦</span> Account</button>
-                    <button class="admin-btn" onclick="openModal('salary')"><span>💸</span> Salary</button>
-                    <button class="admin-btn" onclick="openModal('debt')"><span>📉</span> Debt</button>
-                    <button class="admin-btn" onclick="openModal('savings')"><span>💎</span> Savings</button>
-                    <button class="admin-btn" onclick="openModal('bill')"><span>📅</span> Bill</button>
+                <div class="form-group">
+                    <label for="initialBalance">Current Balance (£)</label>
+                    <input type="number" id="initialBalance" required placeholder="100" step="0.01">
                 </div>
 
-                <hr style="border-top: 1px solid rgba(255,255,255,0.1); border-bottom: none; margin-bottom: 20px;">
-                <p style="color: #94a3b8; margin-bottom: 15px; font-size: 0.9rem;">Danger Zone:</p>
-                <button class="danger-btn" onclick="clearAllData()">Reset All Data</button>
+                <div class="form-group">
+                    <label for="odLimit">Overdraft Limit (£) - Optional</label>
+                    <input type="number" id="odLimit" placeholder="500" min="0" step="0.01">
+                </div>
+
+                <button type="submit" class="btn-submit">Add Account</button>
+            </form>
+
+            <div class="admin-footer">
+                <p><strong>Version Control:</strong> v2.0.0 (Clean Slate, UI Upgrades & Local Storage)</p>
             </div>
-        </section>
-    </main>
-
-    <nav class="bottom-nav">
-        <button class="nav-btn" onclick="switchTab('debt-page', this)"><span>📉</span>Debt</button>
-        <button class="nav-btn" onclick="switchTab('savings-page', this)"><span>💎</span>Savings</button>
-        <button class="nav-btn active-btn" onclick="switchTab('home-page', this)"><span>🏠</span>Home</button>
-        <button class="nav-btn" onclick="switchTab('bills-page', this)"><span>📅</span>Bills</button>
-        <button class="nav-btn" onclick="switchTab('admin-page', this)"><span>⚙️</span>Admin</button>
-    </nav>
-
-    <div id="input-modal" class="modal">
-        <div class="modal-content">
-            <h2 id="modal-title" style="margin-bottom: 15px;">Add Item</h2>
-            
-            <input type="text" id="item-name" placeholder="Name (e.g. Barclays, Gas, Salary)">
-            <input type="number" id="item-amount" placeholder="Current Balance / Amount (£)" step="0.01">
-            
-            <input type="number" id="item-overdraft" placeholder="Overdraft Limit (£) - Optional" style="display:none" min="0">
-            <input type="number" id="item-date" placeholder="Day of Month (1-31)" style="display:none" min="1" max="31">
-            
-            <select id="salary-account" style="display:none">
-                <option value="" disabled selected>Select Destination Account</option>
-            </select>
-            
-            <select id="salary-date-type" style="display:none" onchange="toggleSalaryDate()">
-                <option value="" disabled selected>When do you get paid?</option>
-                <option value="last">Last Working Day of the Month</option>
-                <option value="specific">On a Specific Date</option>
-            </select>
-
-            <select id="debt-type" style="display:none" onchange="checkDuration('debt')">
-                <option value="" disabled selected>Select Debt Type</option>
-                <option value="Credit Card">Credit Card</option>
-                <option value="Bank Loan">Bank Loan</option>
-                <option value="PayPal">PayPal</option>
-                <option value="Short Term Debt">Short Term Debt</option>
-            </select>
-
-            <select id="bill-type" style="display:none" onchange="checkDuration('bill')">
-                <option value="" disabled selected>Select Bill Type</option>
-                <option value="Long Term">Long Term</option>
-                <option value="Short Term">Short Term</option>
-            </select>
-
-            <select id="item-duration" style="display:none">
-                <option value="" disabled selected>Select Duration</option>
-            </select>
-
-            <button class="btn-save" style="margin-top: 15px;" onclick="saveItem()">Save 🚀</button>
-            <button onclick="closeModal('input-modal')" class="btn-cancel">Cancel</button>
-        </div>
-    </div>
-
-    <div id="account-modal" class="modal">
-        <div class="modal-content" style="height: 80vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 id="acc-modal-title">Account</h2>
-                <button onclick="editCurrentAccount()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;">✏️ Edit</button>
-            </div>
-            
-            <h1 id="acc-modal-balance" style="margin: 10px 0; color: var(--success);">£0.00</h1>
-            
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <input type="number" id="tx-amount" placeholder="Amount (£)" style="margin:0;" min="0.01" step="0.01">
-                <button class="btn-save" style="margin:0; width: 70px;" onclick="addTransaction('in')">In</button>
-                <button class="danger-btn" style="margin:0; width: 70px; padding: 0;" onclick="addTransaction('out')">Out</button>
-            </div>
-
-            <h3 style="margin-bottom: 15px; color: #94a3b8;">Last 20 Transactions</h3>
-            <div id="transactions-list"></div>
-            
-            <button onclick="closeModal('account-modal')" class="btn-cancel" style="margin-top: 20px;">Close</button>
-        </div>
+        </main>
     </div>
 
     <script src="app.js"></script>
