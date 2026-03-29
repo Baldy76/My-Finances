@@ -4,20 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finance iOS</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div class="app-container">
-        <div id="view-home" class="view active-view"><div class="header">Summary</div><div id="home-content"></div></div>
-        <div id="view-cards" class="view"><div class="header">Cards</div><p class="placeholder-text">Coming soon.</p></div>
-        <div id="view-bills" class="view"><div class="header">Bills</div><p class="placeholder-text">Coming soon.</p></div>
-        <div id="view-loans" class="view"><div class="header">Loans</div><p class="placeholder-text">Coming soon.</p></div>
+        <div id="view-home" class="view active-view">
+            <div class="header">Summary</div>
+            <div id="home-content"></div>
+        </div>
+
+        <div id="view-cards" class="view">
+            <div class="header">Cards</div>
+            <p class="placeholder-text">Detailed analytics coming soon.</p>
+        </div>
+        <div id="view-bills" class="view">
+            <div class="header">Bills</div>
+            <p class="placeholder-text">Calendar view coming soon.</p>
+        </div>
+        <div id="view-loans" class="view">
+            <div class="header">Loans</div>
+            <p class="placeholder-text">Loan status coming soon.</p>
+        </div>
+
         <div id="view-admin" class="view">
             <div class="header">Admin</div>
             <div class="settings-group">
-                <div class="settings-row"><div class="row-label"><span>✨ Dark Mode</span></div><label class="ios-toggle"><input type="checkbox" id="themeToggle"><span class="slider"></span></label></div>
+                <div class="settings-row">
+                    <div class="row-label"><span>✨ Dark Mode</span></div>
+                    <label class="ios-toggle">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </div>
+
             <div class="group-title">Add New Item</div>
             <div class="settings-group">
                 <div class="segmented-control">
@@ -33,16 +58,18 @@
                         <input type="number" id="odLimit" placeholder="Overdraft Limit (£)" step="0.01">
                     </div>
                     <div id="bill-only-fields" style="display:none;">
-                        <input type="number" id="billDay" placeholder="Day (1-31)">
+                        <input type="number" id="billDay" placeholder="Day Due (1-31)">
                     </div>
-                    <button type="submit" class="ios-btn">Save</button>
+                    <button type="submit" class="ios-btn">Save to Dashboard</button>
                 </form>
             </div>
+
             <div class="admin-footer">
                 <button id="sync-updates-btn" class="sync-btn">Sync for Updates</button>
-                <div class="version-control">App Version 2.6.0</div>
+                <div class="version-control">App Version 2.6.5 (Build 1102)</div>
             </div>
         </div>
+
         <nav class="tab-bar">
             <div id="nav-home" class="tab-item active"><span>🏠</span><label>Home</label></div>
             <div id="nav-cards" class="tab-item"><span>💳</span><label>Cards</label></div>
