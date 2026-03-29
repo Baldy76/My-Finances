@@ -32,11 +32,13 @@
             
             <div class="group-title">Recent Transactions</div>
             <div class="settings-group" id="transaction-list"></div>
+            <button class="fab" onclick="openTransactionModal()">+</button>
         </div>
 
         <div id="view-cards" class="view">
             <div class="header">Cards</div>
             <div id="cards-content"></div>
+            <button class="fab" onclick="openTransactionModal()">+</button>
         </div>
 
         <div id="view-bills" class="view">
@@ -124,7 +126,7 @@
 
             <div class="admin-footer">
                 <button id="sync-updates-btn" class="sync-btn">Sync for Updates</button>
-                <div class="version-control">App Version 3.7.0 (Build 1800)</div>
+                <div class="version-control">App Version 3.8.0 (Build 1850)</div>
             </div>
         </div>
 
@@ -143,18 +145,19 @@
             <form id="transaction-form" class="admin-form" style="padding-top: 5px;">
                 
                 <select id="txAccount" class="ios-select" style="margin-bottom: 12px;" required>
-                    <option value="" disabled selected>Select Account</option>
+                    <option value="" disabled selected>Select Account/Card</option>
                 </select>
                 
-                <div class="segmented-control" style="margin: 0 0 12px 0;">
+                <div class="segmented-control tx-seg-control" style="margin: 0 0 12px 0;">
                     <input type="radio" name="txType" value="out" id="tx-out" checked><label for="tx-out">Out (Spend)</label>
-                    <input type="radio" name="txType" value="in" id="tx-in"><label for="tx-in">In (Income)</label>
+                    <input type="radio" name="txType" value="in" id="tx-in"><label for="tx-in">In</label>
+                    <input type="radio" name="txType" value="bonus" id="tx-bonus"><label for="tx-bonus">Bonus</label>
                     <input type="radio" name="txType" value="transfer" id="tx-transfer"><label for="tx-transfer">Transfer</label>
                 </div>
 
                 <div id="transfer-to-container" style="display: none; margin-bottom: 12px;">
                     <select id="txToAccount" class="ios-select">
-                        <option value="" disabled selected>Select Account to Credit</option>
+                        <option value="" disabled selected>Select Account/Card to Credit</option>
                     </select>
                 </div>
                 
@@ -166,12 +169,17 @@
         </div>
 
         <div id="edit-modal" class="bottom-sheet">
-            <div class="sheet-header">Edit Account</div>
+            <div class="sheet-header">Edit Account / Card</div>
             <form id="edit-form" class="admin-form" style="padding-top: 5px;">
                 <input type="number" id="editBalance" placeholder="Correct Balance (£)" step="0.01" required>
-                <div id="edit-od-wrapper">
+                
+                <div id="edit-od-wrapper" style="display:none;">
                     <input type="number" id="editOdLimit" placeholder="New Overdraft Limit (£)" step="0.01">
                 </div>
+                <div id="edit-card-wrapper" style="display:none;">
+                    <input type="number" id="editCardLimit" placeholder="New Credit Limit (£)" step="0.01">
+                </div>
+
                 <button type="submit" class="ios-btn" style="margin-top: 10px;">Save Changes</button>
             </form>
         </div>
