@@ -2,92 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Finances</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iOS Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-container">
-        
-        <main id="view-cards" class="view">
-            <header>
-                <h1>My Cards</h1>
-                <p>Manage your debit and credit cards here.</p>
-            </header>
-            <div class="placeholder-content">
-                <p>Cards interface coming soon...</p>
+
+<div class="app-container">
+    <div class="header">Admin Panel</div>
+
+    <div class="settings-group">
+        <div class="settings-row">
+            <div class="row-label">
+                <div class="icon" style="background-color: #5E5CE6;">✨</div>
+                <span>Appearance</span>
             </div>
-        </main>
+            <label class="ios-toggle">
+                <input type="checkbox" id="themeToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
 
-        <main id="view-bills" class="view">
-            <header>
-                <h1>Upcoming Bills</h1>
-                <p>Track your scheduled payments.</p>
-            </header>
-            <div class="placeholder-content">
-                <p>Bills interface coming soon...</p>
+        <div class="settings-row">
+            <div class="row-label">
+                <div class="icon" style="background-color: #FF9500;">⚙️</div>
+                <span>Advanced Settings</span>
             </div>
-        </main>
-
-        <main id="view-home" class="view active-view">
-            <header>
-                <h1>My Accounts</h1>
-                <p>Click an account to simulate a transaction.</p>
-            </header>
-            <div id="accounts-container" class="accounts-grid">
-                </div>
-        </main>
-
-        <main id="view-loans" class="view">
-            <header>
-                <h1>My Loans</h1>
-                <p>Track your personal loans and mortgages.</p>
-            </header>
-            <div class="placeholder-content">
-                <p>Loans interface coming soon...</p>
-            </div>
-        </main>
-
-        <main id="view-admin" class="view">
-            <header>
-                <h1>Admin Dashboard</h1>
-                <p>Add a new bank account to your portfolio.</p>
-            </header>
-            
-            <form id="add-account-form" class="admin-form">
-                <div class="form-group">
-                    <label for="bankName">Bank Name</label>
-                    <input type="text" id="bankName" required placeholder="e.g. Barclays">
-                </div>
-                
-                <div class="form-group">
-                    <label for="initialBalance">Current Balance (£)</label>
-                    <input type="number" id="initialBalance" required placeholder="100" step="0.01">
-                </div>
-
-                <div class="form-group">
-                    <label for="odLimit">Overdraft Limit (£) - Optional</label>
-                    <input type="number" id="odLimit" placeholder="500" min="0" step="0.01">
-                </div>
-
-                <button type="submit" class="btn-submit">Add Account</button>
-            </form>
-
-            <div class="admin-footer">
-                <p><strong>Version Control:</strong> v2.1.0 (5-Tab Bottom Navigation)</p>
-            </div>
-        </main>
-
+            <span class="chevron">></span>
+        </div>
     </div>
 
-    <nav class="bottom-nav">
-        <button id="nav-cards" class="nav-btn">Cards</button>
-        <button id="nav-bills" class="nav-btn">Bills</button>
-        <button id="nav-home" class="nav-btn active">Home</button>
-        <button id="nav-loans" class="nav-btn">Loans</button>
-        <button id="nav-admin" class="nav-btn">Admin</button>
-    </nav>
+    <div class="admin-footer">
+        <div class="version-control">App Version 2.4.1 (Build 842)</div>
+        <div class="developer-mode">Deployed via GitHub Pages</div>
+    </div>
+</div>
 
-    <script src="app.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
