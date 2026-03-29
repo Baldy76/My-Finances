@@ -3,29 +3,35 @@ document.addEventListener("DOMContentLoaded", () => {
     let accounts = JSON.parse(localStorage.getItem("bankingAccounts")) || [];
 
     // --- 2. DOM Elements ---
-    const navHome = document.getElementById("nav-home");
-    const navAdmin = document.getElementById("nav-admin");
-    const viewHome = document.getElementById("view-home");
-    const viewAdmin = document.getElementById("view-admin");
     const accountsContainer = document.getElementById("accounts-container");
     const addAccountForm = document.getElementById("add-account-form");
+    
+    // Array of our 5 view names
+    const views = ['cards', 'bills', 'home', 'loans', 'admin'];
 
     // --- 3. Navigation Logic ---
-    navHome.addEventListener("click", () => switchView('home'));
-    navAdmin.addEventListener("click", () => switchView('admin'));
+    // Attach click listeners to all 5 bottom nav buttons
+    views.forEach(view => {
+        document.getElementById(`nav-${view}`).addEventListener("click", () => switchView(view));
+    });
 
-    function switchView(view) {
-        if (view === 'home') {
-            viewHome.classList.add("active-view");
-            viewAdmin.classList.remove("active-view");
-            navHome.classList.add("active");
-            navAdmin.classList.remove("active");
+    function switchView(targetView) {
+        views.forEach(view => {
+            const viewEl = document.getElementById(`view-${view}`);
+            const navEl = document.getElementById(`nav-${view}`);
+            
+            if (view === targetView) {
+                viewEl.classList.add("active-view");
+                navEl.classList.add("active");
+            } else {
+                viewEl.classList.remove("active-view");
+                navEl.classList.remove("active");
+            }
+        });
+
+        // Re-render accounts if we are navigating back to the Home screen
+        if (targetView === 'home') {
             renderAccounts();
-        } else {
-            viewAdmin.classList.add("active-view");
-            viewHome.classList.remove("active-view");
-            navAdmin.classList.add("active");
-            navHome.classList.remove("active");
         }
     }
 
@@ -107,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
         saveAccounts();
         
         addAccountForm.reset();
-        switchView('home');
+        switchView('home'); // Automatically take the user back to Home to see their new account
     });
 
     // Save to browser
