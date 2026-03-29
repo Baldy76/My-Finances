@@ -6,6 +6,7 @@
     --toggle-bg: #E9E9EA;
     --toggle-active: #34C759;
     --divider: #C6C6C8;
+    --tab-bg: rgba(255, 255, 255, 0.8);
 }
 
 [data-theme="dark"] {
@@ -15,13 +16,10 @@
     --text-secondary: #8E8E93;
     --toggle-bg: #39393D;
     --divider: #38383A;
+    --tab-bg: rgba(28, 28, 30, 0.8);
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -30,105 +28,111 @@ body {
     transition: background-color 0.3s ease;
     display: flex;
     justify-content: center;
-    padding: 20px;
 }
 
 .app-container {
     width: 100%;
-    max-width: 400px;
-    min-height: 90vh;
+    max-width: 450px;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
 }
 
-.header {
-    font-size: 28px;
-    font-weight: 700;
-    margin: 40px 0 24px 16px;
+.view {
+    display: none;
+    flex-direction: column;
+    padding: 20px;
+    height: 100%;
+    overflow-y: auto;
+    padding-bottom: 100px; /* Space for tab bar */
 }
 
+.active-view { display: flex; }
+
+.header {
+    font-size: 32px;
+    font-weight: 800;
+    margin: 40px 0 20px 0;
+}
+
+/* Account Tiles */
+.account-tile {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.account-name { font-size: 14px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+.account-balance { font-size: 28px; font-weight: 700; margin: 8px 0; }
+.text-red { color: #FF3B30; }
+
+/* Tab Bar */
+.tab-bar {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 85px;
+    background: var(--tab-bg);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-around;
+    padding-top: 10px;
+    border-top: 0.5px solid var(--divider);
+}
+
+.tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 10px;
+}
+
+.tab-item.active { color: #5E5CE6; }
+.tab-item span { font-size: 24px; margin-bottom: 4px; }
+
+/* Settings & Admin */
 .settings-group {
-    background-color: var(--card-bg);
+    background: var(--card-bg);
     border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 24px;
+    padding: 4px 16px;
+    margin-bottom: 20px;
 }
 
 .settings-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 16px;
+    padding: 12px 0;
     border-bottom: 0.5px solid var(--divider);
 }
 
-.settings-row:last-child {
-    border-bottom: none;
-}
+.settings-row:last-child { border-bottom: none; }
 
-.row-label {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
+.row-label { display: flex; align-items: center; gap: 10px; }
 
 .icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 14px;
-}
-
-.chevron {
-    color: var(--text-secondary);
-    font-weight: 300;
+    width: 28px; height: 28px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; color: white;
 }
 
 /* iOS Toggle */
-.ios-toggle {
-    position: relative;
-    width: 50px;
-    height: 30px;
-}
-
+.ios-toggle { position: relative; width: 50px; height: 30px; }
 .ios-toggle input { opacity: 0; width: 0; height: 0; }
-
 .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: var(--toggle-bg);
-    transition: .3s;
-    border-radius: 30px;
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--toggle-bg); transition: .3s; border-radius: 30px;
 }
-
 .slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 2px;
-    bottom: 2px;
-    background-color: white;
-    transition: .3s cubic-bezier(0.25, 0.1, 0.25, 1.3);
-    border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    position: absolute; content: ""; height: 26px; width: 26px; left: 2px; bottom: 2px;
+    background-color: white; border-radius: 50%; transition: .3s cubic-bezier(0.25, 0.1, 0.25, 1.3);
 }
-
 input:checked + .slider { background-color: var(--toggle-active); }
 input:checked + .slider:before { transform: translateX(20px); }
 
-/* Footer */
-.admin-footer {
-    margin-top: auto;
-    text-align: center;
-    padding: 24px 0;
-    color: var(--text-secondary);
-}
-
-.version-control { font-size: 13px; }
-.developer-mode { font-size: 11px; margin-top: 4px; text-transform: uppercase; }
+.admin-footer { text-align: center; margin-top: 20px; color: var(--text-secondary); font-size: 12px; }
