@@ -1,12 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // --- 0. Service Worker Registration ---
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
             .then(() => console.log("Service Worker Registered"))
             .catch(err => console.log("SW Registration Failed", err));
     }
 
-    // --- 1. Theme Management ---
     const toggle = document.getElementById('themeToggle');
     const currentTheme = localStorage.getItem('theme') || 'light';
     if (currentTheme === 'dark') {
@@ -21,27 +19,20 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- 2. PWA Sync Logic ---
     const syncBtn = document.getElementById('sync-updates-btn');
     if (syncBtn) {
         syncBtn.addEventListener('click', () => {
             syncBtn.innerText = "Syncing...";
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(registrations => {
-                    for (let registration of registrations) {
-                        registration.update(); 
-                    }
+                    for (let registration of registrations) registration.update();
                 });
             }
-            // Clear cache and reload
-            caches.keys().then(names => {
-                for (let name of names) caches.delete(name);
-            });
+            caches.keys().then(names => { for (let name of names) caches.delete(name); });
             setTimeout(() => { window.location.reload(true); }, 1000);
         });
     }
 
-    // --- 3. State & Elements ---
     let financialItems = JSON.parse(localStorage.getItem("financialItems")) || [];
     const homeContent = document.getElementById("home-content");
     const addItemForm = document.getElementById("add-item-form");
@@ -121,6 +112,5 @@ document.addEventListener("DOMContentLoaded", () => {
             switchView('home');
         });
     }
-
     renderHome();
 });
