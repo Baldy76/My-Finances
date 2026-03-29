@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentActiveAccountId = null; 
 
     // Inject Days 1-31 into scrolling date Selects
-    const dateSelects = ['cardDay', 'loanDay', 'billDay', 'salaryDay'];
+    const dateSelects = ['cardDay', 'loanDay', 'billDay', 'salaryDay', 'editDay'];
     dateSelects.forEach(id => {
         const sel = document.getElementById(id);
         if (sel && sel.options.length <= 2) { 
@@ -384,6 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const emoji = item.emoji || (isIncome ? '💸' : '📑');
 
             const row = document.createElement('div'); row.className = 'item-tile';
+            row.onclick = () => openEditModal(item.id); 
             row.innerHTML = `
                 <div class="item-info">
                     <div class="list-emoji">${emoji}</div>
@@ -409,6 +410,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const emoji = item.emoji || (isIncome ? '💸' : '📑');
 
             const row = document.createElement('div'); row.className = 'item-tile is-paid';
+            row.onclick = () => openEditModal(item.id); 
             row.innerHTML = `
                 <div class="item-info">
                     <div class="list-emoji" style="opacity: 0.5;">${emoji}</div>
@@ -491,17 +493,38 @@ document.addEventListener("DOMContentLoaded", () => {
         overlay.classList.add('active'); setTimeout(() => txModal.classList.add('open'), 10); 
     };
     
-    window.openEditModal = () => {
-        if(!currentActiveAccountId) return;
-        const item = financialItems.find(i => i.id === currentActiveAccountId);
+    window.openEditModal = (overrideId) => {
+        const targetId = overrideId || currentActiveAccountId;
+        if(!targetId) return;
+        currentActiveAccountId = targetId;
+        
+        const item = financialItems.find(i => i.id === targetId);
+        if(!item) return;
+
+        document.getElementById('editName').value = item.name;
         document.getElementById('editBalance').value = item.balance;
+        
         const odWrapper = document.getElementById('edit-od-wrapper');
         const cardWrapper = document.getElementById('edit-card-wrapper');
-        odWrapper.style.display = 'none'; cardWrapper.style.display = 'none';
-        document.getElementById('editOdLimit').required = false; document.getElementById('editCardLimit').required = false;
+        const dateWrapper = document.getElementById('edit-date-wrapper');
+        
+        odWrapper.style.display = 'none'; cardWrapper.style.display = 'none'; dateWrapper.style.display = 'none';
+        document.getElementById('editOdLimit').required = false; 
+        document.getElementById('editCardLimit').required = false;
+        document.getElementById('editDay').required = false;
 
-        if(item.type === 'account' && item.hasOverdraft) { odWrapper.style.display = 'block'; document.getElementById('editOdLimit').value = item.odLimit; } 
-        else if (item.type === 'card') { cardWrapper.style.display = 'block'; document.getElementById('editCardLimit').value = item.creditLimit; }
+        if(item.type === 'account' && item.hasOverdraft) { 
+            odWrapper.style.display = 'block'; 
+            document.getElementById('editOdLimit').value = item.odLimit; 
+        } else if (item.type === 'card') { 
+            cardWrapper.style.display = 'block'; 
+            document.getElementById('editCardLimit').value = item.creditLimit; 
+            dateWrapper.style.display = 'block';
+            document.getElementById('editDay').value = item.dueDate;
+        } else if (['loan', 'bill', 'salary'].includes(item.type)) {
+            dateWrapper.style.display = 'block';
+            document.getElementById('editDay').value = item.dueDate;
+        }
         
         overlay.classList.add('active'); setTimeout(() => editModal.classList.add('open'), 10);
     };
@@ -590,14 +613,39 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         const itemIndex = financialItems.findIndex(i => i.id === currentActiveAccountId);
         if(itemIndex !== -1) {
+            financialItems[itemIndex].name = document.getElementById('editName').value;
             financialItems[itemIndex].balance = parseFloat(document.getElementById('editBalance').value);
+            
             if(financialItems[itemIndex].type === 'account' && financialItems[itemIndex].hasOverdraft) {
                 financialItems[itemIndex].odLimit = parseFloat(document.getElementById('editOdLimit').value) || 0;
             } else if (financialItems[itemIndex].type === 'card') {
                 financialItems[itemIndex].creditLimit = parseFloat(document.getElementById('editCardLimit').value) || 0;
+                financialItems[itemIndex].dueDate = document.getElementById('editDay').value;
+            } else if (['loan', 'bill', 'salary'].includes(financialItems[itemIndex].type)) {
+                financialItems[itemIndex].dueDate = document.getElementById('editDay').value;
             }
+            
             localStorage.setItem("financialItems", JSON.stringify(financialItems));
-            closeAllModals(); openAccountDetails(currentActiveAccountId); renderAll();
+            closeAllModals(); 
+            
+            // If we were looking at the detail view, refresh it. Otherwise just render the background.
+            if (['account', 'card', 'loan'].includes(financialItems[itemIndex].type) && document.getElementById('view-account-details').classList.contains('active-view')) {
+                openAccountDetails(currentActiveAccountId);
+            }
+            renderAll();
+        }
+    });
+
+    // Delete Submission
+    document.getElementById('delete-btn').addEventListener('click', () => {
+        const confirmDelete = confirm("Are you sure you want to delete this? This action cannot be undone.");
+        if (confirmDelete) {
+            financialItems = financialItems.filter(i => i.id !== currentActiveAccountId);
+            localStorage.setItem("financialItems", JSON.stringify(financialItems));
+            closeAllModals();
+            currentActiveAccountId = null;
+            switchView('home'); // Send them back to the home screen just in case they deleted the account they were currently viewing
+            renderAll();
         }
     });
 
