@@ -18,24 +18,31 @@ body.dark-mode {
     --tab-bg: rgba(28, 28, 30, 0.8);
 }
 
-/* 2. Base Layout */
-body { 
+/* 2. Base Layout - CRITICAL iOS PWA SCROLL FIX */
+html, body { 
     font-family: -apple-system, system-ui, sans-serif; 
     background: var(--bg); 
     color: var(--text); 
+    width: 100%;
+    height: 100%;
     height: 100dvh; 
     margin: 0;
-    overflow: hidden; 
+    padding: 0;
+    position: fixed; /* Locks the body in place on iOS homescreen */
+    overflow: hidden; /* Stops rubber-banding of the whole page */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 .app-container { 
+    position: absolute; /* Pins the app to the fixed body */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%; 
     max-width: 450px; 
-    height: 100%; 
     margin: 0 auto; 
-    position: relative; 
     display: flex; 
     flex-direction: column; 
     overflow: hidden;
@@ -48,7 +55,7 @@ body {
     padding: 20px; 
     flex: 1; 
     overflow-y: auto; 
-    -webkit-overflow-scrolling: touch; 
+    -webkit-overflow-scrolling: touch; /* Enables iOS momentum scrolling inside the view */
     padding-bottom: calc(120px + env(safe-area-inset-bottom)); 
 }
 
@@ -99,7 +106,7 @@ body {
 .item-amount { font-size: 18px; font-weight: 700; display: flex; align-items: center; }
 .text-red { color: #FF3B30 !important; }
 
-/* New Bill Status Styles */
+/* Bill Status Styles */
 .item-tile.is-paid { opacity: 0.45; }
 .bill-divider { height: 1.5px; background-color: var(--ios-grey); margin: 20px 0; border-radius: 2px; }
 .status-badge.paid { color: #34C759; font-size: 13px; font-weight: 800; margin-right: 8px; text-transform: uppercase; }
