@@ -60,6 +60,10 @@
                     <input type="number" id="itemAmount" placeholder="Current Balance (£)" step="0.01" required>
                     
                     <div id="account-fields">
+                        <select id="accountType" class="ios-select" style="margin-bottom: 12px;">
+                            <option value="current" selected>Current Account</option>
+                            <option value="savings">Savings Account</option>
+                        </select>
                         <div class="settings-row" style="padding: 10px 0;">
                             <span style="color: var(--text);">Overdraft Facility?</span>
                             <label class="ios-toggle small">
@@ -71,16 +75,18 @@
                     </div>
 
                     <div id="card-fields" style="display:none;">
-                        <input type="number" id="cardLimit" placeholder="Credit Limit (£)" step="0.01">
+                        <input type="number" id="cardLimit" placeholder="Credit Limit (£)" step="0.01" style="margin-bottom: 12px;">
+                        <input type="number" id="cardDay" placeholder="Day Due (1-31)" min="1" max="31">
                     </div>
 
                     <div id="loan-fields" style="display:none;">
-                        <input type="number" id="loanOriginal" placeholder="Original Loan Amount (£)" step="0.01">
-                        <input type="number" id="loanMonthly" placeholder="Monthly Payment (£)" step="0.01">
+                        <input type="number" id="loanOriginal" placeholder="Original Loan Amount (£)" step="0.01" style="margin-bottom: 12px;">
+                        <input type="number" id="loanMonthly" placeholder="Monthly Payment (£)" step="0.01" style="margin-bottom: 12px;">
+                        <input type="number" id="loanDay" placeholder="Day Due (1-31)" min="1" max="31">
                     </div>
                     
                     <div id="bill-fields" style="display:none;">
-                        <input type="number" id="billDay" placeholder="Day Due (1-31)" min="1" max="31">
+                        <input type="number" id="billDay" placeholder="Day Due (1-31)" min="1" max="31" style="margin-bottom: 12px;">
                         <select id="billAccount" class="ios-select">
                             <option value="" disabled selected>Select Account to Debit</option>
                         </select>
@@ -92,7 +98,7 @@
 
             <div class="admin-footer">
                 <button id="sync-updates-btn" class="sync-btn">Sync for Updates</button>
-                <div class="version-control">App Version 3.2.0 (Build 1550)</div>
+                <div class="version-control">App Version 3.3.0 (Build 1600)</div>
             </div>
         </div>
 
