@@ -9,35 +9,12 @@ body {
     background: linear-gradient(135deg, #f4f7f6 0%, #e0e8e6 100%);
     min-height: 100vh;
     color: #1a1a24;
-    padding: 20px;
+    padding: 20px 20px 90px 20px; /* Added 90px bottom padding for the nav bar */
 }
 
 .app-container {
     max-width: 600px;
     margin: 0 auto;
-}
-
-/* Navigation */
-.top-nav {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 24px;
-}
-
-.top-nav button {
-    padding: 10px 20px;
-    border: none;
-    background: #d1d8d5;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    color: #333;
-    transition: background 0.2s ease;
-}
-
-.top-nav button.active {
-    background: #0056d2;
-    color: white;
 }
 
 /* View Toggling */
@@ -130,12 +107,18 @@ header p {
     border: 1px solid #e2e8f0;
 }
 
-/* Admin Form */
-.admin-form {
+/* Admin Form & Placeholders */
+.admin-form, .placeholder-content {
     background: white;
     padding: 24px;
     border-radius: 16px;
     box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+}
+
+.placeholder-content {
+    text-align: center;
+    color: #888;
+    font-style: italic;
 }
 
 .form-group {
@@ -188,4 +171,40 @@ header p {
     text-align: center;
     font-size: 13px;
     color: #666;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 10px;
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
+    z-index: 1000;
+    border-top: 1px solid #eaeaea;
+}
+
+.nav-btn {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px;
+    flex: 1;
+    text-align: center;
+    transition: color 0.2s ease;
+}
+
+.nav-btn:hover {
+    color: #444;
+}
+
+.nav-btn.active {
+    color: #0056d2;
 }
