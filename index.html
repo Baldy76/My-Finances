@@ -74,6 +74,17 @@
                 </div>
                 
                 <form id="add-item-form" class="admin-form">
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <input type="text" id="itemEmoji" placeholder="🏦" maxlength="2" style="width: 25%; text-align: center; font-size: 22px; padding: 10px;" required>
+                        <select id="itemTheme" class="ios-select" style="flex: 1;" required>
+                            <option value="theme-blue" selected>Ocean Blue</option>
+                            <option value="theme-red">Sunset Red</option>
+                            <option value="theme-green">Emerald Green</option>
+                            <option value="theme-purple">Royal Purple</option>
+                            <option value="theme-dark">Midnight Slate</option>
+                        </select>
+                    </div>
+
                     <input type="text" id="itemName" placeholder="Name (e.g. Monzo, Salary, Gas)" required>
                     <input type="number" id="itemAmount" placeholder="Current Balance (£)" step="0.01" required>
                     
@@ -94,17 +105,23 @@
 
                     <div id="card-fields" style="display:none;">
                         <input type="number" id="cardLimit" placeholder="Credit Limit (£)" step="0.01" style="margin-bottom: 12px;">
-                        <input type="number" id="cardDay" placeholder="Day Due (1-31)" min="1" max="31">
+                        <select id="cardDay" class="ios-select">
+                            <option value="" disabled selected>Select Day Due</option>
+                        </select>
                     </div>
 
                     <div id="loan-fields" style="display:none;">
                         <input type="number" id="loanOriginal" placeholder="Original Loan Amount (£)" step="0.01" style="margin-bottom: 12px;">
                         <input type="number" id="loanMonthly" placeholder="Monthly Payment (£)" step="0.01" style="margin-bottom: 12px;">
-                        <input type="number" id="loanDay" placeholder="Day Due (1-31)" min="1" max="31">
+                        <select id="loanDay" class="ios-select">
+                            <option value="" disabled selected>Select Day Due</option>
+                        </select>
                     </div>
                     
                     <div id="bill-fields" style="display:none;">
-                        <input type="number" id="billDay" placeholder="Day Due (1-31)" min="1" max="31" style="margin-bottom: 12px;">
+                        <select id="billDay" class="ios-select" style="margin-bottom: 12px;">
+                            <option value="" disabled selected>Select Day Due</option>
+                        </select>
                         <select id="billAccount" class="ios-select">
                             <option value="" disabled selected>Select Account to Debit</option>
                         </select>
@@ -126,7 +143,7 @@
 
             <div class="admin-footer">
                 <button id="sync-updates-btn" class="sync-btn">Sync for Updates</button>
-                <div class="version-control">App Version 3.8.0 (Build 1850)</div>
+                <div class="version-control">App Version 3.9.0 (Build 1900)</div>
             </div>
         </div>
 
@@ -143,7 +160,6 @@
         <div id="transaction-modal" class="bottom-sheet">
             <div class="sheet-header">Record Transaction</div>
             <form id="transaction-form" class="admin-form" style="padding-top: 5px;">
-                
                 <select id="txAccount" class="ios-select" style="margin-bottom: 12px;" required>
                     <option value="" disabled selected>Select Account/Card</option>
                 </select>
