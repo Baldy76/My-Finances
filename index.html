@@ -58,7 +58,7 @@
             <div class="header">Admin</div>
             
             <div style="border-bottom: 2px solid var(--ios-grey); padding-bottom: 20px; margin-bottom: 15px;">
-                <span style="font-size: 16px; font-weight: 800; color: var(--text); display: block; text-align: center;">Theme Selection</span>
+                <span style="font-size: 14px; font-weight: 800; color: var(--text-secondary); display: block; text-align: center; text-transform: uppercase;">Theme Selection</span>
                 <div class="theme-segmented-control">
                     <button id="btnLight" class="segment active" onclick="setThemeMode(false)">☀️ Light</button>
                     <button id="btnDark" class="segment" onclick="setThemeMode(true)">🌙 Dark</button>
@@ -76,7 +76,7 @@
                 </div>
                 
                 <form id="add-item-form" class="admin-form">
-                    <input type="text" id="itemName" placeholder="Name (e.g. Monzo, Salary, Gas)" required>
+                    <input type="text" id="itemName" placeholder="Name (e.g. Barclays, Gas, Visa)" required>
                     <input type="number" id="itemAmount" placeholder="Current Balance (£)" step="0.01" required>
                     
                     <div id="account-fields">
@@ -160,7 +160,7 @@
                     <input type="radio" name="txType" value="in" id="tx-in"><label for="tx-in" id="lbl-tx-in">In</label>
                     <input type="radio" name="txType" value="bonus" id="tx-bonus"><label for="tx-bonus" id="lbl-tx-bonus">Bonus</label>
                     <input type="radio" name="txType" value="transfer" id="tx-transfer"><label for="tx-transfer" id="lbl-tx-transfer">Transfer</label>
-                    <input type="radio" name="txType" value="interest" id="tx-interest"><label for="tx-interest" id="lbl-tx-interest" style="display: none;">Interest</label>
+                    <input type="radio" name="txType" value="interest" id="tx-interest" style="display:none;"><label for="tx-interest" id="lbl-tx-interest" style="display: none;">Interest</label>
                 </div>
 
                 <div id="transfer-to-container" style="display: none; margin-bottom: 12px;">
@@ -180,7 +180,7 @@
             <div class="sheet-header">Edit Item</div>
             <form id="edit-form" class="admin-form" style="padding-top: 5px;">
                 <input type="text" id="editName" placeholder="Item Name" required>
-                <input type="number" id="editBalance" placeholder="Amount / Balance (£)" step="0.01" required>
+                <input type="number" id="editBalance" placeholder="Balance (£)" step="0.01" required>
                 
                 <div id="edit-date-wrapper" style="display:none;">
                     <select id="editDay" class="ios-select" style="margin-bottom: 12px;">
@@ -189,10 +189,10 @@
                 </div>
 
                 <div id="edit-od-wrapper" style="display:none;">
-                    <input type="number" id="editOdLimit" placeholder="New Overdraft Limit (£)" step="0.01">
+                    <input type="number" id="editOdLimit" placeholder="Overdraft Limit (£)" step="0.01">
                 </div>
                 <div id="edit-card-wrapper" style="display:none;">
-                    <input type="number" id="editCardLimit" placeholder="New Credit Limit (£)" step="0.01">
+                    <input type="number" id="editCardLimit" placeholder="Credit Limit (£)" step="0.01">
                 </div>
 
                 <button type="submit" class="ios-btn" style="margin-top: 10px;">Save Changes</button>
