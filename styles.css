@@ -18,23 +18,23 @@ body.dark-mode {
     --tab-bg: rgba(28, 28, 30, 0.8);
 }
 
-/* 2. Base Layout - CRITICAL iOS PWA SCROLL FIX */
+/* 2. Base Layout - THE BULLETPROOF iOS PWA FIX */
 html, body { 
     font-family: -apple-system, system-ui, sans-serif; 
     background: var(--bg); 
     color: var(--text); 
     width: 100%;
-    height: 100%;
-    height: 100dvh; 
+    height: 100%; /* Fallback to standard 100% instead of dvh */
     margin: 0;
     padding: 0;
-    position: fixed; 
-    overflow: hidden; 
+    overflow: hidden; /* Stops rubber-banding of the background */
+    /* Removed position: fixed as it breaks touch events on some iOS versions */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 .app-container { 
+    /* Pinning to all 4 edges forces iOS to respect the container boundaries */
     position: absolute; 
     top: 0;
     left: 0;
@@ -48,15 +48,17 @@ html, body {
     overflow: hidden;
 }
 
-/* 3. View & Scrolling Fix */
+/* 3. View & Scrolling */
 .view { 
     display: none; 
     flex-direction: column; 
     padding: 20px; 
-    flex: 1; 
+    flex: 1 1 auto; /* Ensures it takes up remaining space properly */
     overflow-y: auto; 
-    -webkit-overflow-scrolling: touch; 
-    padding-bottom: calc(120px + env(safe-area-inset-bottom)); 
+    -webkit-overflow-scrolling: touch; /* Critical for smooth iOS momentum scrolling */
+    
+    /* Increased padding to ensure bottom content clears the nav bar completely */
+    padding-bottom: calc(140px + env(safe-area-inset-bottom)); 
 }
 
 .active-view { display: flex; }
@@ -121,7 +123,6 @@ html, body {
 .group-title { font-size: 13px; text-transform: uppercase; color: var(--text-secondary); margin: 25px 0 8px 5px; }
 .admin-form { display: flex; flex-direction: column; gap: 12px; padding: 15px 0; }
 
-/* Unified Input & Select Styles */
 .admin-form input, .admin-form .ios-select { 
     background: var(--bg); 
     border: none; 
