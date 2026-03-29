@@ -73,11 +73,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (formGroups[selectedType]) {
             formGroups[selectedType].style.display = 'block';
             
-            if (selectedType === 'card') {
+            if (selectedType === 'account') {
+                document.getElementById('accountType').required = true;
+            } else if (selectedType === 'card') {
                 document.getElementById('cardLimit').required = true;
+                document.getElementById('cardDay').required = true;
             } else if (selectedType === 'loan') {
                 document.getElementById('loanOriginal').required = true;
                 document.getElementById('loanMonthly').required = true;
+                document.getElementById('loanDay').required = true;
             } else if (selectedType === 'bill') {
                 document.getElementById('billDay').required = true;
                 document.getElementById('billAccount').required = true;
@@ -156,12 +160,22 @@ document.addEventListener("DOMContentLoaded", () => {
                     extraInfoHtml = `<div class="available-balance">Available: £${available.toFixed(2)}</div>`;
                 }
 
+                // Dynamic Subtitle Logic
+                let subText = 'Balance Today';
+                if (item.type === 'account') {
+                    subText = item.accountType === 'savings' ? 'Savings Account' : 'Current Account';
+                } else if (item.type === 'bill') {
+                    subText = 'Base Due Day ' + item.dueDate;
+                } else if (item.type === 'card' || item.type === 'loan') {
+                    subText = item.dueDate ? 'Due Day ' + item.dueDate : 'Balance Today';
+                }
+
                 const tile = document.createElement('div');
                 tile.className = 'item-tile';
                 tile.innerHTML = `
                     <div class="item-info">
                         <div class="name">${item.name}</div>
-                        <div class="sub">${item.type === 'bill' ? 'Base Due Day ' + item.dueDate : 'Balance Today'}</div>
+                        <div class="sub">${subText}</div>
                     </div>
                     <div class="amount-container">
                         <div class="item-amount ${isNegative ? 'text-red' : ''}">${balanceDisplay}</div>
@@ -267,13 +281,16 @@ document.addEventListener("DOMContentLoaded", () => {
             };
 
             if (type === 'account') {
+                newItem.accountType = document.getElementById("accountType").value;
                 newItem.hasOverdraft = document.getElementById("hasOverdraft").checked;
                 newItem.odLimit = parseFloat(document.getElementById("odLimit").value) || 0;
             } else if (type === 'card') {
                 newItem.creditLimit = parseFloat(document.getElementById("cardLimit").value) || 0;
+                newItem.dueDate = document.getElementById("cardDay").value;
             } else if (type === 'loan') {
                 newItem.originalAmount = parseFloat(document.getElementById("loanOriginal").value) || 0;
                 newItem.monthlyPayment = parseFloat(document.getElementById("loanMonthly").value) || 0;
+                newItem.dueDate = document.getElementById("loanDay").value;
             } else if (type === 'bill') {
                 newItem.dueDate = document.getElementById("billDay").value;
                 newItem.debitAccount = document.getElementById("billAccount").value;
