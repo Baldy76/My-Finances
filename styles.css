@@ -6,8 +6,9 @@
 }
 
 body {
-    background-color: #f4f7f6;
-    color: #333;
+    background: linear-gradient(135deg, #f4f7f6 0%, #e0e8e6 100%);
+    min-height: 100vh;
+    color: #1a1a24;
     padding: 20px;
 }
 
@@ -16,69 +17,175 @@ body {
     margin: 0 auto;
 }
 
+/* Navigation */
+.top-nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.top-nav button {
+    padding: 10px 20px;
+    border: none;
+    background: #d1d8d5;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #333;
+    transition: background 0.2s ease;
+}
+
+.top-nav button.active {
+    background: #0056d2;
+    color: white;
+}
+
+/* View Toggling */
+.view {
+    display: none;
+}
+
+.view.active-view {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 header {
     margin-bottom: 24px;
 }
 
 header h1 {
-    font-size: 24px;
+    font-size: 26px;
     margin-bottom: 4px;
 }
 
 header p {
-    font-size: 12px;
-    color: #777;
+    font-size: 14px;
+    color: #666;
 }
 
+/* Grid & Modern Tiles */
 .accounts-grid {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-/* Tile Styling */
 .account-tile {
     background: #ffffff;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    cursor: pointer; /* Makes it look clickable */
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.025);
+    cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: 1px solid #eaeaea;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .account-tile:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 15px 20px -3px rgba(0,0,0,0.1);
+}
+
+.tile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .account-name {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
-    color: #555;
-    margin-bottom: 8px;
+    color: #444;
 }
 
 .account-balance {
     font-size: 28px;
     font-weight: bold;
-    margin-bottom: 8px;
 }
 
-/* Dynamic Classes applied via JS */
-.text-red {
-    color: #d93025;
-}
+.text-red { color: #d93025; }
+.text-black { color: #1a1a24; }
 
-.text-black {
-    color: #000000;
+.overdraft-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .od-info {
+    font-size: 13px;
+    font-weight: 500;
+    color: #555;
+    background-color: #f0f4f8;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Admin Form */
+.admin-form {
+    background: white;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
     font-size: 14px;
+    color: #444;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #0056d2;
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 14px;
+    background: #0056d2;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s ease;
+}
+
+.btn-submit:hover {
+    background: #0044a8;
+}
+
+.admin-footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #ccc;
+    text-align: center;
+    font-size: 13px;
     color: #666;
-    background-color: #f0f0f0;
-    padding: 6px 10px;
-    border-radius: 6px;
-    display: inline-block;
 }
