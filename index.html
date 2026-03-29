@@ -31,8 +31,7 @@
             <div class="available-balance" id="detail-account-od" style="margin-bottom: 25px; text-align: center; font-size: 14px;"></div>
             
             <div class="group-title">Recent Transactions</div>
-            <div class="settings-group" id="transaction-list">
-                </div>
+            <div class="settings-group" id="transaction-list"></div>
         </div>
 
         <div id="view-cards" class="view">
@@ -41,8 +40,8 @@
         </div>
 
         <div id="view-bills" class="view">
-            <div class="header">Bills</div>
-            <div class="group-title">This Month's Schedule</div>
+            <div class="header">Schedule</div>
+            <div class="group-title">Income & Bills This Month</div>
             <div id="bills-content"></div>
         </div>
 
@@ -64,14 +63,16 @@
 
             <div class="group-title">Add New Item</div>
             <div class="settings-group">
-                <div class="segmented-control">
+                <div class="segmented-control" style="flex-wrap: wrap;">
                     <input type="radio" name="itemType" value="account" id="type-account" checked><label for="type-account">Account</label>
                     <input type="radio" name="itemType" value="card" id="type-card"><label for="type-card">Card</label>
                     <input type="radio" name="itemType" value="loan" id="type-loan"><label for="type-loan">Loan</label>
                     <input type="radio" name="itemType" value="bill" id="type-bill"><label for="type-bill">Bill</label>
+                    <input type="radio" name="itemType" value="salary" id="type-salary"><label for="type-salary">Salary</label>
                 </div>
+                
                 <form id="add-item-form" class="admin-form">
-                    <input type="text" id="itemName" placeholder="Name (e.g. Monzo, Amex, Gas)" required>
+                    <input type="text" id="itemName" placeholder="Name (e.g. Monzo, Salary, Gas)" required>
                     <input type="number" id="itemAmount" placeholder="Current Balance (£)" step="0.01" required>
                     
                     <div id="account-fields">
@@ -107,19 +108,29 @@
                         </select>
                     </div>
 
+                    <div id="salary-fields" style="display:none;">
+                        <select id="salaryDay" class="ios-select" style="margin-bottom: 12px;">
+                            <option value="" disabled selected>Select Pay Date</option>
+                            <option value="last">Last Working Day of Month</option>
+                            </select>
+                        <select id="salaryAccount" class="ios-select">
+                            <option value="" disabled selected>Select Account to Credit</option>
+                        </select>
+                    </div>
+
                     <button type="submit" class="ios-btn">Save to Dashboard</button>
                 </form>
             </div>
 
             <div class="admin-footer">
                 <button id="sync-updates-btn" class="sync-btn">Sync for Updates</button>
-                <div class="version-control">App Version 3.5.0 (Build 1700)</div>
+                <div class="version-control">App Version 3.6.0 (Build 1750)</div>
             </div>
         </div>
 
         <nav class="tab-bar">
             <div id="nav-cards" class="tab-item"><span>💳</span><label>Cards</label></div>
-            <div id="nav-bills" class="tab-item"><span>📑</span><label>Bills</label></div>
+            <div id="nav-bills" class="tab-item"><span>📑</span><label>Schedule</label></div>
             <div id="nav-home" class="tab-item center-btn active"><span>🏠</span></div>
             <div id="nav-loans" class="tab-item"><span>💰</span><label>Loans</label></div>
             <div id="nav-admin" class="tab-item"><span>⚙️</span><label>Admin</label></div>
@@ -133,15 +144,12 @@
                 <select id="txAccount" class="ios-select" required>
                     <option value="" disabled selected>Select Account</option>
                 </select>
-                
                 <div class="segmented-control" style="margin: 0 0 12px 0;">
                     <input type="radio" name="txType" value="out" id="tx-out" checked><label for="tx-out">Out (Spend)</label>
                     <input type="radio" name="txType" value="in" id="tx-in"><label for="tx-in">In (Income)</label>
                 </div>
-                
                 <input type="number" id="txAmount" placeholder="Amount (£)" step="0.01" required>
                 <input type="text" id="txDesc" placeholder="Description (e.g., Tesco, Salary)" required>
-                
                 <button type="submit" class="ios-btn" style="margin-top: 10px;">Save Transaction</button>
             </form>
         </div>
