@@ -28,14 +28,14 @@ html, body {
     height: 100dvh; 
     margin: 0;
     padding: 0;
-    position: fixed; /* Locks the body in place on iOS homescreen */
-    overflow: hidden; /* Stops rubber-banding of the whole page */
+    position: fixed; 
+    overflow: hidden; 
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 .app-container { 
-    position: absolute; /* Pins the app to the fixed body */
+    position: absolute; 
     top: 0;
     left: 0;
     right: 0;
@@ -55,7 +55,7 @@ html, body {
     padding: 20px; 
     flex: 1; 
     overflow-y: auto; 
-    -webkit-overflow-scrolling: touch; /* Enables iOS momentum scrolling inside the view */
+    -webkit-overflow-scrolling: touch; 
     padding-bottom: calc(120px + env(safe-area-inset-bottom)); 
 }
 
@@ -120,7 +120,20 @@ html, body {
 .settings-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid var(--ios-grey); }
 .group-title { font-size: 13px; text-transform: uppercase; color: var(--text-secondary); margin: 25px 0 8px 5px; }
 .admin-form { display: flex; flex-direction: column; gap: 12px; padding: 15px 0; }
-.admin-form input { background: var(--bg); border: none; padding: 14px; border-radius: 10px; color: var(--text); }
+
+/* Unified Input & Select Styles */
+.admin-form input, .admin-form .ios-select { 
+    background: var(--bg); 
+    border: none; 
+    padding: 14px; 
+    border-radius: 10px; 
+    color: var(--text); 
+    width: 100%;
+    font-family: inherit;
+    font-size: 15px;
+}
+.admin-form .ios-select { -webkit-appearance: none; appearance: none; cursor: pointer; }
+
 .ios-btn { background: var(--accent); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
 
 .ios-toggle { position: relative; width: 51px; height: 31px; }
