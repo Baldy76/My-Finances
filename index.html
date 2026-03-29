@@ -8,10 +8,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="apple-touch-icon" href="my_finances.png">
     
+    <meta name="theme-color" content="#f2f2f7" id="theme-meta">
+    
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
 </head>
-<body>
+<body class="light-mode">
     <div class="app-container">
         <div id="view-home" class="view active-view">
             <div class="header">Summary</div>
@@ -33,13 +35,12 @@
 
         <div id="view-admin" class="view">
             <div class="header">Admin</div>
-            <div class="settings-group">
-                <div class="settings-row">
-                    <div class="row-label"><span>✨ Dark Mode</span></div>
-                    <label class="ios-toggle">
-                        <input type="checkbox" id="themeToggle">
-                        <span class="slider"></span>
-                    </label>
+            
+            <div style="border-bottom: 2px solid var(--ios-grey); padding-bottom: 20px; margin-bottom: 15px;">
+                <span style="font-size: 16px; font-weight: 800; color: var(--text); display: block; text-align: center;">Theme Selection</span>
+                <div class="theme-segmented-control">
+                    <button id="btnLight" class="segment active" onclick="setThemeMode(false)">☀️ Light</button>
+                    <button id="btnDark" class="segment" onclick="setThemeMode(true)">🌙 Dark</button>
                 </div>
             </div>
 
@@ -54,9 +55,18 @@
                 <form id="add-item-form" class="admin-form">
                     <input type="text" id="itemName" placeholder="Name" required>
                     <input type="number" id="itemAmount" placeholder="Balance (£)" step="0.01" required>
+                    
                     <div id="account-only-fields">
+                        <div class="settings-row" style="padding: 10px 0;">
+                            <span style="color: var(--text);">Overdraft Facility?</span>
+                            <label class="ios-toggle small">
+                                <input type="checkbox" id="hasOverdraft">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                         <input type="number" id="odLimit" placeholder="Overdraft Limit (£)" step="0.01">
                     </div>
+                    
                     <div id="bill-only-fields" style="display:none;">
                         <input type="number" id="billDay" placeholder="Day Due (1-31)">
                     </div>
@@ -66,7 +76,7 @@
 
             <div class="admin-footer">
                 <button id="sync-updates-btn" class="sync-btn">Sync for Updates</button>
-                <div class="version-control">App Version 2.7.0 (Build 1205)</div>
+                <div class="version-control">App Version 2.8.0 (Build 1300)</div>
             </div>
         </div>
 
