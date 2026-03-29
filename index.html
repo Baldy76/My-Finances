@@ -5,30 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finance iOS</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
 <div class="app-container">
     <div id="view-home" class="view active-view">
-        <div class="header">Accounts</div>
-        <div id="accounts-container"></div>
+        <div class="header">Summary</div>
+        <div id="home-content"></div>
     </div>
 
     <div id="view-cards" class="view">
         <div class="header">Cards</div>
-        <p class="placeholder-text">Card management coming soon.</p>
+        <p class="placeholder-text">Detailed card analytics coming soon.</p>
     </div>
     <div id="view-bills" class="view">
         <div class="header">Bills</div>
-        <p class="placeholder-text">Track your upcoming bills.</p>
+        <p class="placeholder-text">Upcoming calendar view coming soon.</p>
     </div>
     <div id="view-loans" class="view">
         <div class="header">Loans</div>
-        <p class="placeholder-text">Loan and credit status.</p>
+        <p class="placeholder-text">Amortization schedules coming soon.</p>
     </div>
 
     <div id="view-admin" class="view">
-        <div class="header">Admin Panel</div>
+        <div class="header">Admin</div>
         
         <div class="settings-group">
             <div class="settings-row">
@@ -43,19 +44,50 @@
             </div>
         </div>
 
+        <div class="group-title">Add New Item</div>
         <div class="settings-group">
-            <h3 class="group-title">Add Account</h3>
-            <form id="add-account-form" class="admin-form">
-                <input type="text" id="bankName" placeholder="Bank Name" required>
-                <input type="number" id="initialBalance" placeholder="Initial Balance" step="0.01" required>
-                <input type="number" id="odLimit" placeholder="Overdraft Limit" step="0.01">
-                <button type="submit" class="ios-btn">Add Account</button>
+            <div class="segmented-control">
+                <input type="radio" name="itemType" value="account" id="type-account" checked>
+                <label for="type-account">Account</label>
+                <input type="radio" name="itemType" value="card" id="type-card">
+                <label for="type-card">Card</label>
+                <input type="radio" name="itemType" value="loan" id="type-loan">
+                <label for="type-loan">Loan</label>
+                <input type="radio" name="itemType" value="bill" id="type-bill">
+                <label for="type-bill">Bill</label>
+            </div>
+
+            <form id="add-item-form" class="admin-form">
+                <input type="text" id="itemName" placeholder="Name" required>
+                <input type="number" id="itemAmount" placeholder="Balance (£)" step="0.01" required>
+
+                <div id="account-only-fields">
+                    <div class="settings-row" style="padding: 10px 0;">
+                        <span>Overdraft Facility?</span>
+                        <label class="ios-toggle small">
+                            <input type="checkbox" id="hasOverdraft">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <input type="number" id="odLimit" placeholder="Overdraft Limit (£)" step="0.01">
+                </div>
+
+                <div id="bill-only-fields" style="display:none;">
+                    <input type="number" id="billDay" placeholder="Day of month due (1-31)">
+                    <select id="billFrequency">
+                        <option value="Monthly">Monthly</option>
+                        <option value="Quarterly">Quarterly</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="ios-btn">Save to Dashboard</button>
             </form>
         </div>
 
         <div class="admin-footer">
-            <div class="version-control">App Version 2.4.1 (Build 842)</div>
-            <div class="developer-mode">Deployed via GitHub Pages</div>
+            <button id="sync-updates-btn" class="sync-btn">Sync for Updates</button>
+            <div class="version-control">App Version 2.6.0 (Build 1042)</div>
+            <div class="developer-mode">PWA Mode: Active</div>
         </div>
     </div>
 
