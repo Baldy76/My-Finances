@@ -1,12 +1,31 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // --- 1. Theme Management (Merged from script.js) ---
+    const toggle = document.getElementById('themeToggle');
+    const currentTheme = localStorage.getItem('theme') || 'light';
+
+    if (currentTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        if (toggle) toggle.checked = true;
+    }
+
+    if (toggle) {
+        toggle.addEventListener('change', (e) => {
+            const theme = e.target.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        });
+    }
+
+    // --- 2. Banking State & DOM Elements ---
     let accounts = JSON.parse(localStorage.getItem("bankingAccounts")) || [];
     const accountsContainer = document.getElementById("accounts-container");
     const addAccountForm = document.getElementById("add-account-form");
     const views = ['cards', 'bills', 'home', 'loans', 'admin'];
 
+    // --- 3. Navigation Logic ---
     views.forEach(view => {
         const navBtn = document.getElementById(`nav-${view}`);
-        if(navBtn) {
+        if (navBtn) {
             navBtn.addEventListener("click", () => switchView(view));
         }
     });
@@ -25,11 +44,14 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
-        if (targetView === 'home') { renderAccounts(); }
+        if (targetView === 'home') renderAccounts();
     }
 
+    // --- 4. Render Home Screen ---
     function renderAccounts() {
+        if (!accountsContainer) return;
         accountsContainer.innerHTML = ""; 
+
         if (accounts.length === 0) {
             accountsContainer.innerHTML = "<p style='text-align:center; color:#8e8e93; margin-top:40px;'>No accounts found.</p>";
             return;
@@ -49,19 +71,23 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    addAccountForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const newAccount = {
-            id: Date.now().toString(),
-            name: document.getElementById("bankName").value,
-            balance: parseFloat(document.getElementById("initialBalance").value),
-            overdraftLimit: parseFloat(document.getElementById("odLimit").value) || 0
-        };
-        accounts.push(newAccount);
-        localStorage.setItem("bankingAccounts", JSON.stringify(accounts));
-        addAccountForm.reset();
-        switchView('home');
-    });
+    // --- 5. Add Account Logic ---
+    if (addAccountForm) {
+        addAccountForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const newAccount = {
+                id: Date.now().toString(),
+                name: document.getElementById("bankName").value,
+                balance: parseFloat(document.getElementById("initialBalance").value),
+                overdraftLimit: parseFloat(document.getElementById("odLimit").value) || 0
+            };
+            accounts.push(newAccount);
+            localStorage.setItem("bankingAccounts", JSON.stringify(accounts));
+            addAccountForm.reset();
+            switchView('home');
+        });
+    }
 
+    // Initial render
     renderAccounts();
 });
