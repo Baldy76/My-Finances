@@ -1,5 +1,4 @@
-// Version bumped to ensure the cache clears
-const CACHE_NAME = 'finance-ios-v3.2.0';
+const CACHE_NAME = 'finance-ios-v3.3.0';
 const ASSETS = ['./', './index.html', './styles.css', './app.js', './manifest.json'];
 
 self.addEventListener('install', (e) => {
