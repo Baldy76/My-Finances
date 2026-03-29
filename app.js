@@ -17,16 +17,29 @@ window.setThemeMode = (isDark) => {
     localStorage.setItem('MyApp_Theme', isDark); 
 };
 
-// 2. UK Banking Logic
+// 2. UK Banking Logic (Forward for Bills, Backward for Income)
 const ukHolidays2026 = ["2026-01-01", "2026-04-03", "2026-04-06", "2026-05-04", "2026-05-25", "2026-08-31", "2026-12-25", "2026-12-28"];
+
+function isNonWorkingDay(d) {
+    const dayOfWeek = d.getDay(); 
+    const offsetDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000));
+    return dayOfWeek === 0 || dayOfWeek === 6 || ukHolidays2026.includes(offsetDate.toISOString().split('T')[0]);
+}
+
 function getAdjustedPaymentDate(year, month, day) {
     let date = new Date(year, month, day);
-    const isNonWorkingDay = (d) => {
-        const dayOfWeek = d.getDay(); 
-        const offsetDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000));
-        return dayOfWeek === 0 || dayOfWeek === 6 || ukHolidays2026.includes(offsetDate.toISOString().split('T')[0]);
-    };
-    while (isNonWorkingDay(date)) date.setDate(date.getDate() + 1);
+    while (isNonWorkingDay(date)) date.setDate(date.getDate() + 1); // Rolls Forward
+    return date;
+}
+
+function getAdjustedIncomeDate(year, month, dayVal) {
+    let date;
+    if (dayVal === 'last') {
+        date = new Date(year, month + 1, 0); // Gets the very last day of the target month
+    } else {
+        date = new Date(year, month, parseInt(dayVal));
+    }
+    while (isNonWorkingDay(date)) date.setDate(date.getDate() - 1); // Rolls Backward
     return date;
 }
 
@@ -39,15 +52,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let financialItems = JSON.parse(localStorage.getItem("financialItems")) || [];
     const views = ['cards', 'bills', 'home', 'loans', 'admin', 'account-details'];
-    
-    // Track which account we are currently viewing/editing
     let currentActiveAccountId = null; 
+
+    // --- Inject Salary Days 1-31 ---
+    const salaryDaySelect = document.getElementById('salaryDay');
+    if (salaryDaySelect) {
+        for(let i=1; i<=31; i++) {
+            salaryDaySelect.insertAdjacentHTML('beforeend', `<option value="${i}">${i}${getOrdinalIndicator(i)}</option>`);
+        }
+    }
+    function getOrdinalIndicator(n) {
+        const s = ["th", "st", "nd", "rd"];
+        const v = n % 100;
+        return (s[(v - 20) % 10] || s[v] || s[0]);
+    }
 
     // --- Dynamic Form Handling ---
     const typeRadios = document.querySelectorAll('input[name="itemType"]');
     const formGroups = {
         account: document.getElementById('account-fields'), card: document.getElementById('card-fields'),
-        loan: document.getElementById('loan-fields'), bill: document.getElementById('bill-fields')
+        loan: document.getElementById('loan-fields'), bill: document.getElementById('bill-fields'),
+        salary: document.getElementById('salary-fields')
     };
 
     function updateFormFields(selectedType) {
@@ -58,20 +83,29 @@ document.addEventListener("DOMContentLoaded", () => {
             else if (selectedType === 'card') { document.getElementById('cardLimit').required = true; document.getElementById('cardDay').required = true; }
             else if (selectedType === 'loan') { document.getElementById('loanOriginal').required = true; document.getElementById('loanMonthly').required = true; document.getElementById('loanDay').required = true; }
             else if (selectedType === 'bill') { document.getElementById('billDay').required = true; document.getElementById('billAccount').required = true; }
+            else if (selectedType === 'salary') { document.getElementById('salaryDay').required = true; document.getElementById('salaryAccount').required = true; }
         }
-        document.getElementById('itemAmount').placeholder = (selectedType === 'bill') ? "Bill Amount (£)" : "Current Balance (£)";
+        
+        let placeholder = "Current Balance (£)";
+        if (selectedType === 'bill') placeholder = "Bill Amount (£)";
+        if (selectedType === 'salary') placeholder = "Salary Amount (£)";
+        document.getElementById('itemAmount').placeholder = placeholder;
     }
     typeRadios.forEach(radio => radio.addEventListener('change', (e) => updateFormFields(e.target.value)));
 
     function populateDropdowns() {
         const billSelect = document.getElementById('billAccount');
+        const salarySelect = document.getElementById('salaryAccount');
         const txSelect = document.getElementById('txAccount');
+        
         if (billSelect) billSelect.innerHTML = '<option value="" disabled selected>Select Account to Debit</option>';
+        if (salarySelect) salarySelect.innerHTML = '<option value="" disabled selected>Select Account to Credit</option>';
         if (txSelect) txSelect.innerHTML = '<option value="" disabled selected>Select Account</option>';
         
         const accounts = financialItems.filter(i => i.type === 'account');
         accounts.forEach(acc => {
             if (billSelect) billSelect.insertAdjacentHTML('beforeend', `<option value="${acc.id}">${acc.name}</option>`);
+            if (salarySelect) salarySelect.insertAdjacentHTML('beforeend', `<option value="${acc.id}">${acc.name}</option>`);
             if (txSelect) txSelect.insertAdjacentHTML('beforeend', `<option value="${acc.id}">${acc.name}</option>`);
         });
     }
@@ -87,18 +121,12 @@ document.addEventListener("DOMContentLoaded", () => {
             const vEl = document.getElementById(`view-${view}`);
             const nEl = document.getElementById(`nav-${view}`);
             if(vEl) vEl.classList.toggle("active-view", view === targetView);
-            if(nEl) {
-                // Keep home icon active even if we are deep in the account details view
-                const isActive = view === targetView || (targetView === 'account-details' && view === 'home');
-                nEl.classList.toggle("active", isActive);
-            }
+            if(nEl) nEl.classList.toggle("active", view === targetView || (targetView === 'account-details' && view === 'home'));
         });
-        
-        if (targetView === 'home') renderAll();
+        if (targetView === 'home' || targetView === 'bills') renderAll();
         if (targetView === 'admin') populateDropdowns(); 
     }
 
-    // Expose for back button in HTML
     window.switchBackToHome = () => { currentActiveAccountId = null; switchView('home'); };
 
     // --- Rendering Views ---
@@ -110,12 +138,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const homeContent = document.getElementById("home-content");
         if (!homeContent) return;
         homeContent.innerHTML = ""; 
-        
         const accounts = financialItems.filter(i => i.type === 'account');
-        if (accounts.length === 0) {
-            homeContent.innerHTML = "<p class='placeholder-text'>No accounts added yet.</p>";
-            return;
-        }
+        if (accounts.length === 0) { homeContent.innerHTML = "<p class='placeholder-text'>No accounts added yet.</p>"; return; }
 
         const grid = document.createElement('div');
         grid.className = 'tiles-grid';
@@ -125,22 +149,15 @@ document.addEventListener("DOMContentLoaded", () => {
             const sign = isNegative ? '-' : '';
             const balanceDisplay = `${sign}£${Math.abs(item.balance).toFixed(2)}`;
             
-            // NEW: Requested OD Display Logic
             let extraInfoHtml = '';
             if (item.hasOverdraft) {
-                if (item.balance >= 0) {
-                    extraInfoHtml = `<div class="available-balance">Overdraft Limit: £${(item.odLimit || 0).toFixed(2)}</div>`;
-                } else {
-                    const available = item.balance + (item.odLimit || 0);
-                    extraInfoHtml = `<div class="available-balance">Available OD: £${available.toFixed(2)}</div>`;
-                }
+                if (item.balance >= 0) extraInfoHtml = `<div class="available-balance">Overdraft Limit: £${(item.odLimit || 0).toFixed(2)}</div>`;
+                else extraInfoHtml = `<div class="available-balance">Available OD: £${(item.balance + (item.odLimit || 0)).toFixed(2)}</div>`;
             }
 
             const subText = item.accountType === 'savings' ? 'Savings Account' : 'Current Account';
-
             const tile = document.createElement('div');
             tile.className = 'square-tile';
-            // Click tile to view details
             tile.onclick = () => openAccountDetails(item.id); 
             tile.innerHTML = `
                 <div class="top-info">
@@ -157,29 +174,150 @@ document.addEventListener("DOMContentLoaded", () => {
         homeContent.appendChild(grid);
     }
 
-    // Cards, Loans, Bills remain unchanged from v3.4.0 (omitted here to save space, but logically run in background)
-    function renderCards() { /* Logic maintained */ }
-    function renderLoans() { /* Logic maintained */ }
-    function renderBills() { /* Logic maintained */ }
+    function renderCards() {
+        const content = document.getElementById("cards-content");
+        if (!content) return;
+        content.innerHTML = "";
+        const cards = financialItems.filter(i => i.type === 'card');
+        if (cards.length === 0) { content.innerHTML = "<p class='placeholder-text'>No credit cards added.</p>"; return; }
+        const grid = document.createElement('div'); grid.className = 'tiles-grid';
+        cards.forEach(item => {
+            const isNegative = item.balance < 0;
+            const sign = isNegative ? '-' : '';
+            const balanceDisplay = `${sign}£${Math.abs(item.balance).toFixed(2)}`;
+            const tile = document.createElement('div'); tile.className = 'square-tile';
+            tile.innerHTML = `
+                <div class="top-info"><div class="name">${item.name}</div><div class="sub">Due: ${item.dueDate ? 'Day ' + item.dueDate : 'N/A'}</div></div>
+                <div class="bottom-info"><div class="item-amount ${isNegative ? 'text-red' : ''}">${balanceDisplay}</div><div class="available-balance">${item.creditLimit ? `Limit: £${item.creditLimit.toFixed(2)}` : ''}</div></div>
+            `;
+            grid.appendChild(tile);
+        });
+        content.appendChild(grid);
+    }
 
-    // --- NEW: Account Details View ---
+    function renderLoans() {
+        const content = document.getElementById("loans-content");
+        if (!content) return;
+        content.innerHTML = "";
+        const loans = financialItems.filter(i => i.type === 'loan');
+        if (loans.length === 0) { content.innerHTML = "<p class='placeholder-text'>No loans added.</p>"; return; }
+        const grid = document.createElement('div'); grid.className = 'tiles-grid';
+        loans.forEach(item => {
+            const isNegative = item.balance < 0;
+            const sign = isNegative ? '-' : '';
+            const balanceDisplay = `${sign}£${Math.abs(item.balance).toFixed(2)}`;
+            const tile = document.createElement('div'); tile.className = 'square-tile';
+            tile.innerHTML = `
+                <div class="top-info"><div class="name">${item.name}</div><div class="sub">Due: ${item.dueDate ? 'Day ' + item.dueDate : 'N/A'}</div></div>
+                <div class="bottom-info"><div class="item-amount ${isNegative ? 'text-red' : ''}">${balanceDisplay}</div><div class="available-balance">${item.monthlyPayment ? `£${item.monthlyPayment.toFixed(2)} / mo` : ''}</div></div>
+            `;
+            grid.appendChild(tile);
+        });
+        content.appendChild(grid);
+    }
+
+    function renderBills() {
+        const billsContent = document.getElementById("bills-content");
+        if (!billsContent) return;
+        billsContent.innerHTML = "";
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); 
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+
+        // Include BOTH bills and salaries
+        const scheduleItems = financialItems.filter(i => i.type === 'bill' || i.type === 'salary');
+
+        if (scheduleItems.length === 0) {
+            billsContent.innerHTML = "<p class='placeholder-text'>No items scheduled.</p>";
+            return;
+        }
+
+        const scheduledList = scheduleItems.map(item => {
+            let actualDate;
+            if (item.type === 'bill') actualDate = getAdjustedPaymentDate(currentYear, currentMonth, parseInt(item.dueDate));
+            if (item.type === 'salary') actualDate = getAdjustedIncomeDate(currentYear, currentMonth, item.dueDate);
+            return { ...item, actualDate };
+        });
+
+        scheduledList.sort((a, b) => a.actualDate - b.actualDate);
+
+        const upcoming = scheduledList.filter(b => b.actualDate >= today);
+        const past = scheduledList.filter(b => b.actualDate < today);
+
+        const listContainer = document.createElement('div');
+        listContainer.className = 'settings-group';
+
+        upcoming.forEach(item => {
+            const dateStr = item.actualDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', weekday: 'short' });
+            const targetAcc = financialItems.find(a => a.id === (item.debitAccount || item.creditAccount));
+            const accName = targetAcc ? targetAcc.name : 'Unknown Account';
+            
+            const isIncome = item.type === 'salary';
+            const labelText = isIncome ? 'INCOME' : 'UPCOMING';
+            const fromToText = isIncome ? `To: ${accName}` : `From: ${accName}`;
+            const amountClass = isIncome ? 'text-green' : '';
+            const sign = isIncome ? '+' : '';
+
+            const row = document.createElement('div');
+            row.className = 'item-tile';
+            row.innerHTML = `
+                <div class="item-info">
+                    <div class="name">${item.name}</div>
+                    <div class="sub" style="color: ${isIncome ? '#34C759' : 'var(--accent)'}; font-weight: 600;">${labelText}: ${dateStr}</div>
+                    <div class="sub" style="font-size: 10px; margin-top: 2px;">${fromToText}</div>
+                </div>
+                <div class="amount-container">
+                    <div class="item-amount ${amountClass}">${sign}£${Math.abs(item.balance).toFixed(2)}</div>
+                </div>
+            `;
+            listContainer.appendChild(row);
+        });
+
+        if (upcoming.length > 0 && past.length > 0) {
+            const divider = document.createElement('div');
+            divider.className = 'bill-divider';
+            listContainer.appendChild(divider);
+        }
+
+        past.forEach(item => {
+            const dateStr = item.actualDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', weekday: 'short' });
+            const isIncome = item.type === 'salary';
+            const badgeText = isIncome ? 'Received' : 'Paid';
+
+            const row = document.createElement('div');
+            row.className = 'item-tile is-paid';
+            row.innerHTML = `
+                <div class="item-info">
+                    <div class="name">${item.name}</div>
+                    <div class="sub">${badgeText.toUpperCase()}: ${dateStr}</div>
+                </div>
+                <div class="amount-container">
+                    <div class="item-amount">
+                        <span class="status-badge paid" style="color: ${isIncome ? '#34C759' : '#8E8E93'}">${badgeText}</span>
+                        £${Math.abs(item.balance).toFixed(2)}
+                    </div>
+                </div>
+            `;
+            listContainer.appendChild(row);
+        });
+
+        billsContent.appendChild(listContainer);
+    }
+
+    // --- Account Details View ---
     window.openAccountDetails = (accountId) => {
         currentActiveAccountId = accountId;
         const account = financialItems.find(i => i.id === accountId);
         if(!account) return;
 
-        // Ensure transactions array exists
-        const txs = account.transactions || [];
-
-        // Update Header and Balance
         document.getElementById('detail-account-name').innerText = account.name;
-        
         const isNeg = account.balance < 0;
         const balEl = document.getElementById('detail-account-balance');
         balEl.innerText = `${isNeg ? '-' : ''}£${Math.abs(account.balance).toFixed(2)}`;
         balEl.className = `detail-balance-large ${isNeg ? 'text-red' : ''}`;
 
-        // OD text for details screen
         const odEl = document.getElementById('detail-account-od');
         if (account.hasOverdraft) {
             odEl.innerText = account.balance >= 0 
@@ -187,20 +325,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 : `Available: £${(account.balance + account.odLimit).toFixed(2)}`;
         } else { odEl.innerText = ""; }
 
-        // Render Transaction List (Limit 20)
         const listEl = document.getElementById('transaction-list');
         listEl.innerHTML = "";
+        const txs = account.transactions || [];
 
         if (txs.length === 0) {
             listEl.innerHTML = "<p class='placeholder-text' style='padding-bottom: 20px;'>No recent transactions.</p>";
         } else {
-            // Take top 20
             const recentTxs = txs.slice(0, 20);
             recentTxs.forEach(tx => {
                 const isOut = tx.amount < 0;
                 const sign = isOut ? '-' : '+';
                 const colorClass = isOut ? 'text-red' : 'text-green';
-                
                 const isRollNeg = tx.rollingBalance < 0;
                 const rollSign = isRollNeg ? '-' : '';
 
@@ -221,46 +357,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 listEl.appendChild(row);
             });
         }
-
         switchView('account-details');
     };
 
-    // --- NEW: Modals Logic ---
+    // --- Modals Logic ---
     const overlay = document.getElementById('modal-overlay');
     const txModal = document.getElementById('transaction-modal');
     const editModal = document.getElementById('edit-modal');
 
-    window.openTransactionModal = () => {
-        overlay.classList.add('active');
-        // Small delay ensures display:block applies before moving bottom property
-        setTimeout(() => txModal.classList.add('open'), 10); 
-    };
-
+    window.openTransactionModal = () => { overlay.classList.add('active'); setTimeout(() => txModal.classList.add('open'), 10); };
     window.openEditModal = () => {
         if(!currentActiveAccountId) return;
         const acc = financialItems.find(i => i.id === currentActiveAccountId);
-        
         document.getElementById('editBalance').value = acc.balance;
-        
         const odWrapper = document.getElementById('edit-od-wrapper');
         if(acc.hasOverdraft) {
-            odWrapper.style.display = 'block';
-            document.getElementById('editOdLimit').value = acc.odLimit;
-            document.getElementById('editOdLimit').required = true;
+            odWrapper.style.display = 'block'; document.getElementById('editOdLimit').value = acc.odLimit; document.getElementById('editOdLimit').required = true;
         } else {
-            odWrapper.style.display = 'none';
-            document.getElementById('editOdLimit').required = false;
+            odWrapper.style.display = 'none'; document.getElementById('editOdLimit').required = false;
         }
-
-        overlay.classList.add('active');
-        setTimeout(() => editModal.classList.add('open'), 10);
+        overlay.classList.add('active'); setTimeout(() => editModal.classList.add('open'), 10);
     };
-
-    window.closeAllModals = () => {
-        txModal.classList.remove('open');
-        editModal.classList.remove('open');
-        setTimeout(() => overlay.classList.remove('active'), 300); // Wait for slide down to finish
-    };
+    window.closeAllModals = () => { txModal.classList.remove('open'); editModal.classList.remove('open'); setTimeout(() => overlay.classList.remove('active'), 300); };
 
     // Transaction Submission
     document.getElementById('transaction-form').addEventListener('submit', (e) => {
@@ -269,34 +387,22 @@ document.addEventListener("DOMContentLoaded", () => {
         const type = document.querySelector('input[name="txType"]:checked').value;
         const amountInput = parseFloat(document.getElementById('txAmount').value);
         const desc = document.getElementById('txDesc').value;
-
-        // Calculate actual mathematical amount (out is negative, in is positive)
         const actualAmount = type === 'out' ? -Math.abs(amountInput) : Math.abs(amountInput);
         
         const accountIndex = financialItems.findIndex(i => i.id === accId);
         if (accountIndex !== -1) {
-            // Create array if missing
             if(!financialItems[accountIndex].transactions) financialItems[accountIndex].transactions = [];
-            
-            // Apply math
             financialItems[accountIndex].balance += actualAmount;
             
-            // Build transaction record
             const newTx = {
                 id: Date.now().toString(),
                 date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }),
-                description: desc,
-                amount: actualAmount,
-                rollingBalance: financialItems[accountIndex].balance
+                description: desc, amount: actualAmount, rollingBalance: financialItems[accountIndex].balance
             };
-
-            // Add to top of array
             financialItems[accountIndex].transactions.unshift(newTx);
-            
             localStorage.setItem("financialItems", JSON.stringify(financialItems));
             document.getElementById('transaction-form').reset();
-            closeAllModals();
-            renderAll();
+            closeAllModals(); renderAll();
         }
     });
 
@@ -309,12 +415,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if(financialItems[accountIndex].hasOverdraft) {
                 financialItems[accountIndex].odLimit = parseFloat(document.getElementById('editOdLimit').value) || 0;
             }
-            
             localStorage.setItem("financialItems", JSON.stringify(financialItems));
-            closeAllModals();
-            // Refresh the details view to show new numbers
-            openAccountDetails(currentActiveAccountId); 
-            renderAll();
+            closeAllModals(); openAccountDetails(currentActiveAccountId); renderAll();
         }
     });
 
@@ -324,12 +426,11 @@ document.addEventListener("DOMContentLoaded", () => {
         addItemForm.addEventListener("submit", (e) => {
             e.preventDefault();
             const type = document.querySelector('input[name="itemType"]:checked').value;
-            
             let newItem = {
                 id: Date.now().toString(), type: type,
                 name: document.getElementById("itemName").value,
                 balance: parseFloat(document.getElementById("itemAmount").value),
-                transactions: [] // Initialize array for new accounts
+                transactions: []
             };
 
             if (type === 'account') {
@@ -337,28 +438,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 newItem.hasOverdraft = document.getElementById("hasOverdraft").checked;
                 newItem.odLimit = parseFloat(document.getElementById("odLimit").value) || 0;
             } else if (type === 'card') {
-                newItem.creditLimit = parseFloat(document.getElementById("cardLimit").value) || 0;
-                newItem.dueDate = document.getElementById("cardDay").value;
+                newItem.creditLimit = parseFloat(document.getElementById("cardLimit").value) || 0; newItem.dueDate = document.getElementById("cardDay").value;
             } else if (type === 'loan') {
-                newItem.originalAmount = parseFloat(document.getElementById("loanOriginal").value) || 0;
-                newItem.monthlyPayment = parseFloat(document.getElementById("loanMonthly").value) || 0;
-                newItem.dueDate = document.getElementById("loanDay").value;
+                newItem.originalAmount = parseFloat(document.getElementById("loanOriginal").value) || 0; newItem.monthlyPayment = parseFloat(document.getElementById("loanMonthly").value) || 0; newItem.dueDate = document.getElementById("loanDay").value;
             } else if (type === 'bill') {
-                newItem.dueDate = document.getElementById("billDay").value;
-                newItem.debitAccount = document.getElementById("billAccount").value;
+                newItem.dueDate = document.getElementById("billDay").value; newItem.debitAccount = document.getElementById("billAccount").value;
+            } else if (type === 'salary') {
+                newItem.dueDate = document.getElementById("salaryDay").value; newItem.creditAccount = document.getElementById("salaryAccount").value;
             }
 
             financialItems.push(newItem);
             localStorage.setItem("financialItems", JSON.stringify(financialItems));
-            addItemForm.reset();
-            document.getElementById('type-account').checked = true;
-            updateFormFields('account');
-            renderAll(); 
-            switchView('home');
+            addItemForm.reset(); document.getElementById('type-account').checked = true; updateFormFields('account');
+            renderAll(); switchView('home');
         });
     }
 
-    // Initial Setup
     updateFormFields('account');
     renderAll();
 });
