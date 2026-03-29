@@ -15,8 +15,24 @@
 </head>
 <body class="light-mode">
     <div class="app-container">
+        
         <div id="view-home" class="view active-view">
             <div id="home-content"></div>
+            <button class="fab" onclick="openTransactionModal()">+</button>
+        </div>
+
+        <div id="view-account-details" class="view">
+            <div class="details-header">
+                <button class="back-btn" onclick="switchBackToHome()">◄ Back</button>
+                <button class="edit-btn" onclick="openEditModal()">Edit</button>
+            </div>
+            <div class="header" id="detail-account-name" style="margin-top: 10px;">Account</div>
+            <div class="detail-balance-large" id="detail-account-balance">£0.00</div>
+            <div class="available-balance" id="detail-account-od" style="margin-bottom: 25px; text-align: center; font-size: 14px;"></div>
+            
+            <div class="group-title">Recent Transactions</div>
+            <div class="settings-group" id="transaction-list">
+                </div>
         </div>
 
         <div id="view-cards" class="view">
@@ -97,7 +113,7 @@
 
             <div class="admin-footer">
                 <button id="sync-updates-btn" class="sync-btn">Sync for Updates</button>
-                <div class="version-control">App Version 3.4.0 (Build 1650)</div>
+                <div class="version-control">App Version 3.5.0 (Build 1700)</div>
             </div>
         </div>
 
@@ -108,6 +124,39 @@
             <div id="nav-loans" class="tab-item"><span>💰</span><label>Loans</label></div>
             <div id="nav-admin" class="tab-item"><span>⚙️</span><label>Admin</label></div>
         </nav>
+
+        <div id="modal-overlay" class="modal-overlay" onclick="closeAllModals()"></div>
+
+        <div id="transaction-modal" class="bottom-sheet">
+            <div class="sheet-header">Record Transaction</div>
+            <form id="transaction-form" class="admin-form" style="padding-top: 5px;">
+                <select id="txAccount" class="ios-select" required>
+                    <option value="" disabled selected>Select Account</option>
+                </select>
+                
+                <div class="segmented-control" style="margin: 0 0 12px 0;">
+                    <input type="radio" name="txType" value="out" id="tx-out" checked><label for="tx-out">Out (Spend)</label>
+                    <input type="radio" name="txType" value="in" id="tx-in"><label for="tx-in">In (Income)</label>
+                </div>
+                
+                <input type="number" id="txAmount" placeholder="Amount (£)" step="0.01" required>
+                <input type="text" id="txDesc" placeholder="Description (e.g., Tesco, Salary)" required>
+                
+                <button type="submit" class="ios-btn" style="margin-top: 10px;">Save Transaction</button>
+            </form>
+        </div>
+
+        <div id="edit-modal" class="bottom-sheet">
+            <div class="sheet-header">Edit Account</div>
+            <form id="edit-form" class="admin-form" style="padding-top: 5px;">
+                <input type="number" id="editBalance" placeholder="Correct Balance (£)" step="0.01" required>
+                <div id="edit-od-wrapper">
+                    <input type="number" id="editOdLimit" placeholder="New Overdraft Limit (£)" step="0.01">
+                </div>
+                <button type="submit" class="ios-btn" style="margin-top: 10px;">Save Changes</button>
+            </form>
+        </div>
+
     </div>
     <script src="app.js"></script>
 </body>
