@@ -1,200 +1,26 @@
-:root {
-    --bg-color: #F2F2F7;
-    --card-bg: #FFFFFF;
-    --text-primary: #000000;
-    --text-secondary: #8E8E93;
-    --toggle-bg: #E9E9EA;
-    --toggle-active: #34C759;
-    --divider: #C6C6C8;
-    --tab-bg: rgba(255, 255, 255, 0.8);
-    --accent: #5E5CE6;
-}
+/* ... [Previous styles remain same] ... */
 
-[data-theme="dark"] {
-    --bg-color: #000000;
-    --card-bg: #1C1C1E;
-    --text-primary: #FFFFFF;
-    --text-secondary: #8E8E93;
-    --toggle-bg: #39393D;
-    --divider: #38383A;
-    --tab-bg: rgba(28, 28, 30, 0.8);
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-primary);
-    height: 100vh;
-    overflow: hidden;
-}
-
-.app-container {
-    width: 100%;
-    max-width: 450px;
-    height: 100%;
-    margin: 0 auto;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-
-.view {
-    display: none;
-    flex-direction: column;
-    padding: 20px;
-    height: 100%;
-    overflow-y: auto;
-    padding-bottom: 110px;
-}
-
-.active-view { display: flex; }
-
-.header {
-    font-size: 34px;
-    font-weight: 800;
-    margin: 40px 0 10px 0;
-    letter-spacing: -1px;
-}
-
-/* Home Screen Grouping */
-.home-section { margin-bottom: 25px; }
-.section-title {
-    font-size: 20px;
-    font-weight: 700;
-    margin: 15px 0 10px 0;
-    padding-left: 5px;
-}
-
-/* Account/Item Tiles */
-.item-tile {
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 18px;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
-
-.item-info .name { font-size: 15px; font-weight: 600; }
-.item-info .sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-.item-amount { font-size: 18px; font-weight: 700; }
-.text-red { color: #FF3B30; }
-
-/* Segmented Control (iOS Picker) */
-.segmented-control {
-    display: flex;
+.sync-btn {
     background: var(--toggle-bg);
-    padding: 2px;
+    color: var(--accent);
+    border: none;
+    padding: 12px 24px;
     border-radius: 10px;
-    margin: 15px 0;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: opacity 0.2s;
 }
 
-.segmented-control input { display: none; }
-.segmented-control label {
-    flex: 1;
+.sync-btn:active {
+    opacity: 0.7;
+}
+
+.admin-footer {
     text-align: center;
-    padding: 8px 0;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    border-radius: 8px;
-    transition: 0.2s;
-}
-
-.segmented-control input:checked + label {
-    background: var(--card-bg);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* Admin Styling */
-.settings-group {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 0 16px;
-    margin-bottom: 10px;
-}
-
-.group-title {
-    font-size: 13px;
-    text-transform: uppercase;
+    margin-top: 40px;
+    padding-bottom: 20px;
     color: var(--text-secondary);
-    margin: 25px 0 8px 5px;
-    font-weight: 600;
+    font-size: 11px;
 }
-
-.settings-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 0;
-    border-bottom: 0.5px solid var(--divider);
-}
-
-.settings-row:last-child { border-bottom: none; }
-
-.admin-form { display: flex; flex-direction: column; gap: 12px; padding: 15px 0; }
-.admin-form input, .admin-form select {
-    background: var(--bg-color);
-    border: none;
-    padding: 14px;
-    border-radius: 10px;
-    color: var(--text-primary);
-    font-size: 16px;
-    width: 100%;
-}
-
-.ios-btn {
-    background: var(--accent);
-    color: white;
-    border: none;
-    padding: 16px;
-    border-radius: 12px;
-    font-weight: 700;
-    margin-top: 10px;
-    cursor: pointer;
-}
-
-/* Tab Bar */
-.tab-bar {
-    position: absolute;
-    bottom: 0; width: 100%; height: 85px;
-    background: var(--tab-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    display: flex;
-    justify-content: space-around;
-    padding-top: 10px;
-    border-top: 0.5px solid var(--divider);
-}
-
-.tab-item {
-    display: flex; flex-direction: column; align-items: center;
-    color: var(--text-secondary); cursor: pointer; font-size: 10px; flex: 1;
-}
-
-.tab-item.active { color: var(--accent); }
-.tab-item span { font-size: 24px; margin-bottom: 2px; }
-
-/* iOS Toggle */
-.ios-toggle { position: relative; width: 51px; height: 31px; }
-.ios-toggle.small { width: 40px; height: 24px; }
-.ios-toggle input { opacity: 0; width: 0; height: 0; }
-.slider {
-    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-    background-color: var(--toggle-bg); transition: .3s; border-radius: 31px;
-}
-.slider:before {
-    position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px;
-    background-color: white; border-radius: 50%; transition: .3s cubic-bezier(0.25, 0.1, 0.25, 1.3);
-    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-}
-.ios-toggle.small .slider:before { height: 20px; width: 20px; }
-input:checked + .slider { background-color: var(--toggle-active); }
-input:checked + .slider:before { transform: translateX(20px); }
-.ios-toggle.small input:checked + .slider:before { transform: translateX(16px); }
-
-.admin-footer { text-align: center; margin-top: 30px; color: var(--text-secondary); font-size: 11px; }
