@@ -1,15 +1,11 @@
 // 1. Theme Engine Functions
 function applyTheme(isDark) {
     document.body.classList.toggle('dark-mode', isDark);
-    
     const meta = document.getElementById('theme-meta'); 
-    if(meta) {
-        meta.content = isDark ? "#000000" : "#f2f2f7";
-    }
+    if(meta) meta.content = isDark ? "#000000" : "#f2f2f7";
     
     const btnLight = document.getElementById('btnLight'); 
     const btnDark = document.getElementById('btnDark');
-    
     if (btnLight && btnDark) {
         if (isDark) { 
             btnLight.classList.remove('active'); 
@@ -28,51 +24,17 @@ window.setThemeMode = (isDark) => {
 
 // 2. Main App Logic
 document.addEventListener("DOMContentLoaded", () => {
-    
-    // Check local storage for theme
     const savedTheme = localStorage.getItem('MyApp_Theme') === 'true';
     applyTheme(savedTheme);
 
-    // PWA Service Worker Registration
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-            .then(() => console.log("Service Worker Registered"))
-            .catch(err => console.log("SW Registration Failed", err));
+        navigator.serviceWorker.register('./sw.js').then(() => console.log("SW Active"));
     }
 
-    // PWA Sync Logic
-    const syncBtn = document.getElementById('sync-updates-btn');
-    if (syncBtn) {
-        syncBtn.addEventListener('click', () => {
-            syncBtn.innerText = "Syncing...";
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(registrations => {
-                    for (let registration of registrations) registration.update();
-                });
-            }
-            caches.keys().then(names => { for (let name of names) caches.delete(name); });
-            setTimeout(() => { window.location.reload(true); }, 1000);
-        });
-    }
-
-    // State & Navigation
     let financialItems = JSON.parse(localStorage.getItem("financialItems")) || [];
-    const homeContent = document.getElementById("home-content");
-    const addItemForm = document.getElementById("add-item-form");
-    const typeRadios = document.querySelectorAll('input[name="itemType"]');
     const views = ['cards', 'bills', 'home', 'loans', 'admin'];
 
-    // Dynamic Form Fields
-    typeRadios.forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            const val = e.target.value;
-            document.getElementById('account-only-fields').style.display = (val === 'account') ? 'block' : 'none';
-            document.getElementById('bill-only-fields').style.display = (val === 'bill') ? 'block' : 'none';
-            document.getElementById('itemAmount').placeholder = (val === 'bill') ? "Bill Amount (£)" : "Balance (£)";
-        });
-    });
-
-    // View Switching
+    // Navigation Logic
     views.forEach(view => {
         const navBtn = document.getElementById(`nav-${view}`);
         if (navBtn) navBtn.addEventListener("click", () => switchView(view));
@@ -80,14 +42,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function switchView(targetView) {
         views.forEach(view => {
-            document.getElementById(`view-${view}`).classList.toggle("active-view", view === targetView);
-            document.getElementById(`nav-${view}`).classList.toggle("active", view === targetView);
+            const vEl = document.getElementById(`view-${view}`);
+            const nEl = document.getElementById(`nav-${view}`);
+            if(vEl) vEl.classList.toggle("active-view", view === targetView);
+            if(nEl) nEl.classList.toggle("active", view === targetView);
         });
         if (targetView === 'home') renderHome();
     }
 
-    // Render Home Screen
     function renderHome() {
+        const homeContent = document.getElementById("home-content");
         if (!homeContent) return;
         homeContent.innerHTML = ""; 
         const categories = [
@@ -104,7 +68,6 @@ document.addEventListener("DOMContentLoaded", () => {
             section.className = 'home-section';
             section.innerHTML = `<div class="section-title">${cat.icon} ${cat.title}</div>`;
             items.forEach(item => {
-                const balanceDisplay = `£${Math.abs(item.balance).toFixed(2)}`;
                 const tile = document.createElement('div');
                 tile.className = 'item-tile';
                 tile.innerHTML = `
@@ -112,16 +75,16 @@ document.addEventListener("DOMContentLoaded", () => {
                         <div class="name">${item.name}</div>
                         <div class="sub">${item.type === 'bill' ? 'Due Day ' + item.dueDate : 'Balance Today'}</div>
                     </div>
-                    <div class="item-amount ${item.balance < 0 ? 'text-red' : ''}">${item.balance < 0 ? '-' : ''}${balanceDisplay}</div>
+                    <div class="item-amount ${item.balance < 0 ? 'text-red' : ''}">£${Math.abs(item.balance).toFixed(2)}</div>
                 `;
                 section.appendChild(tile);
             });
             homeContent.appendChild(section);
         });
-        if (financialItems.length === 0) homeContent.innerHTML = "<p class='placeholder-text'>No data found.</p>";
     }
 
-    // Submit New Item
+    // Form Handling
+    const addItemForm = document.getElementById("add-item-form");
     if (addItemForm) {
         addItemForm.addEventListener("submit", (e) => {
             e.preventDefault();
@@ -131,7 +94,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 type: type,
                 name: document.getElementById("itemName").value,
                 balance: parseFloat(document.getElementById("itemAmount").value),
-                odLimit: type === 'account' ? (parseFloat(document.getElementById("odLimit").value) || 0) : null,
                 dueDate: type === 'bill' ? document.getElementById("billDay").value : null
             });
             localStorage.setItem("financialItems", JSON.stringify(financialItems));
@@ -139,7 +101,5 @@ document.addEventListener("DOMContentLoaded", () => {
             switchView('home');
         });
     }
-    
-    // Initial Render
     renderHome();
 });
