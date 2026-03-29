@@ -17,7 +17,7 @@ window.setThemeMode = (isDark) => {
     localStorage.setItem('MyApp_Theme', isDark); 
 };
 
-// 2. UK Banking Logic (Forward for Bills, Backward for Income)
+// 2. UK Banking Logic
 const ukHolidays2026 = ["2026-01-01", "2026-04-03", "2026-04-06", "2026-05-04", "2026-05-25", "2026-08-31", "2026-12-25", "2026-12-28"];
 
 function isNonWorkingDay(d) {
@@ -28,18 +28,18 @@ function isNonWorkingDay(d) {
 
 function getAdjustedPaymentDate(year, month, day) {
     let date = new Date(year, month, day);
-    while (isNonWorkingDay(date)) date.setDate(date.getDate() + 1); // Rolls Forward
+    while (isNonWorkingDay(date)) date.setDate(date.getDate() + 1); 
     return date;
 }
 
 function getAdjustedIncomeDate(year, month, dayVal) {
     let date;
     if (dayVal === 'last') {
-        date = new Date(year, month + 1, 0); // Gets the very last day of the target month
+        date = new Date(year, month + 1, 0); 
     } else {
         date = new Date(year, month, parseInt(dayVal));
     }
-    while (isNonWorkingDay(date)) date.setDate(date.getDate() - 1); // Rolls Backward
+    while (isNonWorkingDay(date)) date.setDate(date.getDate() - 1); 
     return date;
 }
 
@@ -50,24 +50,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(err => console.log(err));
 
+    // --- NEW: Bulletproof PWA Sync Logic ---
+    const syncBtn = document.getElementById('sync-updates-btn');
+    if (syncBtn) {
+        syncBtn.addEventListener('click', () => {
+            syncBtn.innerText = "Syncing...";
+            // 1. Unregister SW
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    for (let reg of registrations) reg.unregister();
+                });
+            }
+            // 2. Nuke all Caches
+            caches.keys().then(names => {
+                for (let name of names) caches.delete(name);
+            }).then(() => {
+                // 3. Hard Reload
+                setTimeout(() => window.location.reload(true), 500);
+            });
+        });
+    }
+
     let financialItems = JSON.parse(localStorage.getItem("financialItems")) || [];
     const views = ['cards', 'bills', 'home', 'loans', 'admin', 'account-details'];
     let currentActiveAccountId = null; 
 
-    // --- Inject Salary Days 1-31 ---
+    // Inject Salary Days 1-31
     const salaryDaySelect = document.getElementById('salaryDay');
-    if (salaryDaySelect) {
+    if (salaryDaySelect && salaryDaySelect.options.length <= 2) {
         for(let i=1; i<=31; i++) {
-            salaryDaySelect.insertAdjacentHTML('beforeend', `<option value="${i}">${i}${getOrdinalIndicator(i)}</option>`);
+            const s = ["th", "st", "nd", "rd"], v = i % 100;
+            const ordinal = (s[(v - 20) % 10] || s[v] || s[0]);
+            salaryDaySelect.insertAdjacentHTML('beforeend', `<option value="${i}">${i}${ordinal}</option>`);
         }
     }
-    function getOrdinalIndicator(n) {
-        const s = ["th", "st", "nd", "rd"];
-        const v = n % 100;
-        return (s[(v - 20) % 10] || s[v] || s[0]);
-    }
 
-    // --- Dynamic Form Handling ---
+    // Dynamic Form Handling
     const typeRadios = document.querySelectorAll('input[name="itemType"]');
     const formGroups = {
         account: document.getElementById('account-fields'), card: document.getElementById('card-fields'),
@@ -97,20 +115,43 @@ document.addEventListener("DOMContentLoaded", () => {
         const billSelect = document.getElementById('billAccount');
         const salarySelect = document.getElementById('salaryAccount');
         const txSelect = document.getElementById('txAccount');
+        const txToSelect = document.getElementById('txToAccount'); // New Transfer Dropdown
         
         if (billSelect) billSelect.innerHTML = '<option value="" disabled selected>Select Account to Debit</option>';
         if (salarySelect) salarySelect.innerHTML = '<option value="" disabled selected>Select Account to Credit</option>';
         if (txSelect) txSelect.innerHTML = '<option value="" disabled selected>Select Account</option>';
+        if (txToSelect) txToSelect.innerHTML = '<option value="" disabled selected>Select Account to Credit</option>';
         
         const accounts = financialItems.filter(i => i.type === 'account');
         accounts.forEach(acc => {
             if (billSelect) billSelect.insertAdjacentHTML('beforeend', `<option value="${acc.id}">${acc.name}</option>`);
             if (salarySelect) salarySelect.insertAdjacentHTML('beforeend', `<option value="${acc.id}">${acc.name}</option>`);
             if (txSelect) txSelect.insertAdjacentHTML('beforeend', `<option value="${acc.id}">${acc.name}</option>`);
+            if (txToSelect) txToSelect.insertAdjacentHTML('beforeend', `<option value="${acc.id}">${acc.name}</option>`);
         });
     }
 
-    // --- Navigation Logic ---
+    // --- Transfer UI Toggle Logic ---
+    const txTypeRadios = document.querySelectorAll('input[name="txType"]');
+    const transferContainer = document.getElementById('transfer-to-container');
+    const txToAccount = document.getElementById('txToAccount');
+    const txAccount = document.getElementById('txAccount');
+
+    txTypeRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if(e.target.value === 'transfer') {
+                transferContainer.style.display = 'block';
+                txToAccount.required = true;
+                txAccount.options[0].text = "Transfer From Account";
+            } else {
+                transferContainer.style.display = 'none';
+                txToAccount.required = false;
+                txAccount.options[0].text = "Select Account";
+            }
+        });
+    });
+
+    // Navigation Logic
     views.forEach(view => {
         const navBtn = document.getElementById(`nav-${view}`);
         if (navBtn) navBtn.addEventListener("click", () => switchView(view));
@@ -129,10 +170,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.switchBackToHome = () => { currentActiveAccountId = null; switchView('home'); };
 
-    // --- Rendering Views ---
-    function renderAll() {
-        renderHome(); renderCards(); renderLoans(); renderBills(); populateDropdowns();
-    }
+    // Rendering Views
+    function renderAll() { renderHome(); renderCards(); renderLoans(); renderBills(); populateDropdowns(); }
 
     function renderHome() {
         const homeContent = document.getElementById("home-content");
@@ -160,14 +199,8 @@ document.addEventListener("DOMContentLoaded", () => {
             tile.className = 'square-tile';
             tile.onclick = () => openAccountDetails(item.id); 
             tile.innerHTML = `
-                <div class="top-info">
-                    <div class="name">${item.name}</div>
-                    <div class="sub">${subText}</div>
-                </div>
-                <div class="bottom-info">
-                    <div class="item-amount ${isNegative ? 'text-red' : ''}">${balanceDisplay}</div>
-                    ${extraInfoHtml}
-                </div>
+                <div class="top-info"><div class="name">${item.name}</div><div class="sub">${subText}</div></div>
+                <div class="bottom-info"><div class="item-amount ${isNegative ? 'text-red' : ''}">${balanceDisplay}</div>${extraInfoHtml}</div>
             `;
             grid.appendChild(tile);
         });
@@ -226,13 +259,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentYear = now.getFullYear();
         const currentMonth = now.getMonth();
 
-        // Include BOTH bills and salaries
         const scheduleItems = financialItems.filter(i => i.type === 'bill' || i.type === 'salary');
-
-        if (scheduleItems.length === 0) {
-            billsContent.innerHTML = "<p class='placeholder-text'>No items scheduled.</p>";
-            return;
-        }
+        if (scheduleItems.length === 0) { billsContent.innerHTML = "<p class='placeholder-text'>No items scheduled.</p>"; return; }
 
         const scheduledList = scheduleItems.map(item => {
             let actualDate;
@@ -242,7 +270,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         scheduledList.sort((a, b) => a.actualDate - b.actualDate);
-
         const upcoming = scheduledList.filter(b => b.actualDate >= today);
         const past = scheduledList.filter(b => b.actualDate < today);
 
@@ -268,17 +295,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="sub" style="color: ${isIncome ? '#34C759' : 'var(--accent)'}; font-weight: 600;">${labelText}: ${dateStr}</div>
                     <div class="sub" style="font-size: 10px; margin-top: 2px;">${fromToText}</div>
                 </div>
-                <div class="amount-container">
-                    <div class="item-amount ${amountClass}">${sign}£${Math.abs(item.balance).toFixed(2)}</div>
-                </div>
+                <div class="amount-container"><div class="item-amount ${amountClass}">${sign}£${Math.abs(item.balance).toFixed(2)}</div></div>
             `;
             listContainer.appendChild(row);
         });
 
         if (upcoming.length > 0 && past.length > 0) {
-            const divider = document.createElement('div');
-            divider.className = 'bill-divider';
-            listContainer.appendChild(divider);
+            const divider = document.createElement('div'); divider.className = 'bill-divider'; listContainer.appendChild(divider);
         }
 
         past.forEach(item => {
@@ -289,10 +312,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const row = document.createElement('div');
             row.className = 'item-tile is-paid';
             row.innerHTML = `
-                <div class="item-info">
-                    <div class="name">${item.name}</div>
-                    <div class="sub">${badgeText.toUpperCase()}: ${dateStr}</div>
-                </div>
+                <div class="item-info"><div class="name">${item.name}</div><div class="sub">${badgeText.toUpperCase()}: ${dateStr}</div></div>
                 <div class="amount-container">
                     <div class="item-amount">
                         <span class="status-badge paid" style="color: ${isIncome ? '#34C759' : '#8E8E93'}">${badgeText}</span>
@@ -302,11 +322,10 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
             listContainer.appendChild(row);
         });
-
         billsContent.appendChild(listContainer);
     }
 
-    // --- Account Details View ---
+    // Account Details View
     window.openAccountDetails = (accountId) => {
         currentActiveAccountId = accountId;
         const account = financialItems.find(i => i.id === accountId);
@@ -320,9 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const odEl = document.getElementById('detail-account-od');
         if (account.hasOverdraft) {
-            odEl.innerText = account.balance >= 0 
-                ? `Limit: £${account.odLimit.toFixed(2)}` 
-                : `Available: £${(account.balance + account.odLimit).toFixed(2)}`;
+            odEl.innerText = account.balance >= 0 ? `Limit: £${account.odLimit.toFixed(2)}` : `Available: £${(account.balance + account.odLimit).toFixed(2)}`;
         } else { odEl.innerText = ""; }
 
         const listEl = document.getElementById('transaction-list');
@@ -360,7 +377,7 @@ document.addEventListener("DOMContentLoaded", () => {
         switchView('account-details');
     };
 
-    // --- Modals Logic ---
+    // Modals Logic
     const overlay = document.getElementById('modal-overlay');
     const txModal = document.getElementById('transaction-modal');
     const editModal = document.getElementById('edit-modal');
@@ -380,30 +397,74 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     window.closeAllModals = () => { txModal.classList.remove('open'); editModal.classList.remove('open'); setTimeout(() => overlay.classList.remove('active'), 300); };
 
-    // Transaction Submission
+    // --- NEW: Transaction & Transfer Submission ---
     document.getElementById('transaction-form').addEventListener('submit', (e) => {
         e.preventDefault();
-        const accId = document.getElementById('txAccount').value;
+        const fromAccId = document.getElementById('txAccount').value;
         const type = document.querySelector('input[name="txType"]:checked').value;
         const amountInput = parseFloat(document.getElementById('txAmount').value);
         const desc = document.getElementById('txDesc').value;
-        const actualAmount = type === 'out' ? -Math.abs(amountInput) : Math.abs(amountInput);
+        const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
         
-        const accountIndex = financialItems.findIndex(i => i.id === accId);
-        if (accountIndex !== -1) {
-            if(!financialItems[accountIndex].transactions) financialItems[accountIndex].transactions = [];
-            financialItems[accountIndex].balance += actualAmount;
+        if (type === 'transfer') {
+            const toAccId = document.getElementById('txToAccount').value;
+            if (fromAccId === toAccId) {
+                alert("You cannot transfer money to the exact same account!");
+                return;
+            }
             
-            const newTx = {
-                id: Date.now().toString(),
-                date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }),
-                description: desc, amount: actualAmount, rollingBalance: financialItems[accountIndex].balance
-            };
-            financialItems[accountIndex].transactions.unshift(newTx);
-            localStorage.setItem("financialItems", JSON.stringify(financialItems));
-            document.getElementById('transaction-form').reset();
-            closeAllModals(); renderAll();
+            const fromIndex = financialItems.findIndex(i => i.id === fromAccId);
+            const toIndex = financialItems.findIndex(i => i.id === toAccId);
+            
+            if (fromIndex !== -1 && toIndex !== -1) {
+                // Ensure arrays exist
+                if(!financialItems[fromIndex].transactions) financialItems[fromIndex].transactions = [];
+                if(!financialItems[toIndex].transactions) financialItems[toIndex].transactions = [];
+
+                // 1. Debit the sender
+                financialItems[fromIndex].balance -= amountInput;
+                financialItems[fromIndex].transactions.unshift({
+                    id: Date.now().toString() + '-out',
+                    date: dateStr, description: `Transfer to ${financialItems[toIndex].name}`,
+                    amount: -amountInput, rollingBalance: financialItems[fromIndex].balance
+                });
+
+                // 2. Credit the receiver
+                financialItems[toIndex].balance += amountInput;
+                financialItems[toIndex].transactions.unshift({
+                    id: Date.now().toString() + '-in',
+                    date: dateStr, description: `Transfer from ${financialItems[fromIndex].name}`,
+                    amount: amountInput, rollingBalance: financialItems[toIndex].balance
+                });
+            }
+        } else {
+            // Standard In/Out Logic
+            const actualAmount = type === 'out' ? -Math.abs(amountInput) : Math.abs(amountInput);
+            const accountIndex = financialItems.findIndex(i => i.id === fromAccId);
+            
+            if (accountIndex !== -1) {
+                if(!financialItems[accountIndex].transactions) financialItems[accountIndex].transactions = [];
+                financialItems[accountIndex].balance += actualAmount;
+                financialItems[accountIndex].transactions.unshift({
+                    id: Date.now().toString(),
+                    date: dateStr, description: desc,
+                    amount: actualAmount, rollingBalance: financialItems[accountIndex].balance
+                });
+            }
         }
+
+        localStorage.setItem("financialItems", JSON.stringify(financialItems));
+        document.getElementById('transaction-form').reset();
+        
+        // Reset Modal UI state
+        transferContainer.style.display = 'none';
+        txToAccount.required = false;
+        document.getElementById('tx-out').checked = true;
+        document.getElementById('txAccount').options[0].text = "Select Account";
+
+        closeAllModals(); 
+        if (currentActiveAccountId) openAccountDetails(currentActiveAccountId);
+        renderAll();
     });
 
     // Edit Submission
@@ -420,7 +481,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // --- Form Submission (Adding new items) ---
+    // Form Submission (Adding new items)
     const addItemForm = document.getElementById("add-item-form");
     if (addItemForm) {
         addItemForm.addEventListener("submit", (e) => {
