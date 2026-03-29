@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Finance iOS</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="my_finances.png">
+    <meta name="theme-color" content="#f2f2f7" id="theme-meta">
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body class="light-mode">
+    <div class="app-container">
+        
+        <div id="view-home" class="view active-view">
+            <div id="home-content"></div>
+            <button class="fab" onclick="openTransactionModal()">+</button>
+        </div>
+
+        <div id="view-account-details" class="view">
+            <div class="details-header">
+                <button class="back-btn" onclick="switchBackToHome()">◄ Back</button>
+                <button class="edit-btn" onclick="openEditModal()">Edit</button>
+            </div>
+            <div class="header" id="detail-account-name" style="margin-top: 10px;">Account</div>
+            <div class="detail-balance-large" id="detail-account-balance">£0.00</div>
+            <div class="available-balance" id="detail-account-od" style="margin-bottom: 25px; text-align: center; font-size: 14px;"></div>
+            
+            <div class="group-title">Recent Transactions</div>
+            <div class="settings-group" id="transaction-list"></div>
+            <button class="fab" onclick="openTransactionModal()">+</button>
+        </div>
+
+        <div id="view-cards" class="view">
+            <div class="header">Cards</div>
+            <div id="cards-content"></div>
+            <button class="fab" onclick="openTransactionModal()">+</button>
+        </div>
+
+        <div id="view-bills" class="view">
+            <div class="header">Schedule</div>
+            <div class="group-title">Income & Bills This Month</div>
+            <div id="bills-content"></div>
+        </div>
+
+        <div id="view-loans" class="view">
+            <div class="header">Loans</div>
+            <div id="loans-content"></div>
+            <button class="fab" onclick="openTransactionModal()">+</button>
+        </div>
+
+        <div id="view-admin" class="view">
+            <div class="header">Admin</div>
+            
+            <div style="border-bottom: 2px solid var(--ios-grey); padding-bottom: 20px; margin-bottom: 15px;">
+                <span style="font-size: 16px; font-weight: 800; color: var(--text); display: block; text-align: center;">Theme Selection</span>
+                <div class="theme-segmented-control">
+                    <button id="btnLight" class="segment active" onclick="setThemeMode(false)">☀️ Light</button>
+                    <button id="btnDark" class="segment" onclick="setThemeMode(true)">🌙 Dark</button>
+                </div>
+            </div>
+
+            <div class="group-title">Add New Item</div>
+            <div class="settings-group">
+                <div class="segmented-control" style="flex-wrap: wrap;">
+                    <input type="radio" name="itemType" value="account" id="type-account" checked><label for="type-account">Account</label>
+                    <input type="radio" name="itemType" value="card" id="type-card"><label for="type-card">Card</label>
+                    <input type="radio" name="itemType" value="loan" id="type-loan"><label for="type-loan">Loan</label>
+                    <input type="radio" name="itemType" value="bill" id="type-bill"><label for="type-bill">Bill</label>
+                    <input type="radio" name="itemType" value="salary" id="type-salary"><label for="type-salary">Salary</label>
+                </div>
+                
+                <form id="add-item-form" class="admin-form">
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <input type="text" id="itemEmoji" placeholder="🏦" maxlength="2" style="width: 25%; text-align: center; font-size: 22px; padding: 10px;" required>
+                        <select id="itemTheme" class="ios-select" style="flex: 1;" required>
+                            <option value="theme-blue" selected>Ocean Blue</option>
+                            <option value="theme-red">Sunset Red</option>
+                            <option value="theme-green">Emerald Green</option>
+                            <option value="theme-purple">Royal Purple</option>
+                            <option value="theme-dark">Midnight Slate</option>
+                        </select>
+                    </div>
+
+                    <input type="text" id="itemName" placeholder="Name (e.g. Monzo, Salary, Gas)" required>
+                    <input type="number" id="itemAmount" placeholder="Current Balance (£)" step="0.01" required>
+                    
+                    <div id="account-fields">
+                        <select id="accountType" class="ios-select" style="margin-bottom: 12px;">
+                            <option value="current" selected>Current Account</option>
+                            <option value="savings">Savings Account</option>
+                        </select>
+                        <div class="settings-row" style="padding: 10px 0;">
+                            <span style="color: var(--text);">Overdraft Facility?</span>
+                            <label class="ios-toggle small">
+                                <input type="checkbox" id="hasOverdraft">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <input type="number" id="odLimit" placeholder="Overdraft Limit (£)" step="0.01">
+                    </div>
+
+                    <div id="card-fields" style="display:none;">
+                        <input type="number" id="cardLimit" placeholder="Credit Limit (£)" step="0.01" style="margin-bottom: 12px;">
+                        <select id="cardDay" class="ios-select">
+                            <option value="" disabled selected>Select Day Due</option>
+                        </select>
+                    </div>
+
+                    <div id="loan-fields" style="display:none;">
+                        <input type="number" id="loanOriginal" placeholder="Original Loan Amount (£)" step="0.01" style="margin-bottom: 12px;">
+                        <input type="number" id="loanMonthly" placeholder="Monthly Payment (£)" step="0.01" style="margin-bottom: 12px;">
+                        <select id="loanDay" class="ios-select">
+                            <option value="" disabled selected>Select Day Due</option>
+                        </select>
+                    </div>
+                    
+                    <div id="bill-fields" style="display:none;">
+                        <select id="billDay" class="ios-select" style="margin-bottom: 12px;">
+                            <option value="" disabled selected>Select Day Due</option>
+                        </select>
+                        <select id="billAccount" class="ios-select">
+                            <option value="" disabled selected>Select Account to Debit</option>
+                        </select>
+                    </div>
+
+                    <div id="salary-fields" style="display:none;">
+                        <select id="salaryDay" class="ios-select" style="margin-bottom: 12px;">
+                            <option value="" disabled selected>Select Pay Date</option>
+                            <option value="last">Last Working Day of Month</option>
+                        </select>
+                        <select id="salaryAccount" class="ios-select">
+                            <option value="" disabled selected>Select Account to Credit</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="ios-btn">Save to Dashboard</button>
+                </form>
+            </div>
+
+            <div class="admin-footer">
+                <button id="sync-updates-btn" class="sync-btn">Sync for Updates</button>
+                <div class="version-control">App Version 3.10.0 (Build 1950)</div>
+            </div>
+        </div>
+
+        <nav class="tab-bar">
+            <div id="nav-cards" class="tab-item"><span>💳</span><label>Cards</label></div>
+            <div id="nav-bills" class="tab-item"><span>📑</span><label>Schedule</label></div>
+            <div id="nav-home" class="tab-item center-btn active"><span>🏠</span></div>
+            <div id="nav-loans" class="tab-item"><span>💰</span><label>Loans</label></div>
+            <div id="nav-admin" class="tab-item"><span>⚙️</span><label>Admin</label></div>
+        </nav>
+
+        <div id="modal-overlay" class="modal-overlay" onclick="closeAllModals()"></div>
+
+        <div id="transaction-modal" class="bottom-sheet">
+            <div class="sheet-header">Record Transaction</div>
+            <form id="transaction-form" class="admin-form" style="padding-top: 5px;">
+                <select id="txAccount" class="ios-select" style="margin-bottom: 12px;" required>
+                    <option value="" disabled selected>Select Account/Card/Loan</option>
+                </select>
+                
+                <div class="segmented-control tx-seg-control" style="margin: 0 0 12px 0;">
+                    <input type="radio" name="txType" value="out" id="tx-out" checked><label for="tx-out" id="lbl-tx-out">Out (Spend)</label>
+                    <input type="radio" name="txType" value="in" id="tx-in"><label for="tx-in" id="lbl-tx-in">In</label>
+                    
+                    <input type="radio" name="txType" value="bonus" id="tx-bonus"><label for="tx-bonus" id="lbl-tx-bonus">Bonus</label>
+                    <input type="radio" name="txType" value="transfer" id="tx-transfer"><label for="tx-transfer" id="lbl-tx-transfer">Transfer</label>
+                    
+                    <input type="radio" name="txType" value="interest" id="tx-interest"><label for="tx-interest" id="lbl-tx-interest" style="display: none;">Interest</label>
+                </div>
+
+                <div id="transfer-to-container" style="display: none; margin-bottom: 12px;">
+                    <select id="txToAccount" class="ios-select">
+                        <option value="" disabled selected>Select Account/Debt to Credit</option>
+                    </select>
+                </div>
+                
+                <input type="number" id="txAmount" placeholder="Amount (£)" step="0.01" required>
+                <input type="text" id="txDesc" placeholder="Description (e.g., Tesco, Payment)" required>
+                
+                <button type="submit" class="ios-btn" style="margin-top: 10px;">Save Transaction</button>
+            </form>
+        </div>
+
+        <div id="edit-modal" class="bottom-sheet">
+            <div class="sheet-header">Edit Item</div>
+            <form id="edit-form" class="admin-form" style="padding-top: 5px;">
+                <input type="number" id="editBalance" placeholder="Correct Balance (£)" step="0.01" required>
+                
+                <div id="edit-od-wrapper" style="display:none;">
+                    <input type="number" id="editOdLimit" placeholder="New Overdraft Limit (£)" step="0.01">
+                </div>
+                <div id="edit-card-wrapper" style="display:none;">
+                    <input type="number" id="editCardLimit" placeholder="New Credit Limit (£)" step="0.01">
+                </div>
+
+                <button type="submit" class="ios-btn" style="margin-top: 10px;">Save Changes</button>
+            </form>
+        </div>
+
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
