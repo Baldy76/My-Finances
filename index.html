@@ -112,7 +112,7 @@
                         <select id="salaryDay" class="ios-select" style="margin-bottom: 12px;">
                             <option value="" disabled selected>Select Pay Date</option>
                             <option value="last">Last Working Day of Month</option>
-                            </select>
+                        </select>
                         <select id="salaryAccount" class="ios-select">
                             <option value="" disabled selected>Select Account to Credit</option>
                         </select>
@@ -124,7 +124,7 @@
 
             <div class="admin-footer">
                 <button id="sync-updates-btn" class="sync-btn">Sync for Updates</button>
-                <div class="version-control">App Version 3.6.0 (Build 1750)</div>
+                <div class="version-control">App Version 3.7.0 (Build 1800)</div>
             </div>
         </div>
 
@@ -141,15 +141,26 @@
         <div id="transaction-modal" class="bottom-sheet">
             <div class="sheet-header">Record Transaction</div>
             <form id="transaction-form" class="admin-form" style="padding-top: 5px;">
-                <select id="txAccount" class="ios-select" required>
+                
+                <select id="txAccount" class="ios-select" style="margin-bottom: 12px;" required>
                     <option value="" disabled selected>Select Account</option>
                 </select>
+                
                 <div class="segmented-control" style="margin: 0 0 12px 0;">
                     <input type="radio" name="txType" value="out" id="tx-out" checked><label for="tx-out">Out (Spend)</label>
                     <input type="radio" name="txType" value="in" id="tx-in"><label for="tx-in">In (Income)</label>
+                    <input type="radio" name="txType" value="transfer" id="tx-transfer"><label for="tx-transfer">Transfer</label>
                 </div>
+
+                <div id="transfer-to-container" style="display: none; margin-bottom: 12px;">
+                    <select id="txToAccount" class="ios-select">
+                        <option value="" disabled selected>Select Account to Credit</option>
+                    </select>
+                </div>
+                
                 <input type="number" id="txAmount" placeholder="Amount (£)" step="0.01" required>
-                <input type="text" id="txDesc" placeholder="Description (e.g., Tesco, Salary)" required>
+                <input type="text" id="txDesc" placeholder="Description (e.g., Tesco, Transfer)" required>
+                
                 <button type="submit" class="ios-btn" style="margin-top: 10px;">Save Transaction</button>
             </form>
         </div>
