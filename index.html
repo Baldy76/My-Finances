@@ -2,16 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>My Finances</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="app-container">
-        <nav class="top-nav">
-            <button id="nav-home" class="active">Home</button>
-            <button id="nav-admin">Admin</button>
-        </nav>
+        
+        <main id="view-cards" class="view">
+            <header>
+                <h1>My Cards</h1>
+                <p>Manage your debit and credit cards here.</p>
+            </header>
+            <div class="placeholder-content">
+                <p>Cards interface coming soon...</p>
+            </div>
+        </main>
+
+        <main id="view-bills" class="view">
+            <header>
+                <h1>Upcoming Bills</h1>
+                <p>Track your scheduled payments.</p>
+            </header>
+            <div class="placeholder-content">
+                <p>Bills interface coming soon...</p>
+            </div>
+        </main>
 
         <main id="view-home" class="view active-view">
             <header>
@@ -20,6 +36,16 @@
             </header>
             <div id="accounts-container" class="accounts-grid">
                 </div>
+        </main>
+
+        <main id="view-loans" class="view">
+            <header>
+                <h1>My Loans</h1>
+                <p>Track your personal loans and mortgages.</p>
+            </header>
+            <div class="placeholder-content">
+                <p>Loans interface coming soon...</p>
+            </div>
         </main>
 
         <main id="view-admin" class="view">
@@ -48,10 +74,19 @@
             </form>
 
             <div class="admin-footer">
-                <p><strong>Version Control:</strong> v2.0.0 (Clean Slate, UI Upgrades & Local Storage)</p>
+                <p><strong>Version Control:</strong> v2.1.0 (5-Tab Bottom Navigation)</p>
             </div>
         </main>
+
     </div>
+
+    <nav class="bottom-nav">
+        <button id="nav-cards" class="nav-btn">Cards</button>
+        <button id="nav-bills" class="nav-btn">Bills</button>
+        <button id="nav-home" class="nav-btn active">Home</button>
+        <button id="nav-loans" class="nav-btn">Loans</button>
+        <button id="nav-admin" class="nav-btn">Admin</button>
+    </nav>
 
     <script src="app.js"></script>
 </body>
