@@ -3,41 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iOS Admin Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Finance iOS</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <div class="app-container">
-    <div class="header">Admin Panel</div>
+    <div id="view-home" class="view active-view">
+        <div class="header">Accounts</div>
+        <div id="accounts-container"></div>
+    </div>
 
-    <div class="settings-group">
-        <div class="settings-row">
-            <div class="row-label">
-                <div class="icon" style="background-color: #5E5CE6;">✨</div>
-                <span>Appearance</span>
+    <div id="view-cards" class="view">
+        <div class="header">Cards</div>
+        <p class="placeholder-text">Card management coming soon.</p>
+    </div>
+    <div id="view-bills" class="view">
+        <div class="header">Bills</div>
+        <p class="placeholder-text">Track your upcoming bills.</p>
+    </div>
+    <div id="view-loans" class="view">
+        <div class="header">Loans</div>
+        <p class="placeholder-text">Loan and credit status.</p>
+    </div>
+
+    <div id="view-admin" class="view">
+        <div class="header">Admin Panel</div>
+        
+        <div class="settings-group">
+            <div class="settings-row">
+                <div class="row-label">
+                    <div class="icon" style="background-color: #5E5CE6;">✨</div>
+                    <span>Dark Mode</span>
+                </div>
+                <label class="ios-toggle">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider"></span>
+                </label>
             </div>
-            <label class="ios-toggle">
-                <input type="checkbox" id="themeToggle">
-                <span class="slider"></span>
-            </label>
         </div>
 
-        <div class="settings-row">
-            <div class="row-label">
-                <div class="icon" style="background-color: #FF9500;">⚙️</div>
-                <span>Advanced Settings</span>
-            </div>
-            <span class="chevron">></span>
+        <div class="settings-group">
+            <h3 class="group-title">Add Account</h3>
+            <form id="add-account-form" class="admin-form">
+                <input type="text" id="bankName" placeholder="Bank Name" required>
+                <input type="number" id="initialBalance" placeholder="Initial Balance" step="0.01" required>
+                <input type="number" id="odLimit" placeholder="Overdraft Limit" step="0.01">
+                <button type="submit" class="ios-btn">Add Account</button>
+            </form>
+        </div>
+
+        <div class="admin-footer">
+            <div class="version-control">App Version 2.4.1 (Build 842)</div>
+            <div class="developer-mode">Deployed via GitHub Pages</div>
         </div>
     </div>
 
-    <div class="admin-footer">
-        <div class="version-control">App Version 2.4.1 (Build 842)</div>
-        <div class="developer-mode">Deployed via GitHub Pages</div>
-    </div>
+    <nav class="tab-bar">
+        <div id="nav-home" class="tab-item active"><span>🏠</span><label>Home</label></div>
+        <div id="nav-cards" class="tab-item"><span>💳</span><label>Cards</label></div>
+        <div id="nav-bills" class="tab-item"><span>📑</span><label>Bills</label></div>
+        <div id="nav-loans" class="tab-item"><span>💰</span><label>Loans</label></div>
+        <div id="nav-admin" class="tab-item"><span>⚙️</span><label>Admin</label></div>
+    </nav>
 </div>
 
 <script src="script.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
