@@ -1,24 +1,46 @@
+// 1. Theme Engine Functions
+function applyTheme(isDark) {
+    document.body.classList.toggle('dark-mode', isDark);
+    
+    const meta = document.getElementById('theme-meta'); 
+    if(meta) {
+        meta.content = isDark ? "#000000" : "#f2f2f7";
+    }
+    
+    const btnLight = document.getElementById('btnLight'); 
+    const btnDark = document.getElementById('btnDark');
+    
+    if (btnLight && btnDark) {
+        if (isDark) { 
+            btnLight.classList.remove('active'); 
+            btnDark.classList.add('active'); 
+        } else { 
+            btnLight.classList.add('active'); 
+            btnDark.classList.remove('active'); 
+        }
+    }
+}
+
+window.setThemeMode = (isDark) => { 
+    applyTheme(isDark); 
+    localStorage.setItem('MyApp_Theme', isDark); 
+};
+
+// 2. Main App Logic
 document.addEventListener("DOMContentLoaded", () => {
+    
+    // Check local storage for theme
+    const savedTheme = localStorage.getItem('MyApp_Theme') === 'true';
+    applyTheme(savedTheme);
+
+    // PWA Service Worker Registration
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
             .then(() => console.log("Service Worker Registered"))
             .catch(err => console.log("SW Registration Failed", err));
     }
 
-    const toggle = document.getElementById('themeToggle');
-    const currentTheme = localStorage.getItem('theme') || 'light';
-    if (currentTheme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        if (toggle) toggle.checked = true;
-    }
-    if (toggle) {
-        toggle.addEventListener('change', (e) => {
-            const theme = e.target.checked ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-        });
-    }
-
+    // PWA Sync Logic
     const syncBtn = document.getElementById('sync-updates-btn');
     if (syncBtn) {
         syncBtn.addEventListener('click', () => {
@@ -33,12 +55,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // State & Navigation
     let financialItems = JSON.parse(localStorage.getItem("financialItems")) || [];
     const homeContent = document.getElementById("home-content");
     const addItemForm = document.getElementById("add-item-form");
     const typeRadios = document.querySelectorAll('input[name="itemType"]');
     const views = ['cards', 'bills', 'home', 'loans', 'admin'];
 
+    // Dynamic Form Fields
     typeRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             const val = e.target.value;
@@ -48,6 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    // View Switching
     views.forEach(view => {
         const navBtn = document.getElementById(`nav-${view}`);
         if (navBtn) navBtn.addEventListener("click", () => switchView(view));
@@ -61,6 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (targetView === 'home') renderHome();
     }
 
+    // Render Home Screen
     function renderHome() {
         if (!homeContent) return;
         homeContent.innerHTML = ""; 
@@ -95,6 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (financialItems.length === 0) homeContent.innerHTML = "<p class='placeholder-text'>No data found.</p>";
     }
 
+    // Submit New Item
     if (addItemForm) {
         addItemForm.addEventListener("submit", (e) => {
             e.preventDefault();
@@ -112,5 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
             switchView('home');
         });
     }
+    
+    // Initial Render
     renderHome();
 });
