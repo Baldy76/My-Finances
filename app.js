@@ -40,7 +40,7 @@ function getAdjustedIncomeDate(year, month, dayVal) {
     return date;
 }
 
-// Confetti Particle Engine
+// Confetti Engine
 function fireConfetti() {
     const colors = ['#0A84FF', '#FF375F', '#30D158', '#BF5AF2', '#FFD60A'];
     for (let i = 0; i < 60; i++) {
@@ -137,7 +137,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (txSelect) txSelect.innerHTML = '<option value="" disabled selected>Select Item</option>';
         if (txToSelect) txToSelect.innerHTML = '<option value="" disabled selected>Select Item to Credit</option>';
         
-        // MODIFIED: Include Loans in Transaction Dropdowns
         const transactionItems = financialItems.filter(i => i.type === 'account' || i.type === 'card' || i.type === 'loan');
         const justAccounts = financialItems.filter(i => i.type === 'account');
 
@@ -152,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- NEW: Dynamic Transaction Modal UI ---
+    // Dynamic Transaction Modal UI
     const txAccountSelect = document.getElementById('txAccount');
     const lblOut = document.getElementById('lbl-tx-out');
     const lblIn = document.getElementById('lbl-tx-in');
@@ -177,9 +176,8 @@ document.addEventListener("DOMContentLoaded", () => {
             lblInterest.style.display = 'block';
             lblBonus.style.display = 'none';
             lblTransfer.style.display = 'none';
-            document.getElementById('tx-in').checked = true; // Default to payment for debts
+            document.getElementById('tx-in').checked = true;
         }
-        // Fire change event to reset transfer container visibility
         document.getElementById(document.querySelector('input[name="txType"]:checked').id).dispatchEvent(new Event('change'));
     });
 
@@ -233,20 +231,17 @@ document.addEventListener("DOMContentLoaded", () => {
         if (accounts.length === 0) { homeContent.innerHTML = "<p class='placeholder-text'>No accounts added yet.</p>"; return; }
 
         const grid = document.createElement('div'); grid.className = 'tiles-grid';
-
         accounts.forEach(item => {
             const isNegative = item.balance < 0;
             const sign = isNegative ? '-' : '';
             const balanceDisplay = `${sign}£${Math.abs(item.balance).toFixed(2)}`;
             const themeClass = item.theme || '';
             const emoji = item.emoji || '🏦';
-            
             let extraInfoHtml = '';
             if (item.hasOverdraft) {
                 if (item.balance >= 0) extraInfoHtml = `<div class="available-balance">Overdraft Limit: £${(item.odLimit || 0).toFixed(2)}</div>`;
                 else extraInfoHtml = `<div class="available-balance">Available OD: £${(item.balance + (item.odLimit || 0)).toFixed(2)}</div>`;
             }
-
             const subText = item.accountType === 'savings' ? 'Savings Account' : 'Current Account';
             const tile = document.createElement('div');
             tile.className = `square-tile ${themeClass ? 'themed ' + themeClass : ''}`;
@@ -269,33 +264,25 @@ document.addEventListener("DOMContentLoaded", () => {
         content.innerHTML = "";
         const cards = financialItems.filter(i => i.type === 'card');
         if (cards.length === 0) { content.innerHTML = "<p class='placeholder-text'>No credit cards added.</p>"; return; }
-        
         const grid = document.createElement('div'); grid.className = 'tiles-grid';
         cards.forEach(item => {
             const isNegative = item.balance < 0;
-            const sign = isNegative ? '-' : '';
-            const balanceDisplay = `${sign}£${Math.abs(item.balance).toFixed(2)}`;
+            const balanceDisplay = `${isNegative ? '-' : ''}£${Math.abs(item.balance).toFixed(2)}`;
             const themeClass = item.theme || '';
-            const emoji = item.emoji || '💳';
-            
-            let percentage = 0;
-            if (item.creditLimit > 0) percentage = (Math.abs(item.balance) / item.creditLimit) * 100;
-            const conicColor = themeClass ? 'rgba(255,255,255,0.9)' : 'var(--accent)';
-            const ringStyle = `background: conic-gradient(${conicColor} ${percentage}%, transparent 0);`;
-            
+            let percentage = item.creditLimit > 0 ? (Math.abs(item.balance) / item.creditLimit) * 100 : 0;
+            const ringStyle = `background: conic-gradient(${themeClass ? 'rgba(255,255,255,0.9)' : 'var(--accent)'} ${percentage}%, transparent 0);`;
             const tile = document.createElement('div'); 
             tile.className = `square-tile ${themeClass ? 'themed ' + themeClass : ''}`;
             tile.onclick = () => openAccountDetails(item.id); 
-
             tile.innerHTML = `
                 <div class="top-info">
                     <div class="header-row">
                         <div class="name">${item.name}</div>
-                        <div class="progress-ring" style="${ringStyle}"><div class="progress-ring-inner">${emoji}</div></div>
+                        <div class="progress-ring" style="${ringStyle}"><div class="progress-ring-inner">${item.emoji || '💳'}</div></div>
                     </div>
                     <div class="sub">Due: ${item.dueDate ? 'Day ' + item.dueDate : 'N/A'}</div>
                 </div>
-                <div class="bottom-info"><div class="item-amount ${isNegative && !themeClass ? 'text-red' : ''}">${balanceDisplay}</div><div class="available-balance">${item.creditLimit ? `Limit: £${item.creditLimit.toFixed(2)}` : ''}</div></div>
+                <div class="bottom-info"><div class="item-amount ${isNegative && !themeClass ? 'text-red' : ''}">${balanceDisplay}</div><div class="available-balance">Limit: £${(item.creditLimit || 0).toFixed(2)}</div></div>
             `;
             grid.appendChild(tile);
         });
@@ -308,93 +295,66 @@ document.addEventListener("DOMContentLoaded", () => {
         content.innerHTML = "";
         const loans = financialItems.filter(i => i.type === 'loan');
         if (loans.length === 0) { content.innerHTML = "<p class='placeholder-text'>No loans added.</p>"; return; }
-        
         const grid = document.createElement('div'); grid.className = 'tiles-grid';
         loans.forEach(item => {
             const isNegative = item.balance < 0;
-            const sign = isNegative ? '-' : '';
-            const balanceDisplay = `${sign}£${Math.abs(item.balance).toFixed(2)}`;
+            const balanceDisplay = `${isNegative ? '-' : ''}£${Math.abs(item.balance).toFixed(2)}`;
             const themeClass = item.theme || '';
-            const emoji = item.emoji || '💰';
-
-            let percentage = 0;
-            if (item.originalAmount > 0) {
-                const paidOff = item.originalAmount - Math.abs(item.balance);
-                percentage = (paidOff / item.originalAmount) * 100;
-            }
-            const conicColor = themeClass ? 'rgba(255,255,255,0.9)' : 'var(--accent)';
-            const ringStyle = `background: conic-gradient(${conicColor} ${percentage}%, transparent 0);`;
-
+            let percentage = item.originalAmount > 0 ? ((item.originalAmount - Math.abs(item.balance)) / item.originalAmount) * 100 : 0;
+            const ringStyle = `background: conic-gradient(${themeClass ? 'rgba(255,255,255,0.9)' : 'var(--accent)'} ${percentage}%, transparent 0);`;
             const tile = document.createElement('div'); 
             tile.className = `square-tile ${themeClass ? 'themed ' + themeClass : ''}`;
-            // MODIFIED: Clickable Loans
             tile.onclick = () => openAccountDetails(item.id); 
-
             tile.innerHTML = `
                 <div class="top-info">
                     <div class="header-row">
                         <div class="name">${item.name}</div>
-                        <div class="progress-ring" style="${ringStyle}"><div class="progress-ring-inner">${emoji}</div></div>
+                        <div class="progress-ring" style="${ringStyle}"><div class="progress-ring-inner">${item.emoji || '💰'}</div></div>
                     </div>
                     <div class="sub">Due: ${item.dueDate ? 'Day ' + item.dueDate : 'N/A'}</div>
                 </div>
-                <div class="bottom-info"><div class="item-amount ${isNegative && !themeClass ? 'text-red' : ''}">${balanceDisplay}</div><div class="available-balance">${item.monthlyPayment ? `£${item.monthlyPayment.toFixed(2)} / mo` : ''}</div></div>
+                <div class="bottom-info"><div class="item-amount ${isNegative && !themeClass ? 'text-red' : ''}">${balanceDisplay}</div><div class="available-balance">£${(item.monthlyPayment || 0).toFixed(2)} / mo</div></div>
             `;
             grid.appendChild(tile);
         });
         content.appendChild(grid);
     }
 
+    // UPDATED: Render Bills with Click-to-Edit
     function renderBills() {
         const billsContent = document.getElementById("bills-content");
         if (!billsContent) return;
         billsContent.innerHTML = "";
-
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); 
-        const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth();
-
         const scheduleItems = financialItems.filter(i => i.type === 'bill' || i.type === 'salary');
         if (scheduleItems.length === 0) { billsContent.innerHTML = "<p class='placeholder-text'>No items scheduled.</p>"; return; }
 
         const scheduledList = scheduleItems.map(item => {
             let actualDate;
-            if (item.type === 'bill') actualDate = getAdjustedPaymentDate(currentYear, currentMonth, parseInt(item.dueDate));
-            if (item.type === 'salary') actualDate = getAdjustedIncomeDate(currentYear, currentMonth, item.dueDate);
+            if (item.type === 'bill') actualDate = getAdjustedPaymentDate(now.getFullYear(), now.getMonth(), parseInt(item.dueDate));
+            if (item.type === 'salary') actualDate = getAdjustedIncomeDate(now.getFullYear(), now.getMonth(), item.dueDate);
             return { ...item, actualDate };
-        });
+        }).sort((a, b) => a.actualDate - b.actualDate);
 
-        scheduledList.sort((a, b) => a.actualDate - b.actualDate);
         const upcoming = scheduledList.filter(b => b.actualDate >= today);
         const past = scheduledList.filter(b => b.actualDate < today);
-
         const listContainer = document.createElement('div'); listContainer.className = 'settings-group';
 
         upcoming.forEach(item => {
             const dateStr = item.actualDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', weekday: 'short' });
-            const targetAcc = financialItems.find(a => a.id === (item.debitAccount || item.creditAccount));
-            const accName = targetAcc ? targetAcc.name : 'Unknown Account';
-            
             const isIncome = item.type === 'salary';
-            const labelText = isIncome ? 'INCOME' : 'UPCOMING';
-            const fromToText = isIncome ? `To: ${accName}` : `From: ${accName}`;
-            const amountClass = isIncome ? 'text-green' : '';
-            const sign = isIncome ? '+' : '';
-            const emoji = item.emoji || (isIncome ? '💸' : '📑');
-
             const row = document.createElement('div'); row.className = 'item-tile';
-            row.onclick = () => openEditModal(item.id); 
+            row.onclick = () => openEditModal(item.id); // EDIT TRIGGER
             row.innerHTML = `
                 <div class="item-info">
-                    <div class="list-emoji">${emoji}</div>
+                    <div class="list-emoji">${item.emoji || (isIncome ? '💸' : '📑')}</div>
                     <div>
                         <div class="name">${item.name}</div>
-                        <div class="sub" style="color: ${isIncome ? '#34C759' : 'var(--accent)'}; font-weight: 600;">${labelText}: ${dateStr}</div>
-                        <div class="sub" style="font-size: 10px; margin-top: 2px;">${fromToText}</div>
+                        <div class="sub" style="color: ${isIncome ? '#34C759' : 'var(--accent)'}; font-weight: 600;">${isIncome ? 'INCOME' : 'UPCOMING'}: ${dateStr}</div>
                     </div>
                 </div>
-                <div class="amount-container"><div class="item-amount ${amountClass}">${sign}£${Math.abs(item.balance).toFixed(2)}</div></div>
+                <div class="amount-container"><div class="item-amount ${isIncome ? 'text-green' : ''}">${isIncome ? '+' : ''}£${Math.abs(item.balance).toFixed(2)}</div></div>
             `;
             listContainer.appendChild(row);
         });
@@ -406,24 +366,18 @@ document.addEventListener("DOMContentLoaded", () => {
         past.forEach(item => {
             const dateStr = item.actualDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', weekday: 'short' });
             const isIncome = item.type === 'salary';
-            const badgeText = isIncome ? 'Received' : 'Paid';
-            const emoji = item.emoji || (isIncome ? '💸' : '📑');
-
             const row = document.createElement('div'); row.className = 'item-tile is-paid';
-            row.onclick = () => openEditModal(item.id); 
+            row.onclick = () => openEditModal(item.id); // EDIT TRIGGER
             row.innerHTML = `
                 <div class="item-info">
-                    <div class="list-emoji" style="opacity: 0.5;">${emoji}</div>
+                    <div class="list-emoji" style="opacity: 0.5;">${item.emoji || (isIncome ? '💸' : '📑')}</div>
                     <div>
                         <div class="name">${item.name}</div>
-                        <div class="sub">${badgeText.toUpperCase()}: ${dateStr}</div>
+                        <div class="sub">${isIncome ? 'Received' : 'Paid'}: ${dateStr}</div>
                     </div>
                 </div>
                 <div class="amount-container">
-                    <div class="item-amount">
-                        <span class="status-badge paid" style="color: ${isIncome ? '#34C759' : '#8E8E93'}">${badgeText}</span>
-                        £${Math.abs(item.balance).toFixed(2)}
-                    </div>
+                    <div class="item-amount"><span class="status-badge paid" style="color: ${isIncome ? '#34C759' : '#8E8E93'}">${isIncome ? 'Received' : 'Paid'}</span>£${Math.abs(item.balance).toFixed(2)}</div>
                 </div>
             `;
             listContainer.appendChild(row);
@@ -452,25 +406,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const listEl = document.getElementById('transaction-list');
         listEl.innerHTML = "";
-        const txs = item.transactions || [];
-
-        if (txs.length === 0) {
-            listEl.innerHTML = "<p class='placeholder-text' style='padding-bottom: 20px;'>No recent transactions.</p>";
-        } else {
-            const recentTxs = txs.slice(0, 20);
-            recentTxs.forEach(tx => {
+        const txs = (item.transactions || []).slice(0, 20);
+        if (txs.length === 0) { listEl.innerHTML = "<p class='placeholder-text' style='padding-bottom: 20px;'>No recent transactions.</p>"; } 
+        else {
+            txs.forEach(tx => {
                 const isOut = tx.amount < 0;
-                const sign = isOut ? '-' : '+';
-                const colorClass = isOut ? 'text-red' : 'text-green';
-                const isRollNeg = tx.rollingBalance < 0;
-                const rollSign = isRollNeg ? '-' : '';
-
                 const row = document.createElement('div');
                 row.className = 'settings-row tx-row';
                 row.innerHTML = `
                     <div style="flex: 1;">
-                        <div class="tx-flex"><span class="tx-desc">${tx.description}</span><span class="tx-val ${colorClass}">${sign}£${Math.abs(tx.amount).toFixed(2)}</span></div>
-                        <div class="tx-flex" style="margin-bottom:0;"><span class="tx-date">${tx.date}</span><span class="tx-rolling">Bal: ${rollSign}£${Math.abs(tx.rollingBalance).toFixed(2)}</span></div>
+                        <div class="tx-flex"><span class="tx-desc">${tx.description}</span><span class="tx-val ${isOut ? 'text-red' : 'text-green'}">${isOut ? '-' : '+'}£${Math.abs(tx.amount).toFixed(2)}</span></div>
+                        <div class="tx-flex" style="margin-bottom:0;"><span class="tx-date">${tx.date}</span><span class="tx-rolling">Bal: ${tx.rollingBalance < 0 ? '-' : ''}£${Math.abs(tx.rollingBalance).toFixed(2)}</span></div>
                     </div>
                 `;
                 listEl.appendChild(row);
@@ -479,25 +425,22 @@ document.addEventListener("DOMContentLoaded", () => {
         switchView('account-details');
     };
 
-    // Modals Logic
+    // Modal Logic
     const overlay = document.getElementById('modal-overlay');
     const txModal = document.getElementById('transaction-modal');
     const editModal = document.getElementById('edit-modal');
 
     window.openTransactionModal = () => { 
-        // Force reset the dropdown and trigger change to reset UI
         const txAcc = document.getElementById('txAccount');
-        txAcc.selectedIndex = 0;
-        txAcc.dispatchEvent(new Event('change'));
-
+        txAcc.selectedIndex = 0; txAcc.dispatchEvent(new Event('change'));
         overlay.classList.add('active'); setTimeout(() => txModal.classList.add('open'), 10); 
     };
     
+    // UPDATED: Smarter Edit Modal
     window.openEditModal = (overrideId) => {
         const targetId = overrideId || currentActiveAccountId;
         if(!targetId) return;
         currentActiveAccountId = targetId;
-        
         const item = financialItems.find(i => i.id === targetId);
         if(!item) return;
 
@@ -509,29 +452,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const dateWrapper = document.getElementById('edit-date-wrapper');
         
         odWrapper.style.display = 'none'; cardWrapper.style.display = 'none'; dateWrapper.style.display = 'none';
-        document.getElementById('editOdLimit').required = false; 
-        document.getElementById('editCardLimit').required = false;
-        document.getElementById('editDay').required = false;
-
         if(item.type === 'account' && item.hasOverdraft) { 
-            odWrapper.style.display = 'block'; 
-            document.getElementById('editOdLimit').value = item.odLimit; 
+            odWrapper.style.display = 'block'; document.getElementById('editOdLimit').value = item.odLimit; 
         } else if (item.type === 'card') { 
-            cardWrapper.style.display = 'block'; 
-            document.getElementById('editCardLimit').value = item.creditLimit; 
-            dateWrapper.style.display = 'block';
-            document.getElementById('editDay').value = item.dueDate;
+            cardWrapper.style.display = 'block'; document.getElementById('editCardLimit').value = item.creditLimit; 
+            dateWrapper.style.display = 'block'; document.getElementById('editDay').value = item.dueDate;
         } else if (['loan', 'bill', 'salary'].includes(item.type)) {
-            dateWrapper.style.display = 'block';
-            document.getElementById('editDay').value = item.dueDate;
+            dateWrapper.style.display = 'block'; document.getElementById('editDay').value = item.dueDate;
         }
-        
         overlay.classList.add('active'); setTimeout(() => editModal.classList.add('open'), 10);
     };
 
     window.closeAllModals = () => { txModal.classList.remove('open'); editModal.classList.remove('open'); setTimeout(() => overlay.classList.remove('active'), 300); };
 
-    // Transaction & Transfer Submission
+    // Transaction Submission
     document.getElementById('transaction-form').addEventListener('submit', (e) => {
         e.preventDefault();
         const fromAccId = document.getElementById('txAccount').value;
@@ -539,83 +473,41 @@ document.addEventListener("DOMContentLoaded", () => {
         const amountInput = parseFloat(document.getElementById('txAmount').value);
         let desc = document.getElementById('txDesc').value;
         const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
-        
         let confettiTriggered = false;
 
         if (type === 'transfer') {
             const toAccId = document.getElementById('txToAccount').value;
-            if (fromAccId === toAccId) { alert("You cannot transfer money to the exact same account!"); return; }
-            
             const fromIndex = financialItems.findIndex(i => i.id === fromAccId);
             const toIndex = financialItems.findIndex(i => i.id === toAccId);
-            
             if (fromIndex !== -1 && toIndex !== -1) {
-                if(!financialItems[fromIndex].transactions) financialItems[fromIndex].transactions = [];
-                if(!financialItems[toIndex].transactions) financialItems[toIndex].transactions = [];
-
                 financialItems[fromIndex].balance -= amountInput;
-                financialItems[fromIndex].transactions.unshift({
-                    id: Date.now().toString() + '-out',
-                    date: dateStr, description: `Transfer to ${financialItems[toIndex].name}`,
-                    amount: -amountInput, rollingBalance: financialItems[fromIndex].balance
-                });
-
-                const oldToBalance = financialItems[toIndex].balance;
+                financialItems[fromIndex].transactions.unshift({ date: dateStr, description: `To ${financialItems[toIndex].name}`, amount: -amountInput, rollingBalance: financialItems[fromIndex].balance });
+                if (financialItems[toIndex].balance < 0 && (financialItems[toIndex].balance + amountInput) >= 0 && (financialItems[toIndex].type === 'card' || financialItems[toIndex].type === 'loan')) confettiTriggered = true;
                 financialItems[toIndex].balance += amountInput;
-                if (oldToBalance < 0 && financialItems[toIndex].balance >= 0 && (financialItems[toIndex].type === 'card' || financialItems[toIndex].type === 'loan')) {
-                    confettiTriggered = true;
-                }
-
-                financialItems[toIndex].transactions.unshift({
-                    id: Date.now().toString() + '-in',
-                    date: dateStr, description: `Transfer from ${financialItems[fromIndex].name}`,
-                    amount: amountInput, rollingBalance: financialItems[toIndex].balance
-                });
+                financialItems[toIndex].transactions.unshift({ date: dateStr, description: `From ${financialItems[fromIndex].name}`, amount: amountInput, rollingBalance: financialItems[toIndex].balance });
             }
         } else {
-            // MODIFIED: Added Interest Math
-            const isNegative = (type === 'out' || type === 'interest');
-            const actualAmount = isNegative ? -Math.abs(amountInput) : Math.abs(amountInput);
-            
-            if (type === 'bonus') desc = `[Bonus] ${desc}`;
-            if (type === 'interest') desc = `[Interest] ${desc}`;
-
+            const actualAmount = (type === 'out' || type === 'interest') ? -Math.abs(amountInput) : Math.abs(amountInput);
             const accountIndex = financialItems.findIndex(i => i.id === fromAccId);
             if (accountIndex !== -1) {
-                if(!financialItems[accountIndex].transactions) financialItems[accountIndex].transactions = [];
-                
-                const oldBalance = financialItems[accountIndex].balance;
+                if (financialItems[accountIndex].balance < 0 && (financialItems[accountIndex].balance + actualAmount) >= 0 && !actualAmount.toString().includes('-') && (financialItems[accountIndex].type === 'card' || financialItems[accountIndex].type === 'loan')) confettiTriggered = true;
                 financialItems[accountIndex].balance += actualAmount;
-                
-                if (oldBalance < 0 && financialItems[accountIndex].balance >= 0 && !isNegative && (financialItems[accountIndex].type === 'card' || financialItems[accountIndex].type === 'loan')) {
-                    confettiTriggered = true;
-                }
-
-                financialItems[accountIndex].transactions.unshift({
-                    id: Date.now().toString(),
-                    date: dateStr, description: desc,
-                    amount: actualAmount, rollingBalance: financialItems[accountIndex].balance
-                });
+                financialItems[accountIndex].transactions.unshift({ date: dateStr, description: desc, amount: actualAmount, rollingBalance: financialItems[accountIndex].balance });
             }
         }
-
         localStorage.setItem("financialItems", JSON.stringify(financialItems));
-        document.getElementById('transaction-form').reset();
-        closeAllModals(); 
+        document.getElementById('transaction-form').reset(); closeAllModals(); 
         if (currentActiveAccountId) openAccountDetails(currentActiveAccountId);
-        renderAll();
-
-        if(confettiTriggered) setTimeout(() => fireConfetti(), 300); 
+        renderAll(); if(confettiTriggered) setTimeout(() => fireConfetti(), 300); 
     });
 
-    // Edit Submission
+    // UPDATED: Edit Submission logic
     document.getElementById('edit-form').addEventListener('submit', (e) => {
         e.preventDefault();
         const itemIndex = financialItems.findIndex(i => i.id === currentActiveAccountId);
         if(itemIndex !== -1) {
             financialItems[itemIndex].name = document.getElementById('editName').value;
             financialItems[itemIndex].balance = parseFloat(document.getElementById('editBalance').value);
-            
             if(financialItems[itemIndex].type === 'account' && financialItems[itemIndex].hasOverdraft) {
                 financialItems[itemIndex].odLimit = parseFloat(document.getElementById('editOdLimit').value) || 0;
             } else if (financialItems[itemIndex].type === 'card') {
@@ -624,67 +516,35 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if (['loan', 'bill', 'salary'].includes(financialItems[itemIndex].type)) {
                 financialItems[itemIndex].dueDate = document.getElementById('editDay').value;
             }
-            
             localStorage.setItem("financialItems", JSON.stringify(financialItems));
-            closeAllModals(); 
-            
-            // If we were looking at the detail view, refresh it. Otherwise just render the background.
-            if (['account', 'card', 'loan'].includes(financialItems[itemIndex].type) && document.getElementById('view-account-details').classList.contains('active-view')) {
-                openAccountDetails(currentActiveAccountId);
-            }
-            renderAll();
+            closeAllModals(); renderAll();
+            if (document.getElementById('view-account-details').classList.contains('active-view')) openAccountDetails(currentActiveAccountId);
         }
     });
 
-    // Delete Submission
+    // UPDATED: Delete Submission logic
     document.getElementById('delete-btn').addEventListener('click', () => {
-        const confirmDelete = confirm("Are you sure you want to delete this? This action cannot be undone.");
-        if (confirmDelete) {
+        if (confirm("Delete this item permanently?")) {
             financialItems = financialItems.filter(i => i.id !== currentActiveAccountId);
             localStorage.setItem("financialItems", JSON.stringify(financialItems));
-            closeAllModals();
-            currentActiveAccountId = null;
-            switchView('home'); // Send them back to the home screen just in case they deleted the account they were currently viewing
-            renderAll();
+            closeAllModals(); currentActiveAccountId = null; switchView('home'); renderAll();
         }
     });
 
-    // Form Submission (Adding new items)
-    const addItemForm = document.getElementById("add-item-form");
-    if (addItemForm) {
-        addItemForm.addEventListener("submit", (e) => {
-            e.preventDefault();
-            const type = document.querySelector('input[name="itemType"]:checked').value;
-            let newItem = {
-                id: Date.now().toString(), type: type,
-                name: document.getElementById("itemName").value,
-                balance: parseFloat(document.getElementById("itemAmount").value),
-                emoji: document.getElementById("itemEmoji").value || "🏦",
-                theme: document.getElementById("itemTheme").value,
-                transactions: []
-            };
+    // New Item Submission
+    document.getElementById("add-item-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const type = document.querySelector('input[name="itemType"]:checked').value;
+        let newItem = { id: Date.now().toString(), type: type, name: document.getElementById("itemName").value, balance: parseFloat(document.getElementById("itemAmount").value), emoji: document.getElementById("itemEmoji").value || "🏦", theme: document.getElementById("itemTheme").value, transactions: [] };
+        if (type === 'account') { newItem.accountType = document.getElementById("accountType").value; newItem.hasOverdraft = document.getElementById("hasOverdraft").checked; newItem.odLimit = parseFloat(document.getElementById("odLimit").value) || 0; }
+        else if (type === 'card') { newItem.creditLimit = parseFloat(document.getElementById("cardLimit").value) || 0; newItem.dueDate = document.getElementById("cardDay").value; }
+        else if (type === 'loan') { newItem.originalAmount = parseFloat(document.getElementById("loanOriginal").value) || 0; newItem.monthlyPayment = parseFloat(document.getElementById("loanMonthly").value) || 0; newItem.dueDate = document.getElementById("loanDay").value; }
+        else if (type === 'bill') { newItem.dueDate = document.getElementById("billDay").value; newItem.debitAccount = document.getElementById("billAccount").value; }
+        else if (type === 'salary') { newItem.dueDate = document.getElementById("salaryDay").value; newItem.creditAccount = document.getElementById("salaryAccount").value; }
+        financialItems.push(newItem);
+        localStorage.setItem("financialItems", JSON.stringify(financialItems));
+        e.target.reset(); updateFormFields('account'); renderAll(); switchView('home');
+    });
 
-            if (type === 'account') {
-                newItem.accountType = document.getElementById("accountType").value;
-                newItem.hasOverdraft = document.getElementById("hasOverdraft").checked;
-                newItem.odLimit = parseFloat(document.getElementById("odLimit").value) || 0;
-            } else if (type === 'card') {
-                newItem.creditLimit = parseFloat(document.getElementById("cardLimit").value) || 0; newItem.dueDate = document.getElementById("cardDay").value;
-            } else if (type === 'loan') {
-                newItem.originalAmount = parseFloat(document.getElementById("loanOriginal").value) || 0; newItem.monthlyPayment = parseFloat(document.getElementById("loanMonthly").value) || 0; newItem.dueDate = document.getElementById("loanDay").value;
-            } else if (type === 'bill') {
-                newItem.dueDate = document.getElementById("billDay").value; newItem.debitAccount = document.getElementById("billAccount").value;
-            } else if (type === 'salary') {
-                newItem.dueDate = document.getElementById("salaryDay").value; newItem.creditAccount = document.getElementById("salaryAccount").value;
-            }
-
-            financialItems.push(newItem);
-            localStorage.setItem("financialItems", JSON.stringify(financialItems));
-            addItemForm.reset(); document.getElementById('type-account').checked = true; updateFormFields('account');
-            renderAll(); switchView('home');
-        });
-    }
-
-    updateFormFields('account');
-    renderAll();
+    updateFormFields('account'); renderAll();
 });
