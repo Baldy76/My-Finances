@@ -56,10 +56,10 @@
                     <input type="radio" name="itemType" value="bill" id="type-bill"><label for="type-bill">Bill</label>
                 </div>
                 <form id="add-item-form" class="admin-form">
-                    <input type="text" id="itemName" placeholder="Name" required>
-                    <input type="number" id="itemAmount" placeholder="Balance (£)" step="0.01" required>
+                    <input type="text" id="itemName" placeholder="Name (e.g. Monzo, Amex, Gas)" required>
+                    <input type="number" id="itemAmount" placeholder="Current Balance (£)" step="0.01" required>
                     
-                    <div id="account-only-fields">
+                    <div id="account-fields">
                         <div class="settings-row" style="padding: 10px 0;">
                             <span style="color: var(--text);">Overdraft Facility?</span>
                             <label class="ios-toggle small">
@@ -69,26 +69,37 @@
                         </div>
                         <input type="number" id="odLimit" placeholder="Overdraft Limit (£)" step="0.01">
                     </div>
-                    
-                    <div id="bill-only-fields" style="display:none;">
-                        <input type="number" id="billDay" placeholder="Day Due (1-31)">
+
+                    <div id="card-fields" style="display:none;">
+                        <input type="number" id="cardLimit" placeholder="Credit Limit (£)" step="0.01">
                     </div>
+
+                    <div id="loan-fields" style="display:none;">
+                        <input type="number" id="loanOriginal" placeholder="Original Loan Amount (£)" step="0.01">
+                        <input type="number" id="loanMonthly" placeholder="Monthly Payment (£)" step="0.01">
+                    </div>
+                    
+                    <div id="bill-fields" style="display:none;">
+                        <input type="number" id="billDay" placeholder="Day Due (1-31)" min="1" max="31">
+                        <select id="billAccount" class="ios-select">
+                            <option value="" disabled selected>Select Account to Debit</option>
+                            </select>
+                    </div>
+
                     <button type="submit" class="ios-btn">Save to Dashboard</button>
                 </form>
             </div>
 
             <div class="admin-footer">
                 <button id="sync-updates-btn" class="sync-btn">Sync for Updates</button>
-                <div class="version-control">App Version 3.0.1 (Build 1451)</div>
+                <div class="version-control">App Version 3.1.0 (Build 1500)</div>
             </div>
         </div>
 
         <nav class="tab-bar">
             <div id="nav-cards" class="tab-item"><span>💳</span><label>Cards</label></div>
             <div id="nav-bills" class="tab-item"><span>📑</span><label>Bills</label></div>
-            
             <div id="nav-home" class="tab-item center-btn active"><span>🏠</span></div>
-            
             <div id="nav-loans" class="tab-item"><span>💰</span><label>Loans</label></div>
             <div id="nav-admin" class="tab-item"><span>⚙️</span><label>Admin</label></div>
         </nav>
