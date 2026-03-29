@@ -17,7 +17,6 @@
     <div class="app-container">
         
         <div id="view-home" class="view active-view">
-            <div class="header">Summary</div>
             <div id="home-content"></div>
             <button class="fab" onclick="openTransactionModal()">+</button>
         </div>
@@ -58,7 +57,7 @@
             <div class="header">Admin</div>
             
             <div style="border-bottom: 2px solid var(--ios-grey); padding-bottom: 20px; margin-bottom: 15px;">
-                <span style="font-size: 14px; font-weight: 800; color: var(--text-secondary); display: block; text-align: center; text-transform: uppercase;">Theme Selection</span>
+                <span style="font-size: 16px; font-weight: 800; color: var(--text); display: block; text-align: center;">Theme Selection</span>
                 <div class="theme-segmented-control">
                     <button id="btnLight" class="segment active" onclick="setThemeMode(false)">☀️ Light</button>
                     <button id="btnDark" class="segment" onclick="setThemeMode(true)">🌙 Dark</button>
@@ -76,7 +75,18 @@
                 </div>
                 
                 <form id="add-item-form" class="admin-form">
-                    <input type="text" id="itemName" placeholder="Name (e.g. Barclays, Gas, Visa)" required>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <input type="text" id="itemEmoji" placeholder="🏦" maxlength="2" style="width: 25%; text-align: center; font-size: 22px; padding: 10px;" required>
+                        <select id="itemTheme" class="ios-select" style="flex: 1;" required>
+                            <option value="theme-blue" selected>Ocean Blue</option>
+                            <option value="theme-red">Sunset Red</option>
+                            <option value="theme-green">Emerald Green</option>
+                            <option value="theme-purple">Royal Purple</option>
+                            <option value="theme-dark">Midnight Slate</option>
+                        </select>
+                    </div>
+
+                    <input type="text" id="itemName" placeholder="Name (e.g. Monzo, Salary, Gas)" required>
                     <input type="number" id="itemAmount" placeholder="Current Balance (£)" step="0.01" required>
                     
                     <div id="account-fields">
@@ -134,7 +144,7 @@
 
             <div class="admin-footer">
                 <button id="sync-updates-btn" class="sync-btn">Sync for Updates</button>
-                <div class="version-control">App Version 3.11.0 (Build 2026)</div>
+                <div class="version-control">App Version 3.10.0 (Build 1950)</div>
             </div>
         </div>
 
@@ -156,21 +166,23 @@
                 </select>
                 
                 <div class="segmented-control tx-seg-control" style="margin: 0 0 12px 0;">
-                    <input type="radio" name="txType" value="out" id="tx-out" checked><label for="tx-out" id="lbl-tx-out">Out</label>
+                    <input type="radio" name="txType" value="out" id="tx-out" checked><label for="tx-out" id="lbl-tx-out">Out (Spend)</label>
                     <input type="radio" name="txType" value="in" id="tx-in"><label for="tx-in" id="lbl-tx-in">In</label>
+                    
                     <input type="radio" name="txType" value="bonus" id="tx-bonus"><label for="tx-bonus" id="lbl-tx-bonus">Bonus</label>
                     <input type="radio" name="txType" value="transfer" id="tx-transfer"><label for="tx-transfer" id="lbl-tx-transfer">Transfer</label>
-                    <input type="radio" name="txType" value="interest" id="tx-interest" style="display:none;"><label for="tx-interest" id="lbl-tx-interest" style="display: none;">Interest</label>
+                    
+                    <input type="radio" name="txType" value="interest" id="tx-interest"><label for="tx-interest" id="lbl-tx-interest" style="display: none;">Interest</label>
                 </div>
 
                 <div id="transfer-to-container" style="display: none; margin-bottom: 12px;">
                     <select id="txToAccount" class="ios-select">
-                        <option value="" disabled selected>Select Item to Credit</option>
+                        <option value="" disabled selected>Select Account/Debt to Credit</option>
                     </select>
                 </div>
                 
                 <input type="number" id="txAmount" placeholder="Amount (£)" step="0.01" required>
-                <input type="text" id="txDesc" placeholder="Description" required>
+                <input type="text" id="txDesc" placeholder="Description (e.g., Tesco, Payment)" required>
                 
                 <button type="submit" class="ios-btn" style="margin-top: 10px;">Save Transaction</button>
             </form>
@@ -180,7 +192,7 @@
             <div class="sheet-header">Edit Item</div>
             <form id="edit-form" class="admin-form" style="padding-top: 5px;">
                 <input type="text" id="editName" placeholder="Item Name" required>
-                <input type="number" id="editBalance" placeholder="Balance / Amount (£)" step="0.01" required>
+                <input type="number" id="editBalance" placeholder="Amount / Balance (£)" step="0.01" required>
                 
                 <div id="edit-date-wrapper" style="display:none;">
                     <select id="editDay" class="ios-select" style="margin-bottom: 12px;">
@@ -189,10 +201,10 @@
                 </div>
 
                 <div id="edit-od-wrapper" style="display:none;">
-                    <input type="number" id="editOdLimit" placeholder="Overdraft Limit (£)" step="0.01">
+                    <input type="number" id="editOdLimit" placeholder="New Overdraft Limit (£)" step="0.01">
                 </div>
                 <div id="edit-card-wrapper" style="display:none;">
-                    <input type="number" id="editCardLimit" placeholder="Credit Limit (£)" step="0.01">
+                    <input type="number" id="editCardLimit" placeholder="New Credit Limit (£)" step="0.01">
                 </div>
 
                 <button type="submit" class="ios-btn" style="margin-top: 10px;">Save Changes</button>
