@@ -1,4 +1,4 @@
-const CACHE_NAME = 'finance-ios-v3.1.0';
+const CACHE_NAME = 'finance-ios-v3.1.1';
 const ASSETS = ['./', './index.html', './styles.css', './app.js', './manifest.json'];
 
 self.addEventListener('install', (e) => {
