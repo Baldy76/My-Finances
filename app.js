@@ -65,13 +65,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const itemAmountInput = document.getElementById('itemAmount');
 
     function updateFormFields(selectedType) {
-        // Hide all specific groups and remove required attributes (to prevent hidden validation errors)
         Object.values(formGroups).forEach(group => {
             group.style.display = 'none';
             group.querySelectorAll('input, select').forEach(input => input.required = false);
         });
 
-        // Show the selected group and add required attributes back
         if (formGroups[selectedType]) {
             formGroups[selectedType].style.display = 'block';
             
@@ -86,16 +84,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // Change base amount placeholder text dynamically
         itemAmountInput.placeholder = (selectedType === 'bill') ? "Bill Amount (£)" : "Current Balance (£)";
     }
 
-    // Listen for radio button changes
     typeRadios.forEach(radio => {
         radio.addEventListener('change', (e) => updateFormFields(e.target.value));
     });
 
-    // Function to populate the "Account to Debit" dropdown for Bills
     function populateBillAccounts() {
         const billSelect = document.getElementById('billAccount');
         if (!billSelect) return;
@@ -127,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         if (targetView === 'home') renderHome();
         if (targetView === 'bills') renderBills();
-        if (targetView === 'admin') populateBillAccounts(); // Refresh dropdown when admin opens
+        if (targetView === 'admin') populateBillAccounts(); 
     }
 
     // --- Rendering Views ---
@@ -148,7 +143,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const section = document.createElement('div');
             section.className = 'home-section';
             section.innerHTML = `<div class="section-title">${cat.icon} ${cat.title}</div>`;
+            
             items.forEach(item => {
+                const isNegative = item.balance < 0;
+                const sign = isNegative ? '-' : '';
+                const balanceDisplay = `${sign}£${Math.abs(item.balance).toFixed(2)}`;
+                
+                // OD Logic: Calculate Available Balance
+                let extraInfoHtml = '';
+                if (item.type === 'account' && item.hasOverdraft) {
+                    const available = item.balance + (item.odLimit || 0);
+                    extraInfoHtml = `<div class="available-balance">Available: £${available.toFixed(2)}</div>`;
+                }
+
                 const tile = document.createElement('div');
                 tile.className = 'item-tile';
                 tile.innerHTML = `
@@ -156,7 +163,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         <div class="name">${item.name}</div>
                         <div class="sub">${item.type === 'bill' ? 'Base Due Day ' + item.dueDate : 'Balance Today'}</div>
                     </div>
-                    <div class="item-amount ${item.balance < 0 ? 'text-red' : ''}">£${Math.abs(item.balance).toFixed(2)}</div>
+                    <div class="amount-container">
+                        <div class="item-amount ${isNegative ? 'text-red' : ''}">${balanceDisplay}</div>
+                        ${extraInfoHtml}
+                    </div>
                 `;
                 section.appendChild(tile);
             });
@@ -196,7 +206,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         unpaidBills.forEach(bill => {
             const dateStr = bill.actualDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', weekday: 'short' });
-            // Look up the name of the debit account
             const debitAcc = financialItems.find(a => a.id === bill.debitAccount);
             const debitName = debitAcc ? debitAcc.name : 'Unknown Account';
 
@@ -208,7 +217,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="sub" style="color: var(--accent); font-weight: 600;">UPCOMING: ${dateStr}</div>
                     <div class="sub" style="font-size: 10px; margin-top: 2px;">From: ${debitName}</div>
                 </div>
-                <div class="item-amount">£${Math.abs(bill.balance).toFixed(2)}</div>
+                <div class="amount-container">
+                    <div class="item-amount">£${Math.abs(bill.balance).toFixed(2)}</div>
+                </div>
             `;
             listContainer.appendChild(row);
         });
@@ -228,9 +239,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="name">${bill.name}</div>
                     <div class="sub">PAID: ${dateStr}</div>
                 </div>
-                <div class="item-amount">
-                    <span class="status-badge paid">Paid</span>
-                    £${Math.abs(bill.balance).toFixed(2)}
+                <div class="amount-container">
+                    <div class="item-amount">
+                        <span class="status-badge paid">Paid</span>
+                        £${Math.abs(bill.balance).toFixed(2)}
+                    </div>
                 </div>
             `;
             listContainer.appendChild(row);
@@ -246,7 +259,6 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             const type = document.querySelector('input[name="itemType"]:checked').value;
             
-            // Base object created for all item types
             let newItem = {
                 id: Date.now().toString(),
                 type: type,
@@ -254,7 +266,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 balance: parseFloat(document.getElementById("itemAmount").value)
             };
 
-            // Capture specific fields based on type
             if (type === 'account') {
                 newItem.hasOverdraft = document.getElementById("hasOverdraft").checked;
                 newItem.odLimit = parseFloat(document.getElementById("odLimit").value) || 0;
@@ -265,23 +276,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 newItem.monthlyPayment = parseFloat(document.getElementById("loanMonthly").value) || 0;
             } else if (type === 'bill') {
                 newItem.dueDate = document.getElementById("billDay").value;
-                newItem.debitAccount = document.getElementById("billAccount").value; // Saves the ID of the chosen account
+                newItem.debitAccount = document.getElementById("billAccount").value;
             }
 
             financialItems.push(newItem);
             localStorage.setItem("financialItems", JSON.stringify(financialItems));
             
-            // Reset form and UI
             addItemForm.reset();
             document.getElementById('type-account').checked = true;
             updateFormFields('account');
-            populateBillAccounts(); // Update the dropdown with new accounts if one was added
+            populateBillAccounts(); 
             
             switchView('home');
         });
     }
 
-    // Initial setup on load
     updateFormFields('account');
     populateBillAccounts();
     renderHome();
