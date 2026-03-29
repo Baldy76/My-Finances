@@ -82,7 +82,6 @@ html, body {
 .segment { flex: 1; padding: 12px; border-radius: 12px; border: none; background: transparent; font-weight: 800; color: var(--text); opacity: 0.5; cursor: pointer; }
 .segment.active { background: var(--card); opacity: 1; box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
 
-/* Horizontal List Tile - CLICKABLE NOW */
 .item-tile { background: var(--card); border-radius: 16px; padding: 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; cursor: pointer; }
 .item-tile:active { transform: scale(0.98); opacity: 0.8; }
 
@@ -91,14 +90,13 @@ html, body {
 .amount-container { display: flex; flex-direction: column; align-items: flex-end; }
 .item-amount { font-size: 18px; font-weight: 700; display: flex; align-items: center; }
 
-/* --- Vibrant Themes --- */
+/* Vibrant Themes (Maintained for legacy items or future manual override) */
 .theme-blue { background: linear-gradient(135deg, #0A84FF, #0056b3); }
 .theme-red { background: linear-gradient(135deg, #FF375F, #b81736); }
 .theme-green { background: linear-gradient(135deg, #30D158, #1c8c36); }
 .theme-purple { background: linear-gradient(135deg, #BF5AF2, #5E5CE6); }
 .theme-dark { background: linear-gradient(135deg, #3a3a3c, #1c1c1e); }
 
-/* Grid & Square Tiles */
 .tiles-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 10px; }
 .square-tile { 
     background: var(--card); border-radius: 20px; padding: 16px; 
@@ -108,7 +106,6 @@ html, body {
 }
 .square-tile:active { opacity: 0.8; }
 
-/* Themed Tile Overrides */
 .square-tile.themed { color: white; box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
 .square-tile.themed .sub, .square-tile.themed .available-balance { color: rgba(255, 255, 255, 0.75); }
 .square-tile.themed .text-red { color: white !important; }
@@ -131,12 +128,10 @@ html, body {
 .text-red { color: #FF3B30 !important; }
 .text-green { color: #34C759 !important; }
 
-/* Status Styles */
 .item-tile.is-paid { opacity: 0.45; }
 .bill-divider { height: 1.5px; background-color: var(--ios-grey); margin: 20px 0; border-radius: 2px; }
 .status-badge.paid { color: #34C759; font-size: 13px; font-weight: 800; margin-right: 8px; text-transform: uppercase; }
 
-/* Forms & Admin */
 .segmented-control { display: flex; background: var(--ios-grey); padding: 2px; border-radius: 10px; margin: 15px 0; }
 .tx-seg-control { flex-wrap: wrap; } 
 .segmented-control input { display: none; }
@@ -153,23 +148,19 @@ html, body {
 .admin-form .ios-select { -webkit-appearance: none; appearance: none; cursor: pointer; }
 .ios-btn { background: var(--accent); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
 
-/* Buttons & Footers */
 .sync-btn { background: var(--ios-grey); color: var(--accent); border: none; padding: 12px; border-radius: 10px; font-weight: 600; margin-bottom: 20px; width: 100%; }
 .admin-footer { text-align: center; padding: 20px 0; color: var(--text-secondary); font-size: 11px; }
 .placeholder-text { color: var(--text-secondary); margin-top: 20px; text-align: center;}
 
-/* Floating Action Button */
 .fab { position: absolute; bottom: calc(100px + env(safe-area-inset-bottom)); right: 20px; width: 60px; height: 60px; background-color: var(--accent); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 34px; border: none; box-shadow: 0 4px 15px rgba(94, 92, 230, 0.5); cursor: pointer; z-index: 90; transition: transform 0.2s ease; }
 .fab:active { transform: scale(0.9); }
 
-/* Bottom Sheet Modals */
 .modal-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 200; display: none; opacity: 0; transition: opacity 0.3s ease; }
 .modal-overlay.active { display: block; opacity: 1; }
 .bottom-sheet { position: absolute; bottom: -100%; left: 0; right: 0; background-color: var(--bg); padding: 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -5px 20px rgba(0,0,0,0.15); z-index: 201; transition: bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
 .bottom-sheet.open { bottom: 0; }
 .sheet-header { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 15px; color: var(--text); }
 
-/* Account Details View */
 .details-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
 .back-btn, .edit-btn { background: none; border: none; color: var(--accent); font-size: 16px; font-weight: 600; cursor: pointer; padding: 0; }
 .detail-balance-large { font-size: 44px; font-weight: 800; text-align: center; color: var(--text); margin: 5px 0; }
