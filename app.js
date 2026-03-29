@@ -1,4 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // --- 0. Service Worker Registration ---
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log("Service Worker Registered"))
+            .catch(err => console.log("SW Registration Failed", err));
+    }
+
     // --- 1. Theme Management ---
     const toggle = document.getElementById('themeToggle');
     const currentTheme = localStorage.getItem('theme') || 'light';
@@ -18,21 +25,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const syncBtn = document.getElementById('sync-updates-btn');
     if (syncBtn) {
         syncBtn.addEventListener('click', () => {
-            syncBtn.innerText = "Checking...";
-            
-            // 1. Clear Service Worker cache if available
+            syncBtn.innerText = "Syncing...";
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(registrations => {
                     for (let registration of registrations) {
-                        registration.update(); // Checks for new version on server
+                        registration.update(); 
                     }
                 });
             }
-
-            // 2. Force hard reload from server
-            setTimeout(() => {
-                window.location.reload(true);
-            }, 1000);
+            // Clear cache and reload
+            caches.keys().then(names => {
+                for (let name of names) caches.delete(name);
+            });
+            setTimeout(() => { window.location.reload(true); }, 1000);
         });
     }
 
@@ -43,7 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const typeRadios = document.querySelectorAll('input[name="itemType"]');
     const views = ['cards', 'bills', 'home', 'loans', 'admin'];
 
-    // Form Toggle Logic
     typeRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             const val = e.target.value;
@@ -53,7 +57,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Navigation
     views.forEach(view => {
         const navBtn = document.getElementById(`nav-${view}`);
         if (navBtn) navBtn.addEventListener("click", () => switchView(view));
@@ -67,7 +70,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (targetView === 'home') renderHome();
     }
 
-    // Render Home
     function renderHome() {
         if (!homeContent) return;
         homeContent.innerHTML = ""; 
@@ -99,9 +101,9 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             homeContent.appendChild(section);
         });
+        if (financialItems.length === 0) homeContent.innerHTML = "<p class='placeholder-text'>No data found.</p>";
     }
 
-    // Form Submit
     if (addItemForm) {
         addItemForm.addEventListener("submit", (e) => {
             e.preventDefault();
