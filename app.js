@@ -123,192 +123,55 @@ document.addEventListener("DOMContentLoaded", () => {
             if(vEl) vEl.classList.toggle("active-view", view === targetView);
             if(nEl) nEl.classList.toggle("active", view === targetView);
         });
-        
-        if (targetView === 'home') renderHome();
-        if (targetView === 'bills') renderBills();
-        if (targetView === 'admin') populateBillAccounts(); 
     }
 
-    // --- Rendering Views ---
+    // --- Centralized Rendering ---
+    function renderAll() {
+        renderHome();
+        renderCards();
+        renderLoans();
+        renderBills();
+        populateBillAccounts();
+    }
+
     function renderHome() {
         const homeContent = document.getElementById("home-content");
         if (!homeContent) return;
         homeContent.innerHTML = ""; 
-        const categories = [
-            { id: 'account', title: 'Bank Accounts', icon: '🏦' },
-            { id: 'card', title: 'Credit Cards', icon: '💳' },
-            { id: 'loan', title: 'Loans', icon: '💰' },
-            { id: 'bill', title: 'Upcoming Bills', icon: '📑' }
-        ];
-
-        categories.forEach(cat => {
-            const items = financialItems.filter(i => i.type === cat.id);
-            if (items.length === 0) return;
-            const section = document.createElement('div');
-            section.className = 'home-section';
-            section.innerHTML = `<div class="section-title">${cat.icon} ${cat.title}</div>`;
-            
-            items.forEach(item => {
-                const isNegative = item.balance < 0;
-                const sign = isNegative ? '-' : '';
-                const balanceDisplay = `${sign}£${Math.abs(item.balance).toFixed(2)}`;
-                
-                // OD Logic: Calculate Available Balance
-                let extraInfoHtml = '';
-                if (item.type === 'account' && item.hasOverdraft) {
-                    const available = item.balance + (item.odLimit || 0);
-                    extraInfoHtml = `<div class="available-balance">Available: £${available.toFixed(2)}</div>`;
-                }
-
-                // Dynamic Subtitle Logic
-                let subText = 'Balance Today';
-                if (item.type === 'account') {
-                    subText = item.accountType === 'savings' ? 'Savings Account' : 'Current Account';
-                } else if (item.type === 'bill') {
-                    subText = 'Base Due Day ' + item.dueDate;
-                } else if (item.type === 'card' || item.type === 'loan') {
-                    subText = item.dueDate ? 'Due Day ' + item.dueDate : 'Balance Today';
-                }
-
-                const tile = document.createElement('div');
-                tile.className = 'item-tile';
-                tile.innerHTML = `
-                    <div class="item-info">
-                        <div class="name">${item.name}</div>
-                        <div class="sub">${subText}</div>
-                    </div>
-                    <div class="amount-container">
-                        <div class="item-amount ${isNegative ? 'text-red' : ''}">${balanceDisplay}</div>
-                        ${extraInfoHtml}
-                    </div>
-                `;
-                section.appendChild(tile);
-            });
-            homeContent.appendChild(section);
-        });
-    }
-
-    function renderBills() {
-        const billsContent = document.getElementById("bills-content");
-        if (!billsContent) return;
-        billsContent.innerHTML = "";
-
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); 
-        const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth();
-
-        const bills = financialItems.filter(i => i.type === 'bill');
-
-        if (bills.length === 0) {
-            billsContent.innerHTML = "<p class='placeholder-text'>No bills added yet.</p>";
+        
+        const accounts = financialItems.filter(i => i.type === 'account');
+        
+        if (accounts.length === 0) {
+            homeContent.innerHTML = "<p class='placeholder-text'>No accounts added yet.</p>";
             return;
         }
 
-        const billList = bills.map(bill => {
-            const actualDate = getAdjustedPaymentDate(currentYear, currentMonth, parseInt(bill.dueDate));
-            return { ...bill, actualDate };
-        });
+        const grid = document.createElement('div');
+        grid.className = 'tiles-grid';
 
-        billList.sort((a, b) => a.actualDate - b.actualDate);
-
-        const unpaidBills = billList.filter(b => b.actualDate >= today);
-        const paidBills = billList.filter(b => b.actualDate < today);
-
-        const listContainer = document.createElement('div');
-        listContainer.className = 'settings-group';
-
-        unpaidBills.forEach(bill => {
-            const dateStr = bill.actualDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', weekday: 'short' });
-            const debitAcc = financialItems.find(a => a.id === bill.debitAccount);
-            const debitName = debitAcc ? debitAcc.name : 'Unknown Account';
-
-            const row = document.createElement('div');
-            row.className = 'item-tile';
-            row.innerHTML = `
-                <div class="item-info">
-                    <div class="name">${bill.name}</div>
-                    <div class="sub" style="color: var(--accent); font-weight: 600;">UPCOMING: ${dateStr}</div>
-                    <div class="sub" style="font-size: 10px; margin-top: 2px;">From: ${debitName}</div>
-                </div>
-                <div class="amount-container">
-                    <div class="item-amount">£${Math.abs(bill.balance).toFixed(2)}</div>
-                </div>
-            `;
-            listContainer.appendChild(row);
-        });
-
-        if (unpaidBills.length > 0 && paidBills.length > 0) {
-            const divider = document.createElement('div');
-            divider.className = 'bill-divider';
-            listContainer.appendChild(divider);
-        }
-
-        paidBills.forEach(bill => {
-            const dateStr = bill.actualDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', weekday: 'short' });
-            const row = document.createElement('div');
-            row.className = 'item-tile is-paid';
-            row.innerHTML = `
-                <div class="item-info">
-                    <div class="name">${bill.name}</div>
-                    <div class="sub">PAID: ${dateStr}</div>
-                </div>
-                <div class="amount-container">
-                    <div class="item-amount">
-                        <span class="status-badge paid">Paid</span>
-                        £${Math.abs(bill.balance).toFixed(2)}
-                    </div>
-                </div>
-            `;
-            listContainer.appendChild(row);
-        });
-
-        billsContent.appendChild(listContainer);
-    }
-
-    // --- Form Submission ---
-    const addItemForm = document.getElementById("add-item-form");
-    if (addItemForm) {
-        addItemForm.addEventListener("submit", (e) => {
-            e.preventDefault();
-            const type = document.querySelector('input[name="itemType"]:checked').value;
+        accounts.forEach(item => {
+            const isNegative = item.balance < 0;
+            const sign = isNegative ? '-' : '';
+            const balanceDisplay = `${sign}£${Math.abs(item.balance).toFixed(2)}`;
             
-            let newItem = {
-                id: Date.now().toString(),
-                type: type,
-                name: document.getElementById("itemName").value,
-                balance: parseFloat(document.getElementById("itemAmount").value)
-            };
-
-            if (type === 'account') {
-                newItem.accountType = document.getElementById("accountType").value;
-                newItem.hasOverdraft = document.getElementById("hasOverdraft").checked;
-                newItem.odLimit = parseFloat(document.getElementById("odLimit").value) || 0;
-            } else if (type === 'card') {
-                newItem.creditLimit = parseFloat(document.getElementById("cardLimit").value) || 0;
-                newItem.dueDate = document.getElementById("cardDay").value;
-            } else if (type === 'loan') {
-                newItem.originalAmount = parseFloat(document.getElementById("loanOriginal").value) || 0;
-                newItem.monthlyPayment = parseFloat(document.getElementById("loanMonthly").value) || 0;
-                newItem.dueDate = document.getElementById("loanDay").value;
-            } else if (type === 'bill') {
-                newItem.dueDate = document.getElementById("billDay").value;
-                newItem.debitAccount = document.getElementById("billAccount").value;
+            let extraInfoHtml = '';
+            if (item.hasOverdraft) {
+                const available = item.balance + (item.odLimit || 0);
+                extraInfoHtml = `<div class="available-balance">Available: £${available.toFixed(2)}</div>`;
             }
 
-            financialItems.push(newItem);
-            localStorage.setItem("financialItems", JSON.stringify(financialItems));
-            
-            addItemForm.reset();
-            document.getElementById('type-account').checked = true;
-            updateFormFields('account');
-            populateBillAccounts(); 
-            
-            switchView('home');
-        });
-    }
+            const subText = item.accountType === 'savings' ? 'Savings Account' : 'Current Account';
 
-    updateFormFields('account');
-    populateBillAccounts();
-    renderHome();
-});
+            const tile = document.createElement('div');
+            tile.className = 'square-tile';
+            tile.innerHTML = `
+                <div class="top-info">
+                    <div class="name">${item.name}</div>
+                    <div class="sub">${subText}</div>
+                </div>
+                <div class="bottom-info">
+                    <div class="item-amount ${isNegative ? 'text-red' : ''}">${balanceDisplay}</div>
+                    ${extraInfoHtml}
+                </div>
+            `;
+            grid.appendChild(tile);
