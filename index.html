@@ -50,6 +50,7 @@
         <div id="view-loans" class="view">
             <div class="header">Loans</div>
             <div id="loans-content"></div>
+            <button class="fab" onclick="openTransactionModal()">+</button>
         </div>
 
         <div id="view-admin" class="view">
@@ -143,7 +144,7 @@
 
             <div class="admin-footer">
                 <button id="sync-updates-btn" class="sync-btn">Sync for Updates</button>
-                <div class="version-control">App Version 3.9.0 (Build 1900)</div>
+                <div class="version-control">App Version 3.10.0 (Build 1950)</div>
             </div>
         </div>
 
@@ -161,31 +162,34 @@
             <div class="sheet-header">Record Transaction</div>
             <form id="transaction-form" class="admin-form" style="padding-top: 5px;">
                 <select id="txAccount" class="ios-select" style="margin-bottom: 12px;" required>
-                    <option value="" disabled selected>Select Account/Card</option>
+                    <option value="" disabled selected>Select Account/Card/Loan</option>
                 </select>
                 
                 <div class="segmented-control tx-seg-control" style="margin: 0 0 12px 0;">
-                    <input type="radio" name="txType" value="out" id="tx-out" checked><label for="tx-out">Out (Spend)</label>
-                    <input type="radio" name="txType" value="in" id="tx-in"><label for="tx-in">In</label>
-                    <input type="radio" name="txType" value="bonus" id="tx-bonus"><label for="tx-bonus">Bonus</label>
-                    <input type="radio" name="txType" value="transfer" id="tx-transfer"><label for="tx-transfer">Transfer</label>
+                    <input type="radio" name="txType" value="out" id="tx-out" checked><label for="tx-out" id="lbl-tx-out">Out (Spend)</label>
+                    <input type="radio" name="txType" value="in" id="tx-in"><label for="tx-in" id="lbl-tx-in">In</label>
+                    
+                    <input type="radio" name="txType" value="bonus" id="tx-bonus"><label for="tx-bonus" id="lbl-tx-bonus">Bonus</label>
+                    <input type="radio" name="txType" value="transfer" id="tx-transfer"><label for="tx-transfer" id="lbl-tx-transfer">Transfer</label>
+                    
+                    <input type="radio" name="txType" value="interest" id="tx-interest"><label for="tx-interest" id="lbl-tx-interest" style="display: none;">Interest</label>
                 </div>
 
                 <div id="transfer-to-container" style="display: none; margin-bottom: 12px;">
                     <select id="txToAccount" class="ios-select">
-                        <option value="" disabled selected>Select Account/Card to Credit</option>
+                        <option value="" disabled selected>Select Account/Debt to Credit</option>
                     </select>
                 </div>
                 
                 <input type="number" id="txAmount" placeholder="Amount (£)" step="0.01" required>
-                <input type="text" id="txDesc" placeholder="Description (e.g., Tesco, Transfer)" required>
+                <input type="text" id="txDesc" placeholder="Description (e.g., Tesco, Payment)" required>
                 
                 <button type="submit" class="ios-btn" style="margin-top: 10px;">Save Transaction</button>
             </form>
         </div>
 
         <div id="edit-modal" class="bottom-sheet">
-            <div class="sheet-header">Edit Account / Card</div>
+            <div class="sheet-header">Edit Item</div>
             <form id="edit-form" class="admin-form" style="padding-top: 5px;">
                 <input type="number" id="editBalance" placeholder="Correct Balance (£)" step="0.01" required>
                 
