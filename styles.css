@@ -98,12 +98,38 @@ html, body {
 .segment { flex: 1; padding: 12px; border-radius: 12px; border: none; background: transparent; font-weight: 800; color: var(--text); opacity: 0.5; cursor: pointer; }
 .segment.active { background: var(--card); opacity: 1; box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
 
+/* Horizontal List Tile (Bills) */
 .item-tile { background: var(--card); border-radius: 16px; padding: 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease;}
 .item-info .name { font-weight: 600; }
 .item-info .sub { font-size: 12px; color: var(--text-secondary); }
-
 .amount-container { display: flex; flex-direction: column; align-items: flex-end; }
 .item-amount { font-size: 18px; font-weight: 700; display: flex; align-items: center; }
+
+/* --- NEW: CSS Grid & Square Tiles --- */
+.tiles-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-top: 10px;
+}
+.square-tile {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    aspect-ratio: 1 / 1; /* Forces it into a perfect square */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+}
+.square-tile .top-info { display: flex; flex-direction: column; }
+.square-tile .name { font-weight: 700; font-size: 16px; margin-bottom: 4px; word-wrap: break-word; line-height: 1.1; }
+.square-tile .sub { font-size: 11px; color: var(--text-secondary); font-weight: 600;}
+.square-tile .bottom-info { display: flex; flex-direction: column; align-items: flex-start; }
+.square-tile .item-amount { font-size: 20px; font-weight: 800; }
+.square-tile .available-balance { font-size: 11px; color: var(--text-secondary); margin-top: 2px; font-weight: 600; }
+
+
 .available-balance { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-weight: 600; }
 .text-red { color: #FF3B30 !important; }
 
@@ -139,10 +165,4 @@ html, body {
 .ios-toggle { position: relative; width: 51px; height: 31px; }
 .ios-toggle input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--ios-grey); border-radius: 31px; transition: .3s; }
-.slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; border-radius: 50%; transition: .3s; }
-input:checked + .slider { background-color: #34C759; }
-input:checked + .slider:before { transform: translateX(20px); }
-
-.sync-btn { background: var(--ios-grey); color: var(--accent); border: none; padding: 12px; border-radius: 10px; font-weight: 600; margin-bottom: 20px; width: 100%; }
-.admin-footer { text-align: center; padding: 20px 0; color: var(--text-secondary); font-size: 11px; }
-.placeholder-text { color: var(--text-secondary); margin-top: 20px; text-align: center;}
+.slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2
