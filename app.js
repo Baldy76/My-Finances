@@ -40,33 +40,28 @@ function getAdjustedIncomeDate(year, month, dayVal) {
     return date;
 }
 
-// --- NEW: Confetti Particle Engine ---
+// Confetti Particle Engine
 function fireConfetti() {
     const colors = ['#0A84FF', '#FF375F', '#30D158', '#BF5AF2', '#FFD60A'];
     for (let i = 0; i < 60; i++) {
         const confetti = document.createElement('div');
         confetti.style.position = 'absolute';
-        confetti.style.width = '8px';
-        confetti.style.height = '16px';
+        confetti.style.width = '8px'; confetti.style.height = '16px';
         confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        confetti.style.top = '50%';
-        confetti.style.left = '50%';
-        confetti.style.zIndex = '9999';
-        confetti.style.borderRadius = '2px';
+        confetti.style.top = '50%'; confetti.style.left = '50%';
+        confetti.style.zIndex = '9999'; confetti.style.borderRadius = '2px';
         document.body.appendChild(confetti);
 
         const angle = Math.random() * Math.PI * 2;
         const velocity = 100 + Math.random() * 200;
         const tx = Math.cos(angle) * velocity;
-        const ty = Math.sin(angle) * velocity - 100; // slight upward bias
+        const ty = Math.sin(angle) * velocity - 100;
 
         confetti.animate([
             { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
             { transform: `translate(${tx}px, ${ty}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }
         ], {
-            duration: 1000 + Math.random() * 1000,
-            easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
-            fill: 'forwards'
+            duration: 1000 + Math.random() * 1000, easing: 'cubic-bezier(0.25, 1, 0.5, 1)', fill: 'forwards'
         }).onfinish = () => confetti.remove();
     }
 }
@@ -92,11 +87,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const views = ['cards', 'bills', 'home', 'loans', 'admin', 'account-details'];
     let currentActiveAccountId = null; 
 
-    // --- Inject Days 1-31 into ALL scrolling date Selects ---
+    // Inject Days 1-31 into scrolling date Selects
     const dateSelects = ['cardDay', 'loanDay', 'billDay', 'salaryDay'];
     dateSelects.forEach(id => {
         const sel = document.getElementById(id);
-        if (sel && sel.options.length <= 2) { // Prevents double injection
+        if (sel && sel.options.length <= 2) { 
             for(let i=1; i<=31; i++) {
                 const s = ["th", "st", "nd", "rd"], v = i % 100;
                 const ordinal = (s[(v - 20) % 10] || s[v] || s[0]);
@@ -139,10 +134,11 @@ document.addEventListener("DOMContentLoaded", () => {
         
         if (billSelect) billSelect.innerHTML = '<option value="" disabled selected>Select Account to Debit</option>';
         if (salarySelect) salarySelect.innerHTML = '<option value="" disabled selected>Select Account to Credit</option>';
-        if (txSelect) txSelect.innerHTML = '<option value="" disabled selected>Select Account / Card</option>';
-        if (txToSelect) txToSelect.innerHTML = '<option value="" disabled selected>Select Account / Card to Credit</option>';
+        if (txSelect) txSelect.innerHTML = '<option value="" disabled selected>Select Item</option>';
+        if (txToSelect) txToSelect.innerHTML = '<option value="" disabled selected>Select Item to Credit</option>';
         
-        const accountsAndCards = financialItems.filter(i => i.type === 'account' || i.type === 'card');
+        // MODIFIED: Include Loans in Transaction Dropdowns
+        const transactionItems = financialItems.filter(i => i.type === 'account' || i.type === 'card' || i.type === 'loan');
         const justAccounts = financialItems.filter(i => i.type === 'account');
 
         justAccounts.forEach(acc => {
@@ -150,23 +146,53 @@ document.addEventListener("DOMContentLoaded", () => {
             if (salarySelect) salarySelect.insertAdjacentHTML('beforeend', `<option value="${acc.id}">${acc.emoji || ''} ${acc.name}</option>`);
         });
 
-        accountsAndCards.forEach(item => {
+        transactionItems.forEach(item => {
             if (txSelect) txSelect.insertAdjacentHTML('beforeend', `<option value="${item.id}">${item.emoji || ''} ${item.name}</option>`);
             if (txToSelect) txToSelect.insertAdjacentHTML('beforeend', `<option value="${item.id}">${item.emoji || ''} ${item.name}</option>`);
         });
     }
 
+    // --- NEW: Dynamic Transaction Modal UI ---
+    const txAccountSelect = document.getElementById('txAccount');
+    const lblOut = document.getElementById('lbl-tx-out');
+    const lblIn = document.getElementById('lbl-tx-in');
+    const lblBonus = document.getElementById('lbl-tx-bonus');
+    const lblTransfer = document.getElementById('lbl-tx-transfer');
+    const lblInterest = document.getElementById('lbl-tx-interest');
+
+    txAccountSelect.addEventListener('change', (e) => {
+        const item = financialItems.find(i => i.id === e.target.value);
+        if (!item) return;
+
+        if (item.type === 'account') {
+            lblOut.style.display = 'block'; lblOut.innerText = 'Out (Spend)';
+            lblIn.style.display = 'block'; lblIn.innerText = 'In';
+            lblBonus.style.display = 'block';
+            lblTransfer.style.display = 'block';
+            lblInterest.style.display = 'none';
+            document.getElementById('tx-out').checked = true;
+        } else { // Card or Loan
+            lblOut.style.display = 'block'; lblOut.innerText = 'Charge';
+            lblIn.style.display = 'block'; lblIn.innerText = 'Payment';
+            lblInterest.style.display = 'block';
+            lblBonus.style.display = 'none';
+            lblTransfer.style.display = 'none';
+            document.getElementById('tx-in').checked = true; // Default to payment for debts
+        }
+        // Fire change event to reset transfer container visibility
+        document.getElementById(document.querySelector('input[name="txType"]:checked').id).dispatchEvent(new Event('change'));
+    });
+
     const txTypeRadios = document.querySelectorAll('input[name="txType"]');
     const transferContainer = document.getElementById('transfer-to-container');
     const txToAccount = document.getElementById('txToAccount');
-    const txAccount = document.getElementById('txAccount');
 
     txTypeRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             if(e.target.value === 'transfer') {
-                transferContainer.style.display = 'block'; txToAccount.required = true; txAccount.options[0].text = "Transfer From Account/Card";
+                transferContainer.style.display = 'block'; txToAccount.required = true; 
             } else {
-                transferContainer.style.display = 'none'; txToAccount.required = false; txAccount.options[0].text = "Select Account/Card";
+                transferContainer.style.display = 'none'; txToAccount.required = false; 
             }
         });
     });
@@ -182,9 +208,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const vEl = document.getElementById(`view-${view}`);
             const nEl = document.getElementById(`nav-${view}`);
             if(vEl) vEl.classList.toggle("active-view", view === targetView);
-            if(nEl) nEl.classList.toggle("active", view === targetView || (targetView === 'account-details' && (view === 'home' || view === 'cards')));
+            if(nEl) nEl.classList.toggle("active", view === targetView || (targetView === 'account-details' && (view === 'home' || view === 'cards' || view === 'loans')));
         });
-        if (targetView === 'home' || targetView === 'cards' || targetView === 'bills') renderAll();
+        if (targetView === 'home' || targetView === 'cards' || targetView === 'loans' || targetView === 'bills') renderAll();
         if (targetView === 'admin') populateDropdowns(); 
     }
 
@@ -192,6 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const acc = financialItems.find(i => i.id === currentActiveAccountId);
         currentActiveAccountId = null; 
         if (acc && acc.type === 'card') switchView('cards');
+        else if (acc && acc.type === 'loan') switchView('loans');
         else switchView('home'); 
     };
 
@@ -226,10 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
             tile.onclick = () => openAccountDetails(item.id); 
             tile.innerHTML = `
                 <div class="top-info">
-                    <div class="header-row">
-                        <div class="name">${item.name}</div>
-                        <div class="simple-emoji">${emoji}</div>
-                    </div>
+                    <div class="header-row"><div class="name">${item.name}</div><div class="simple-emoji">${emoji}</div></div>
                     <div class="sub">${subText}</div>
                 </div>
                 <div class="bottom-info"><div class="item-amount ${isNegative && !themeClass ? 'text-red' : ''}">${balanceDisplay}</div>${extraInfoHtml}</div>
@@ -254,7 +278,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const themeClass = item.theme || '';
             const emoji = item.emoji || '💳';
             
-            // Progress Ring Math
             let percentage = 0;
             if (item.creditLimit > 0) percentage = (Math.abs(item.balance) / item.creditLimit) * 100;
             const conicColor = themeClass ? 'rgba(255,255,255,0.9)' : 'var(--accent)';
@@ -268,9 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="top-info">
                     <div class="header-row">
                         <div class="name">${item.name}</div>
-                        <div class="progress-ring" style="${ringStyle}">
-                            <div class="progress-ring-inner">${emoji}</div>
-                        </div>
+                        <div class="progress-ring" style="${ringStyle}"><div class="progress-ring-inner">${emoji}</div></div>
                     </div>
                     <div class="sub">Due: ${item.dueDate ? 'Day ' + item.dueDate : 'N/A'}</div>
                 </div>
@@ -296,10 +317,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const themeClass = item.theme || '';
             const emoji = item.emoji || '💰';
 
-            // Progress Ring Math (Assuming you owe the balance, paying down to 0)
             let percentage = 0;
             if (item.originalAmount > 0) {
-                // Ring fills up as you pay it off (Original - Debt) / Original
                 const paidOff = item.originalAmount - Math.abs(item.balance);
                 percentage = (paidOff / item.originalAmount) * 100;
             }
@@ -308,13 +327,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const tile = document.createElement('div'); 
             tile.className = `square-tile ${themeClass ? 'themed ' + themeClass : ''}`;
+            // MODIFIED: Clickable Loans
+            tile.onclick = () => openAccountDetails(item.id); 
+
             tile.innerHTML = `
                 <div class="top-info">
                     <div class="header-row">
                         <div class="name">${item.name}</div>
-                        <div class="progress-ring" style="${ringStyle}">
-                            <div class="progress-ring-inner">${emoji}</div>
-                        </div>
+                        <div class="progress-ring" style="${ringStyle}"><div class="progress-ring-inner">${emoji}</div></div>
                     </div>
                     <div class="sub">Due: ${item.dueDate ? 'Day ' + item.dueDate : 'N/A'}</div>
                 </div>
@@ -409,7 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
         billsContent.appendChild(listContainer);
     }
 
-    // Account & Card Details View
+    // Account / Card / Loan Details View
     window.openAccountDetails = (itemId) => {
         currentActiveAccountId = itemId;
         const item = financialItems.find(i => i.id === itemId);
@@ -462,7 +482,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const txModal = document.getElementById('transaction-modal');
     const editModal = document.getElementById('edit-modal');
 
-    window.openTransactionModal = () => { overlay.classList.add('active'); setTimeout(() => txModal.classList.add('open'), 10); };
+    window.openTransactionModal = () => { 
+        // Force reset the dropdown and trigger change to reset UI
+        const txAcc = document.getElementById('txAccount');
+        txAcc.selectedIndex = 0;
+        txAcc.dispatchEvent(new Event('change'));
+
+        overlay.classList.add('active'); setTimeout(() => txModal.classList.add('open'), 10); 
+    };
     
     window.openEditModal = () => {
         if(!currentActiveAccountId) return;
@@ -510,7 +537,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     amount: -amountInput, rollingBalance: financialItems[fromIndex].balance
                 });
 
-                // Check Confetti for receiving account (if paying off debt)
                 const oldToBalance = financialItems[toIndex].balance;
                 financialItems[toIndex].balance += amountInput;
                 if (oldToBalance < 0 && financialItems[toIndex].balance >= 0 && (financialItems[toIndex].type === 'card' || financialItems[toIndex].type === 'loan')) {
@@ -524,17 +550,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             }
         } else {
-            const isNegative = type === 'out';
+            // MODIFIED: Added Interest Math
+            const isNegative = (type === 'out' || type === 'interest');
             const actualAmount = isNegative ? -Math.abs(amountInput) : Math.abs(amountInput);
+            
             if (type === 'bonus') desc = `[Bonus] ${desc}`;
+            if (type === 'interest') desc = `[Interest] ${desc}`;
 
             const accountIndex = financialItems.findIndex(i => i.id === fromAccId);
             if (accountIndex !== -1) {
                 if(!financialItems[accountIndex].transactions) financialItems[accountIndex].transactions = [];
                 
-                // Check Confetti (if adding income to a debt)
                 const oldBalance = financialItems[accountIndex].balance;
                 financialItems[accountIndex].balance += actualAmount;
+                
                 if (oldBalance < 0 && financialItems[accountIndex].balance >= 0 && !isNegative && (financialItems[accountIndex].type === 'card' || financialItems[accountIndex].type === 'loan')) {
                     confettiTriggered = true;
                 }
@@ -549,18 +578,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         localStorage.setItem("financialItems", JSON.stringify(financialItems));
         document.getElementById('transaction-form').reset();
-        transferContainer.style.display = 'none';
-        txToAccount.required = false;
-        document.getElementById('tx-out').checked = true;
-        document.getElementById('txAccount').options[0].text = "Select Account/Card";
-
         closeAllModals(); 
         if (currentActiveAccountId) openAccountDetails(currentActiveAccountId);
         renderAll();
 
-        if(confettiTriggered) {
-            setTimeout(() => fireConfetti(), 300); // Fire after modal closes
-        }
+        if(confettiTriggered) setTimeout(() => fireConfetti(), 300); 
     });
 
     // Edit Submission
