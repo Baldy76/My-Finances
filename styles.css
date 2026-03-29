@@ -82,14 +82,16 @@ html, body {
 .segment { flex: 1; padding: 12px; border-radius: 12px; border: none; background: transparent; font-weight: 800; color: var(--text); opacity: 0.5; cursor: pointer; }
 .segment.active { background: var(--card); opacity: 1; box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
 
-/* Horizontal List Tile */
-.item-tile { background: var(--card); border-radius: 16px; padding: 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease; cursor: pointer; }
+/* Horizontal List Tile - CLICKABLE NOW */
+.item-tile { background: var(--card); border-radius: 16px; padding: 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; cursor: pointer; }
+.item-tile:active { transform: scale(0.98); opacity: 0.8; }
+
 .item-info .name { font-weight: 600; display: flex; align-items: center; gap: 8px;}
 .item-info .sub { font-size: 12px; color: var(--text-secondary); }
 .amount-container { display: flex; flex-direction: column; align-items: flex-end; }
 .item-amount { font-size: 18px; font-weight: 700; display: flex; align-items: center; }
 
-/* --- NEW: Vibrant Themes --- */
+/* --- Vibrant Themes --- */
 .theme-blue { background: linear-gradient(135deg, #0A84FF, #0056b3); }
 .theme-red { background: linear-gradient(135deg, #FF375F, #b81736); }
 .theme-green { background: linear-gradient(135deg, #30D158, #1c8c36); }
@@ -109,7 +111,7 @@ html, body {
 /* Themed Tile Overrides */
 .square-tile.themed { color: white; box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
 .square-tile.themed .sub, .square-tile.themed .available-balance { color: rgba(255, 255, 255, 0.75); }
-.square-tile.themed .text-red { color: white !important; } /* Keeps text readable on gradients */
+.square-tile.themed .text-red { color: white !important; }
 
 .square-tile .top-info { display: flex; flex-direction: column; }
 .square-tile .name { font-weight: 700; font-size: 16px; margin-bottom: 4px; word-wrap: break-word; line-height: 1.1; }
@@ -118,23 +120,11 @@ html, body {
 .square-tile .item-amount { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
 .square-tile .available-balance { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-weight: 600; }
 
-/* --- NEW: Progress Rings & Emojis --- */
 .header-row { display: flex; justify-content: space-between; width: 100%; align-items: flex-start; }
-.progress-ring { 
-    width: 36px; height: 36px; border-radius: 50%; 
-    display: flex; align-items: center; justify-content: center; 
-    /* Default empty ring, JS injects the conic-gradient */
-    background: rgba(0,0,0,0.1); 
-}
-.progress-ring-inner { 
-    width: 30px; height: 30px; border-radius: 50%; 
-    display: flex; align-items: center; justify-content: center; 
-    background-color: var(--card); /* Adapts to light/dark mode if un-themed */
-    font-size: 16px; 
-}
-.square-tile.themed .progress-ring-inner { background-color: rgba(0,0,0,0.25); } /* Translucent inner circle on gradients */
+.progress-ring { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.1); }
+.progress-ring-inner { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: var(--card); font-size: 16px; }
+.square-tile.themed .progress-ring-inner { background-color: rgba(0,0,0,0.25); }
 
-/* Un-ringed emoji for bank accounts */
 .simple-emoji { font-size: 24px; margin-bottom: 5px; }
 .list-emoji { font-size: 18px; width: 32px; height: 32px; background: rgba(0,0,0,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center;}
 
